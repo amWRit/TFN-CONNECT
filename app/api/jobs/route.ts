@@ -20,9 +20,10 @@ export async function GET() {
 
     return NextResponse.json(jobs);
   } catch (error) {
-    console.error("Error fetching jobs:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Error fetching jobs:", errorMessage);
     return NextResponse.json(
-      { error: "Failed to fetch jobs" },
+      { error: "Failed to fetch jobs", details: errorMessage },
       { status: 500 }
     );
   }
