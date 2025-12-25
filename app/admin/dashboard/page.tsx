@@ -4,16 +4,15 @@ import { Suspense } from 'react';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import GeographyTab from './tabs/GeographyTab';
-import ProgramsTab from './tabs/ProgramsTab';
-import PlacementsTab from './tabs/PlacementsTab';
-import PeopleTab from './tabs/PeopleTab';
+import DashboardTab from './tabs/DashboardTab';
+import BrowseTab from './tabs/BrowseTab';
+import ManageTab from './tabs/ManageTab';
+import SettingsTab from './tabs/SettingsTab';
 
 function AdminDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [currentTab, setCurrentTab] = useState('geography');
+  const [currentTab, setCurrentTab] = useState('dashboard');
   const [isAuthed, setIsAuthed] = useState(false);
 
   useEffect(() => {
@@ -41,10 +40,10 @@ function AdminDashboardContent() {
   if (!isAuthed) return null;
 
   const tabs = [
-    { id: 'geography', label: 'Geography' },
-    { id: 'programs', label: 'Programs' },
-    { id: 'placements', label: 'Placements' },
-    { id: 'people', label: 'People' },
+    { id: 'dashboard', label: 'Dashboard' },
+    { id: 'browse', label: 'Browse' },
+    { id: 'manage', label: 'Manage' },
+    { id: 'settings', label: 'Settings' },
   ];
 
   return (
@@ -82,10 +81,10 @@ function AdminDashboardContent() {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {currentTab === 'geography' && <GeographyTab />}
-        {currentTab === 'programs' && <ProgramsTab />}
-        {currentTab === 'placements' && <PlacementsTab />}
-        {currentTab === 'people' && <PeopleTab />}
+        {currentTab === 'dashboard' && <DashboardTab />}
+        {currentTab === 'browse' && <BrowseTab />}
+        {currentTab === 'manage' && <ManageTab />}
+        {currentTab === 'settings' && <SettingsTab />}
       </div>
     </div>
   );
