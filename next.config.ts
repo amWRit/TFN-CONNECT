@@ -10,7 +10,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // ✅ VERCEL BUILD FIXES
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client'],
   },
@@ -18,8 +17,6 @@ const nextConfig: NextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
-  // Use Turbopack for Next.js 15
-  turbopack: {},
 }
 
 export default nextConfig

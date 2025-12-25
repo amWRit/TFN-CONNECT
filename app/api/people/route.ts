@@ -30,9 +30,10 @@ export async function GET() {
 
     return NextResponse.json(people);
   } catch (error) {
-    console.error("Error fetching people:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Error fetching people:", errorMessage);
     return NextResponse.json(
-      { error: "Failed to fetch people" },
+      { error: "Failed to fetch people", details: errorMessage },
       { status: 500 }
     );
   }

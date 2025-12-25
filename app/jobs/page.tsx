@@ -50,7 +50,7 @@ export default function JobsPage() {
         {/* Header Section */}
         <div className="mb-12 sm:mb-16">
           <div className="inline-block mb-4">
-            <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">OPPORTUNITIES</Badge>
+            <Badge className="bg-blue-100 text-blue-800 pointer-events-none">OPPORTUNITIES</Badge>
           </div>
           <h1 className="text-4xl sm:text-5xl font-bold mb-4 text-gray-900 tracking-tight">Jobs & Opportunities</h1>
           <p className="text-gray-600 text-base sm:text-lg max-w-2xl">
