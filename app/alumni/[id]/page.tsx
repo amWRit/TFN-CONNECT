@@ -40,20 +40,21 @@ interface PersonDetail {
   }>
   fellowships: Array<{
     id: string
-    years: number
-    start: string
-    end?: string
+    subjects: string[]
     cohort: {
       name: string
     }
+    placement: {
+      school: {
+        name: string
+      }
+    }
   }>
-  placements: Array<{
+  managedPlacements: Array<{
     id: string
     school: {
       name: string
     }
-    startDate: string
-    endDate?: string
   }>
 }
 
@@ -126,8 +127,8 @@ export default function AlumniDetailPage({
                 <div className="flex items-center gap-2 flex-wrap">
                   <Badge className="text-xs font-semibold bg-red-100 text-red-700 pointer-events-none">⭐ {person.type}</Badge>
                   <Badge className="text-xs font-semibold bg-red-100 text-red-700 pointer-events-none">
-                    {person.empStatus === "employed" && "✓ Employed"}
-                    {person.empStatus === "seeking" && "🔍 Seeking"}
+                    {person.empStatus === "EMPLOYED" && "✓ Employed"}
+                    {person.empStatus === "SEEKING" && "🔍 Seeking"}
                   </Badge>
                 </div>
               </div>
@@ -229,10 +230,10 @@ export default function AlumniDetailPage({
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-gray-600">
-                      {fellowship.years} years · {new Date(fellowship.start).getFullYear()} -{" "}
-                      {fellowship.end
-                        ? new Date(fellowship.end).getFullYear()
-                        : "Present"}
+                      {fellowship.placement.school.name}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Subjects: {fellowship.subjects.join(', ')}
                     </p>
                   </CardContent>
                 </Card>
@@ -241,27 +242,19 @@ export default function AlumniDetailPage({
             </div>
           )}
 
-          {/* Placements */}
-          {person.placements.length > 0 && (
+          {/* Managed Placements (if staff) */}
+          {person.managedPlacements && person.managedPlacements.length > 0 && (
             <div>
               <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
                 <span className="text-2xl">🏫</span>
-                Placements
+                Managed Placements
               </h2>
               <div className="space-y-4">
-              {person.placements.map((placement) => (
+              {person.managedPlacements.map((placement) => (
                 <Card key={placement.id} className="border-2 border-pink-400 rounded-xl hover:shadow-lg hover:border-pink-500 transition bg-white">
                   <CardHeader>
                     <CardTitle>{placement.school.name}</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-600">
-                      {new Date(placement.startDate).getFullYear()} -{" "}
-                      {placement.endDate
-                        ? new Date(placement.endDate).getFullYear()
-                        : "Present"}
-                    </p>
-                  </CardContent>
                 </Card>
               ))}
               </div>

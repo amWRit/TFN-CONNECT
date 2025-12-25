@@ -24,16 +24,16 @@ export async function GET(
         fellowships: {
           include: {
             cohort: true,
+            placement: {
+              include: {
+                school: true,
+              },
+            },
           },
         },
-        placements: {
+        managedPlacements: {
           include: {
             school: true,
-          },
-        },
-        posts: {
-          include: {
-            comments: true,
           },
         },
       },
