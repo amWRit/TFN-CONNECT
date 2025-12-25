@@ -1,0 +1,288 @@
+Paaila Network - REFINED Platform Purpose
+🎯 Platform Purpose (LinkedIn for TFN)
+Paaila Network = LinkedIn exclusively for Teach For Nepal ecosystem - TFN fellows, alumni, staff, LDCs, schools, recruiters, board members.
+
+text
+ALUMNI/FELLOWS (Primary Users)
+├── Update profiles: New jobs, certifications, skills (Leadership→Program Director)
+├── Post career journey: "Just completed Masters @ Harvard, seeking EdTech roles"
+├── SEEK jobs: "Leadership + Dang" → auto-match opportunities
+├── POST jobs: "Hiring School Principal - ABC School needs proven TFN fellow"
+
+TFN STAFF/LDCs (Internal)
+├── View real-time alumni status: Ramesh Sharma → Program Coordinator → seeking workshops
+├── Track cohort success: Tesro Paaila → 58/60 employed, 85% in education sector
+├── Manage fellow placements: ABC School → 3 Tesro Paaila fellows active
+
+EXTERNAL STAKEHOLDERS (View-Only)
+├── Recruiters/Companies: Browse TFN alumni by skills → "proven educators with leadership"
+├── TFN Board: Analytics dashboard → alumni impact by cohort/municipality
+├── Schools: "Hiring needs" → match with available fellows
+
+FUTURE: Recruiter Vacancy Portal
+├── Companies contact admin → "Post Education Manager role" (approval workflow)
+├── Direct "Apply Now" → TFN-vetted candidates
+🛠️ Key Features (LinkedIn-Inspired)
+text
+1. **Profile Timeline** (Ramesh Sharma)
+   ├── B.Ed Tribhuvan → Tesro Paaila Fellowship → ABC School → Program Coordinator
+   ├── Skills badges: Leadership, Teaching, Collaboration (endorsable)
+   ├── Certifications: "Google Data Analytics" (uploadable)
+
+2. **Smart Job Matching**
+   ├── Alumni search: "leadership + employed + dang" → Ramesh Sharma #1
+   ├── Job search: "School Principal + Lumbini" → 3 matches
+   ├── "80% skills match" → auto-suggest applications
+
+3. **Activity Feed**
+   ├── Ramesh: "Just got promoted to Director! #TFNAlumni"
+   ├── Sita (LDC): "Tesro Paaila cohort - 95% placement rate!"
+   ├── ABC School: "Hiring Math Coordinator"
+
+4. **Stakeholder Dashboards**
+   ├── LDC: "My 15 fellows → 12 placed, 3 seeking"
+   ├── Recruiter: "Browse 50+ Leadership alumni"
+   ├── Board: "Cohort retention analytics"
+🚀 Updated Copilot Prompt (Step 1)
+text
+Create Next.js 15 App Router **"Paaila Network"** - **LinkedIn for Teach For Nepal** (Vercel free tier).
+
+**EXACT Purpose**: 
+- TFN Alumni update profiles, post career journeys, seek/post jobs (Ramesh Sharma: Program Coordinator → seeking workshops)  
+- LDCs track fellows real-time: cohort success, school placements
+- Recruiters/schools browse TFN-vetted talent by skills (Leadership + Dang → Ramesh)
+- Future: Companies request job postings (admin approval)
+
+**Prisma Schema**: [FULL 17 models from before - Person, Skill, Fellowship, School, etc.]
+
+**Seed Data**:
+Ramesh Sharma (alumni) - Tesro Paaila → ABC School → Program Coordinator
+├── Skills: Leadership, Teaching, Collaboration (LinkedIn-style badges)
+├── Activity: "Hiring Education Manager" + "Masters in Education completed"
+├── Profile: B.Ed → Fellowship → Current role timeline
+
+Sita Thapa (LDC) - manages Ramesh's cohort/school placement
+Dang Municipality → ABC School (hiring needs)
+
+text
+
+**UI**: shadcn/ui Timeline, LinkedIn-style cards, skill badges, activity feed.
+**Vercel**: Server Components, Server Actions, edge runtime ready.
+📱 User Roles + Permissions
+text
+✅ ALUMNI: Full profile edit, job seek/post, network
+✅ LDC/STAFF: View analytics, manage cohorts, approve posts  
+✅ RECRUITERS: Browse/search (no contact until verified)
+✅ SCHOOLS: Post hiring needs, view placed fellows
+✅ ADMIN: Approve recruiter posts, analytics dashboard
+
+Real Data Example:
+
+text
+Ramesh Sharma (Tesro Paaila 2015 → ABC School → Nepal Education Foundation)
+- Skills: Leadership, Teaching, Collaboration, MS Suite
+- Wants: Workshop Facilitator roles
+- Posts: "Hiring: Education Program Manager" (3+ yrs exp)
+
+Sita Thapa (LDC) → manages Ramesh's fellowship → ABC School placement
+🗄️ COMPLETE Database Schema + Relations
+text
+📍 LocalGov (Dang Municipality, Lumbini Province)
+  ↓ localId
+🛖 School (Shree ABC Secondary School, Gorahi, Dang)
+  ↓ groupId          ↓ schoolId
+🏢 Group (Group 1 - Dang East)     ↓ Placement
+                                    ↓ personId
+👤 Person (Ramesh Sharma, alumni) ← ↓
+  ↓ personId                         Fellowship (Tesro Paaila cohort)
+✏️ Education (B.Ed Tribhuvan Univ)    ↓ fellowshipId
+💼 Experience (Program Coordinator) ← LDC (Sita Thapa)
+  ↓ experienceId
+🎯 ExperienceSkill ← Skill (Leadership, Teaching)
+  ↓ personId
+📝 Post ("Hiring Education Manager")
+FULL Prisma Models:
+
+text
+Person {
+  id            String   @id @default(cuid())
+  firstName     String
+  lastName      String
+  dob           DateTime
+  phone1        String?
+  phone2        String?
+  email1        String?
+  email2        String?
+  linkedin      String?
+  eduStatus     String   // 'enrolled'|'completed'|'not_enrolled'
+  empStatus     String   // 'employed'|'seeking'|'unemployed'
+  type          String   // 'alumni'|'LDC'|'admin'
+  
+  // Relations
+  educations    Education[]
+  experiences   Experience[]
+  fellowships   Fellowship[]
+  placements    Placement[]
+  posts         Post[]
+  ldcs          LDC[]     @relation("LDC_person")
+}
+
+Skill {
+  id            String   @id @default(cuid())
+  name          String   @unique // 'Leadership', 'Teaching', 'MS Suite'
+  category      String   // 'technical'|'personal'|'interpersonal'
+  experienceSkills ExperienceSkill[]
+}
+
+Experience {
+  id            String   @id @default(cuid())
+  personId      String
+  orgName       String   // 'Nepal Education Foundation'
+  title         String   // 'Program Coordinator'
+  sector        String   // 'Education'
+  type          String   // 'full_time_employment'|'freelance'
+  start         DateTime
+  end           DateTime?
+  person        Person   @relation(fields: [personId], references: [id])
+  experienceSkills ExperienceSkill[]
+}
+
+ExperienceSkill {
+  experienceId  String
+  skillId       String
+  experience    Experience @relation(fields: [experienceId], references: [id])
+  skill         Skill      @relation(fields: [skillId], references: [id])
+  @@id([experienceId, skillId])
+}
+
+Education {
+  id            String   @id @default(cuid())
+  personId      String
+  institution   String   // 'Tribhuvan University'
+  university    String?
+  level         String   // 'Bachelors'|'Masters'
+  name          String   // 'Bachelor of Education'
+  sector        String
+  start         DateTime
+  end           DateTime?
+  person        Person   @relation(fields: [personId], references: [id])
+}
+
+Cohort {
+  id            String   @id @default(cuid())
+  name          String   // 'Tesro Paaila'
+  fellowNStart  Int      // 60
+  fellowNEnd    Int      // 58 (attrition)
+  trainingN     Int      // 10 trainers
+  start         DateTime
+  fellowships   Fellowship[]
+}
+
+Fellowship {
+  id            String   @id @default(cuid())
+  cohortId      String
+  personId      String
+  years         Int      // 2
+  start         DateTime
+  end           DateTime?
+  cohort        Cohort   @relation(fields: [cohortId], references: [id])
+  person        Person   @relation(fields: [personId], references: [id])
+  ldcAssignments LDC[]
+  placedIn      PlacedIn[]
+}
+
+LDC {
+  id            String   @id @default(cuid())
+  personId      String   // LDC person
+  fellowshipId  String
+  person        Person   @relation("LDC_person", fields: [personId], references: [id])
+  fellowship    Fellowship @relation(fields: [fellowshipId], references: [id])
+}
+
+Placement {
+  id           String   @id @default(cuid())
+  personId     String
+  schoolId     String
+  person       Person   @relation(fields: [personId], references: [id])
+  school       School   @relation(fields: [schoolId], references: [id])
+  placedIn     PlacedIn[]
+}
+
+School {
+  id          String   @id @default(cuid())
+  name        String   // 'Shree ABC Secondary School'
+  address     String
+  principal   String
+  localId     String
+  groupId     String
+  localGov    LocalGov @relation(fields: [localId], references: [id])
+  group       Group    @relation(fields: [groupId], references: [id])
+  placements  Placement[]
+}
+
+LocalGov {
+  id       String   @id @default(cuid())
+  name     String   // 'Dang Municipality'
+  province String   // 'Lumbini Province'
+  schools  School[]
+}
+
+Group {
+  id      String   @id @default(cuid())
+  name    String   // 'Group 1 - Dang East'
+  schools School[]
+}
+
+PlacedIn {
+  id           String   @id @default(cuid())
+  fellowshipId String
+  placementId  String
+  fellowship   Fellowship @relation(fields: [fellowshipId], references: [id])
+  placement    Placement  @relation(fields: [placementId], references: [id])
+}
+
+Post {
+  id          String   @id @default(cuid())
+  personId    String
+  title       String
+  description String
+  type        String   // 'hire'|'apply'
+  createdAt   DateTime @default(now())
+  person      Person   @relation(fields: [personId], references: [id])
+}
+🚀 Copilot Prompts (Vercel Free Tier + Full Context)
+Step 1: Complete Setup
+text
+Create Next.js 15 App Router + TypeScript + TailwindCSS + shadcn/ui for **Teach For Nepal Alumni Network** (Vercel free tier).
+
+**Context**: TFN fellows (Ramesh Sharma) → 2yr teaching → alumni leaders. Platform connects alumni by skills/cohort/school for jobs.
+
+Use EXACT Prisma schema above (17 models, all relations). 
+
+Seed data:
+Ramesh Sharma (alumni)
+├── Tesro Paaila cohort (2015, 60→58 fellows)
+├── ABC School placement (Dang Municipality)
+├── Program Coordinator @ Nepal Education Foundation
+├── Skills: Leadership, Teaching, Collaboration
+├── Posts: "Hiring Education Manager" + "Workshop Facilitator"
+
+Sita Thapa (LDC assigned to Ramesh)
+Shree ABC Secondary School (Ana Bel, Group 1 - Dang East)
+Dang Municipality (Lumbini Province)
+
+text
+
+Generate .env.local (Vercel Postgres/Neon ready), prisma migrate, seed.ts.
+Step 2: Core Pages
+text
+**Pages** (Server Components, Vercel optimized):
+
+/ - Hero: "Connect 500+ TFN Alumni" + Ramesh Sharma featured + job stats
+/alumni - Search "leadership dang" → Ramesh + filters (cohort, employed, municipality)
+/schools - Dang Municipality → ABC School + placed fellows
+/jobs - "Hiring Education Manager" + skill match button
+/alumni/[id] - Ramesh timeline: B.Ed → Fellowship → ABC School → Program Coordinator
+
+shadcn/ui cards, badges, searchbar, filters, infinite scroll.
+Copy Step 1 → Copilot → npx prisma db seed → npm run dev → Ramesh Sharma live! 🚀

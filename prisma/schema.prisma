@@ -1,0 +1,246 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== Core Models =====
+
+model Person {
+  id            String   @id @default(cuid())
+  firstName     String
+  lastName      String
+  dob           DateTime
+  phone1        String?
+  phone2        String?
+  email1        String   @unique
+  email2        String?
+  linkedin      String?
+  profileImage  String?
+  bio           String?
+  
+  // Employment & Education Status
+  eduStatus     String   @default("completed") // 'enrolled'|'completed'|'not_enrolled'
+  empStatus     String   @default("seeking")   // 'employed'|'seeking'|'unemployed'
+  type          String   @default("alumni")    // 'alumni'|'LDC'|'admin'|'recruiter'|'school'
+  
+  // Relations
+  educations    Education[]
+  experiences   Experience[]
+  fellowships   Fellowship[]
+  placements    Placement[]
+  posts         Post[]
+  ldcManaging   LDC[]     @relation("LDCManager")
+  jobPostings   JobPosting[]
+  jobApplications JobApplication[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// ===== Skills & Endorsements =====
+
+model Skill {
+  id                 String   @id @default(cuid())
+  name               String   @unique
+  category           String   // 'technical'|'personal'|'interpersonal'
+  description        String?
+  experienceSkills   ExperienceSkill[]
+  createdAt          DateTime @default(now())
+}
+
+model ExperienceSkill {
+  experienceId  String
+  skillId       String
+  experience    Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  skill         Skill      @relation(fields: [skillId], references: [id])
+  @@id([experienceId, skillId])
+}
+
+// ===== Education & Experience =====
+
+model Education {
+  id            String   @id @default(cuid())
+  personId      String
+  institution   String   // 'Tribhuvan University'
+  university    String?
+  level         String   // 'Bachelors'|'Masters'|'Diploma'
+  name          String   // 'Bachelor of Education'
+  sector        String?
+  start         DateTime
+  end           DateTime?
+  person        Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+}
+
+model Experience {
+  id                 String   @id @default(cuid())
+  personId           String
+  orgName            String
+  title              String
+  sector             String
+  type               String   // 'full_time'|'part_time'|'contract'|'freelance'
+  description        String?
+  start              DateTime
+  end                DateTime?
+  person             Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  experienceSkills   ExperienceSkill[]
+  createdAt          DateTime @default(now())
+}
+
+// ===== Fellowship & Cohort =====
+
+model Cohort {
+  id              String   @id @default(cuid())
+  name            String   @unique // 'Tesro Paaila', 'Aatma Paaila'
+  fellowshipNStart Int     // 60
+  fellowshipNEnd  Int     // 58
+  trainingN       Int     // 10
+  description     String?
+  start           DateTime
+  end             DateTime?
+  fellowships     Fellowship[]
+  createdAt       DateTime @default(now())
+}
+
+model Fellowship {
+  id              String   @id @default(cuid())
+  cohortId        String
+  personId        String
+  years           Int      // 2
+  start           DateTime
+  end             DateTime?
+  cohort          Cohort   @relation(fields: [cohortId], references: [id])
+  person          Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  ldcAssignments  LDC[]
+  placedIn        Placement[]
+  createdAt       DateTime @default(now())
+}
+
+model LDC {
+  id              String   @id @default(cuid())
+  personId        String   // LDC manager
+  fellowshipId    String
+  person          Person   @relation("LDCManager", fields: [personId], references: [id])
+  fellowship      Fellowship @relation(fields: [fellowshipId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  @@unique([personId, fellowshipId])
+}
+
+// ===== Geographic & Schools =====
+
+model LocalGov {
+  id         String   @id @default(cuid())
+  name       String   @unique // 'Dang', 'Lumbini'
+  province   String
+  schools    School[]
+  createdAt  DateTime @default(now())
+}
+
+model SchoolGroup {
+  id         String   @id @default(cuid())
+  name       String
+  schoolId   String
+  groupName  String   // 'Group 1 - Dang East'
+  school     School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+}
+
+model School {
+  id          String   @id @default(cuid())
+  name        String
+  localGovId  String
+  district    String
+  sector      String?
+  type        String?  // 'primary'|'secondary'|'higher'
+  groups      SchoolGroup[]
+  placements  Placement[]
+  jobPostings JobPosting[]
+  localGov    LocalGov @relation(fields: [localGovId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+// ===== Placements =====
+
+model Placement {
+  id            String   @id @default(cuid())
+  fellowshipId  String
+  schoolId      String
+  personId      String
+  title         String?  // 'Teacher', 'Principal'
+  startDate     DateTime
+  endDate       DateTime?
+  fellowship    Fellowship @relation(fields: [fellowshipId], references: [id], onDelete: Cascade)
+  school        School   @relation(fields: [schoolId], references: [id])
+  person        Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+}
+
+// ===== Jobs & Hiring =====
+
+model JobPosting {
+  id            String   @id @default(cuid())
+  schoolId      String?
+  createdById   String?
+  title         String
+  description   String
+  sector        String   // 'Education'
+  requiredSkills String? // JSON array stored as string
+  location      String?
+  jobType       String   // 'full_time'|'part_time'|'contract'
+  status        String   @default("open") // 'open'|'closed'|'filled'
+  
+  school        School?  @relation(fields: [schoolId], references: [id], onDelete: SetNull)
+  createdBy     Person?  @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  applications  JobApplication[]
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model JobApplication {
+  id            String   @id @default(cuid())
+  jobPostingId  String
+  personId      String
+  status        String   @default("applied") // 'applied'|'reviewed'|'rejected'|'accepted'
+  message       String?
+  
+  jobPosting    JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+  person        Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime @default(now())
+}
+
+// ===== Activity Feed =====
+
+model Post {
+  id            String   @id @default(cuid())
+  personId      String
+  content       String
+  postType      String   // 'career_update'|'job_posting'|'achievement'|'general'
+  imageUrl      String?
+  likes         Int      @default(0)
+  
+  person        Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  comments      Comment[]
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Comment {
+  id            String   @id @default(cuid())
+  postId        String
+  personId      String
+  content       String
+  
+  post          Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
