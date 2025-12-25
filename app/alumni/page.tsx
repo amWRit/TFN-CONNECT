@@ -29,9 +29,9 @@ export default function AlumniPage() {
     fetch("/api/people")
       .then((res) => res.json())
       .then((data) => {
-        // Filter to show alumni and LDC
+        // Filter to show alumni only
         const filtered = data.filter(
-          (p: Person) => p.type === "alumni" || p.type === "LDC"
+          (p: Person) => p.type === "ALUMNI"
         )
         setAlumni(filtered)
         setLoading(false)
@@ -65,9 +65,9 @@ export default function AlumniPage() {
               <Card className="h-full hover:shadow-2xl hover:border-blue-400 transition-all duration-300 cursor-pointer border-2 border-blue-300 bg-white rounded-2xl overflow-hidden">
                 {/* Status Bar */}
                 <div className={`h-1 w-full ${
-                  person.empStatus === "employed"
+                  person.empStatus === "EMPLOYED"
                     ? "bg-gradient-to-r from-green-400 to-emerald-500"
-                    : person.empStatus === "seeking"
+                    : person.empStatus === "SEEKING"
                       ? "bg-gradient-to-r from-blue-400 to-cyan-500"
                       : "bg-gradient-to-r from-gray-300 to-gray-400"
                 }`} />
@@ -88,7 +88,7 @@ export default function AlumniPage() {
                       )}
                       <div className="flex-1">
                         <Badge className="mb-2 text-xs font-semibold bg-red-100 text-red-700 pointer-events-none">
-                          {person.type === "LDC" ? "🎯 LDC" : "⭐ Alumni"}
+                          ⭐ Alumni
                         </Badge>
                       </div>
                     </div>
@@ -121,9 +121,9 @@ export default function AlumniPage() {
                     <span
                       className="text-xs font-semibold px-3 py-1.5 rounded-full bg-red-100 text-red-700 pointer-events-none"
                     >
-                      {person.empStatus === "employed" && "✓ Employed"}
-                      {person.empStatus === "seeking" && "🔍 Seeking"}
-                      {person.empStatus !== "employed" && person.empStatus !== "seeking" && person.empStatus}
+                      {person.empStatus === "EMPLOYED" && "✓ Employed"}
+                      {person.empStatus === "SEEKING" && "🔍 Seeking"}
+                      {person.empStatus !== "EMPLOYED" && person.empStatus !== "SEEKING" && person.empStatus}
                     </span>
                     <span className="text-xs text-gray-400">View Profile →</span>
                   </div>

@@ -27,11 +27,12 @@ export default function RootLayout({
               />
               <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">TFN-Connect</h1>
             </a>
-            <div className="flex gap-3 sm:gap-6 text-xs sm:text-sm">
+            <div className="flex gap-3 sm:gap-6 text-xs sm:text-sm items-center">
               <a href="/" className="text-gray-700 hover:text-blue-600 font-semibold transition">Home</a>
               <a href="/alumni" className="text-gray-700 hover:text-blue-600 font-semibold transition">Alumni</a>
               <a href="/jobs" className="text-gray-700 hover:text-blue-600 font-semibold transition">Jobs</a>
               <a href="/feed" className="text-gray-700 hover:text-blue-600 font-semibold transition">Feed</a>
+              <a href="/admin/dashboard?auto=true" className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded font-semibold transition">Admin</a>
             </div>
           </div>
         </nav>

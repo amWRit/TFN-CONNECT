@@ -3,22 +3,29 @@ import prisma from "@/lib/prisma";
 
 export async function GET() {
   try {
-    const jobs = await prisma.jobPosting.findMany({
+    const jobPostings = await prisma.jobPosting.findMany({
       include: {
-        school: true,
-        createdBy: true,
+        createdBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
         applications: {
-          include: {
-            person: true,
+          select: {
+            id: true,
+            personId: true,
+            status: true,
           },
         },
       },
       orderBy: {
-        createdAt: "desc",
+        createdAt: 'desc',
       },
     });
 
-    return NextResponse.json(jobs);
+    return NextResponse.json(jobPostings);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Error fetching jobs:", errorMessage);
