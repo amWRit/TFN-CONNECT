@@ -31,9 +31,7 @@
     "noEmit": true,
     "strict": true,
     "types": [
-      "node",
-      "jest",
-      "@testing-library/jest-dom"
+      "node"
     ],
     "noUnusedLocals": false,
     "noUnusedParameters": false,

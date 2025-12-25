@@ -56,18 +56,18 @@ export default function FeedPage() {
         </div>
 
         <div className="space-y-3 sm:space-y-4">
-        {posts.map((post) => (
-          <PostCard
-            key={post.id}
-            author={post.person}
-            content={post.content}
-            postType={post.postType}
-            likes={post.likes}
-            comments={post.comments.length}
-            createdAt={new Date(post.createdAt)}
-          />
-        ))}
-      </div>
+          {posts.map((post) => (
+            <PostCard
+              key={post.id}
+              author={post.person}
+              content={post.content}
+              postType={post.postType}
+              likes={post.likes}
+              comments={post.comments.length}
+              createdAt={new Date(post.createdAt)}
+            />
+          ))}
+        </div>
 
         {posts.length === 0 && (
           <div className="text-center py-12 bg-white rounded-lg">
