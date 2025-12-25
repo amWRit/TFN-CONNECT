@@ -1,13 +1,16 @@
 import { PrismaClient } from "@prisma/client";
+import * as dotenv from "dotenv";
+
+dotenv.config({ path: ".env.local" });
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Starting database seed...");
+  console.log("🌱 Starting database seed with comprehensive data...\n");
 
   try {
     // Test connection
-    await (prisma as any).$queryRaw`SELECT 1`;
+    await prisma.$executeRaw`SELECT 1`;
     console.log("✓ Database connected\n");
 
     // ===== Skills =====
@@ -26,220 +29,708 @@ async function main() {
     const skills: any[] = [];
     for (const s of skillsData) {
       try {
-        const skill = await (prisma as any).skill.create({ data: s });
+        const skill = await prisma.skill.upsert({
+          where: { name: s.name },
+          update: {},
+          create: s,
+        });
         skills.push(skill);
-      } catch (e: any) {
-        if (e.code === "P2002") {
-          const existing = await (prisma as any).skill.findUnique({
-            where: { name: s.name },
-          });
-          if (existing) skills.push(existing);
-        } else throw e;
+      } catch (e) {
+        console.log(`Skill ${s.name} error:`, e);
       }
     }
     console.log(`✅ ${skills.length} skills ready\n`);
 
     // ===== Geographic Data =====
     console.log("Creating regions...");
-    const createOrFind = async (name: string, province: string) => {
-      try {
-        return await (prisma as any).localGov.create({
-          data: { name, province },
-        });
-      } catch (e: any) {
-        if (e.code === "P2002") {
-          return await (prisma as any).localGov.findUnique({
-            where: { name },
-          });
-        }
-        throw e;
-      }
-    };
+    const dang = await prisma.localGov.upsert({
+      where: { name: "Dang" },
+      update: {},
+      create: { name: "Dang", province: "Lumbini" },
+    });
 
-    const dang = await createOrFind("Dang", "Lumbini");
-    const lumbini = await createOrFind("Kapilvastu", "Lumbini");
-    console.log("✅ Regions ready\n");
+    const kapilvastu = await prisma.localGov.upsert({
+      where: { name: "Kapilvastu" },
+      update: {},
+      create: { name: "Kapilvastu", province: "Lumbini" },
+    });
+    console.log("✅ 2 regions ready\n");
 
     // ===== Schools =====
     console.log("Creating schools...");
-    const createSchool = async (
-      name: string,
-      district: string,
-      localGovId: string,
-      type: string
-    ) => {
-      try {
-        return await (prisma as any).school.create({
-          data: { name, district, localGovId, sector: "Education", type },
-        });
-      } catch (e: any) {
-        if (e.code === "P2002") {
-          return await (prisma as any).school.findFirst({
-            where: { name },
-          });
-        }
-        throw e;
-      }
-    };
+    const abcSchool = await prisma.school.upsert({
+      where: { id: "abc-1" },
+      update: {},
+      create: {
+        id: "abc-1",
+        name: "Shree ABC Secondary School",
+        district: "Gorahi",
+        localGovId: dang.id,
+        sector: "Education",
+        type: "secondary",
+      },
+    });
 
-    const abcSchool = await createSchool(
-      "Shree ABC Secondary School",
-      "Gorahi",
-      dang.id,
-      "secondary"
-    );
-    const xyzSchool = await createSchool(
-      "Shree XYZ Primary School",
-      "Tulsipur",
-      dang.id,
-      "primary"
-    );
-    const madhavSchool = await createSchool(
-      "Madhav Academy",
-      "Itahari",
-      lumbini.id,
-      "secondary"
-    );
+    const xyzSchool = await prisma.school.upsert({
+      where: { id: "xyz-1" },
+      update: {},
+      create: {
+        id: "xyz-1",
+        name: "Shree XYZ Primary School",
+        district: "Tulsipur",
+        localGovId: dang.id,
+        sector: "Education",
+        type: "primary",
+      },
+    });
+
+    const madhavSchool = await prisma.school.upsert({
+      where: { id: "madhav-1" },
+      update: {},
+      create: {
+        id: "madhav-1",
+        name: "Madhav Academy",
+        district: "Itahari",
+        localGovId: kapilvastu.id,
+        sector: "Education",
+        type: "secondary",
+      },
+    });
     console.log("✅ 3 schools ready\n");
 
     // ===== Cohorts =====
     console.log("Creating cohorts...");
-    const createCohort = async (name: string, startYear: number, endYear: number) => {
-      try {
-        return await (prisma as any).cohort.create({
-          data: {
-            name,
-            fellowshipNStart: 60,
-            fellowshipNEnd: 58,
-            trainingN: 10,
-            description: `${name} cohort (${startYear}-${endYear})`,
-            start: new Date(`${startYear}-01-15`),
-            end: new Date(`${endYear}-01-15`),
-          },
-        });
-      } catch (e: any) {
-        if (e.code === "P2002") {
-          return await (prisma as any).cohort.findUnique({
-            where: { name },
-          });
-        }
-        throw e;
-      }
-    };
+    const tesroPaaila = await prisma.cohort.upsert({
+      where: { name: "Tesro Paaila" },
+      update: {},
+      create: {
+        name: "Tesro Paaila",
+        fellowshipNStart: 60,
+        fellowshipNEnd: 58,
+        trainingN: 10,
+        description: "2-year leadership fellowship program (2015-2017)",
+        start: new Date("2015-01-15"),
+        end: new Date("2017-01-15"),
+      },
+    });
 
-    const tesroPaaila = await createCohort("Tesro Paaila", 2015, 2017);
-    const aatmaPaaila = await createCohort("Aatma Paaila", 2018, 2020);
+    const aatmaPaaila = await prisma.cohort.upsert({
+      where: { name: "Aatma Paaila" },
+      update: {},
+      create: {
+        name: "Aatma Paaila",
+        fellowshipNStart: 50,
+        fellowshipNEnd: 48,
+        trainingN: 8,
+        description: "2-year advanced leadership fellowship (2018-2020)",
+        start: new Date("2018-01-15"),
+        end: new Date("2020-01-15"),
+      },
+    });
     console.log("✅ 2 cohorts ready\n");
 
-    // ===== Alumni Profiles =====
-    console.log("Creating alumni...");
-    const createPerson = async (
-      firstName: string,
-      lastName: string,
-      email: string,
-      bio: string,
-      type: string = "alumni"
-    ) => {
-      try {
-        return await (prisma as any).person.create({
-          data: {
-            firstName,
-            lastName,
-            email1: email,
-            dob: new Date("1990-03-15"),
-            bio,
-            type,
-            empStatus: type === "LDC" ? "employed" : "employed",
-            eduStatus: "completed",
-          },
-        });
-      } catch (e: any) {
-        if (e.code === "P2002") {
-          return await (prisma as any).person.findUnique({
-            where: { email1: email },
-          });
-        }
-        throw e;
-      }
-    };
+    const findSkillId = (name: string) =>
+      skills.find((s) => s.name === name)?.id;
 
-    const ramesh = await createPerson(
-      "Ramesh",
-      "Sharma",
-      "ramesh.sharma@example.com",
-      "Program Director at Nepal Education Foundation. Tesro Paaila fellow with 8+ years of experience."
-    );
+    // ===== Creating Alumni =====
+    console.log("Creating 8 diverse alumni profiles...\n");
 
-    const anjali = await createPerson(
-      "Anjali",
-      "Poudel",
-      "anjali.poudel@example.com",
-      "Education specialist with focus on inclusive learning. Seeking workshop facilitator roles.",
-      "alumni"
-    );
+    // RAMESH
+    const ramesh = await prisma.person.upsert({
+      where: { email1: "ramesh.sharma@example.com" },
+      update: {},
+      create: {
+        firstName: "Ramesh",
+        lastName: "Sharma",
+        dob: new Date("1990-03-15"),
+        email1: "ramesh.sharma@example.com",
+        phone1: "98140123456",
+        profileImage: "https://i.pravatar.cc/150?img=1",
+        bio: "Program Director at Nepal Education Foundation. Tesro Paaila fellow with 8+ years in education.",
+        type: "alumni",
+        empStatus: "employed",
+        eduStatus: "completed",
+      },
+    });
 
-    const pradeep = await createPerson(
-      "Pradeep",
-      "Khatri",
-      "pradeep.khatri@example.com",
-      "Principal at Madhav Academy. Actively recruiting education professionals.",
-      "school"
-    );
-
-    const sita = await createPerson(
-      "Sita",
-      "Thapa",
-      "sita.thapa@tfn.org",
-      "Leadership Development Coordinator managing 15 fellows across Lumbini.",
-      "LDC"
-    );
-
-    console.log("✅ 4 alumni/staff created\n");
-
-    // ===== Activity Feed Posts =====
-    console.log("Creating posts...");
-    const posts = [
-      {
+    await prisma.education.upsert({
+      where: { id: "ramesh-edu-1" },
+      update: {},
+      create: {
+        id: "ramesh-edu-1",
         personId: ramesh.id,
-        content:
-          "🎓 Excited to announce Master's in Educational Leadership! Ready to bring insights back to Nepal's education sector. #TFNAlumni",
-        postType: "achievement",
+        institution: "Tribhuvan University",
+        level: "Bachelors",
+        name: "Bachelor of Education",
+        sector: "Education",
+        start: new Date("2008-01-15"),
+        end: new Date("2012-12-15"),
       },
-      {
+    });
+
+    const rameshFellow = await prisma.fellowship.upsert({
+      where: { id: "ramesh-fellow-1" },
+      update: {},
+      create: {
+        id: "ramesh-fellow-1",
+        cohortId: tesroPaaila.id,
+        personId: ramesh.id,
+        years: 2,
+        start: new Date("2015-01-15"),
+        end: new Date("2017-01-15"),
+      },
+    });
+
+    await prisma.experience.upsert({
+      where: { id: "ramesh-exp-1" },
+      update: {},
+      create: {
+        id: "ramesh-exp-1",
+        personId: ramesh.id,
+        orgName: "Shree ABC Secondary School",
+        title: "Program Coordinator",
+        sector: "Education",
+        type: "full_time",
+        description: "Led curriculum development and teacher training initiatives",
+        start: new Date("2017-02-01"),
+        end: new Date("2021-06-30"),
+        experienceSkills: {
+          create: [
+            { skillId: findSkillId("Leadership")! },
+            { skillId: findSkillId("Teaching")! },
+            { skillId: findSkillId("Collaboration")! },
+          ],
+        },
+      },
+    });
+
+    await prisma.experience.upsert({
+      where: { id: "ramesh-exp-2" },
+      update: {},
+      create: {
+        id: "ramesh-exp-2",
+        personId: ramesh.id,
+        orgName: "Nepal Education Foundation",
+        title: "Program Director",
+        sector: "Education",
+        type: "full_time",
+        description: "Strategic oversight of education programs across 5 districts",
+        start: new Date("2021-07-01"),
+        end: null,
+        experienceSkills: {
+          create: [
+            { skillId: findSkillId("Leadership")! },
+            { skillId: findSkillId("Project Management")! },
+            { skillId: findSkillId("MS Suite")! },
+          ],
+        },
+      },
+    });
+
+    console.log("✅ Ramesh Sharma (Program Director)");
+
+    // SITA
+    const sita = await prisma.person.upsert({
+      where: { email1: "sita.thapa@tfn.org" },
+      update: {},
+      create: {
+        firstName: "Sita",
+        lastName: "Thapa",
+        dob: new Date("1985-07-22"),
+        email1: "sita.thapa@tfn.org",
+        phone1: "98140654321",
+        profileImage: "https://i.pravatar.cc/150?img=2",
+        bio: "Leadership Development Coordinator managing 15 fellows across Lumbini Province.",
+        type: "LDC",
+        empStatus: "employed",
+        eduStatus: "completed",
+      },
+    });
+
+    await prisma.education.upsert({
+      where: { id: "sita-edu-1" },
+      update: {},
+      create: {
+        id: "sita-edu-1",
         personId: sita.id,
-        content:
-          "📊 Tesro Paaila: 58/60 fellows employed, 85% in education sector. Proud of our impact! #TFN",
-        postType: "career_update",
+        institution: "Kathmandu University",
+        level: "Masters",
+        name: "Master of Arts in Development Studies",
+        sector: "Development",
+        start: new Date("2012-01-15"),
+        end: new Date("2014-12-15"),
       },
-      {
-        personId: pradeep.id,
-        content:
-          "🏫 Madhav Academy hiring! Seeking passionate educators to join our team.",
-        postType: "job_posting",
+    });
+
+    await prisma.experience.upsert({
+      where: { id: "sita-exp-1" },
+      update: {},
+      create: {
+        id: "sita-exp-1",
+        personId: sita.id,
+        orgName: "Teach For Nepal",
+        title: "Leadership Development Coordinator",
+        sector: "Education",
+        type: "full_time",
+        description: "Manages fellow development, placements, and cohort success metrics",
+        start: new Date("2017-06-01"),
+        end: null,
+        experienceSkills: {
+          create: [
+            { skillId: findSkillId("Leadership")! },
+            { skillId: findSkillId("Collaboration")! },
+            { skillId: findSkillId("Data Analytics")! },
+          ],
+        },
       },
-      {
+    });
+
+    console.log("✅ Sita Thapa (LDC)");
+
+    // ANJALI
+    const anjali = await prisma.person.upsert({
+      where: { email1: "anjali.poudel@example.com" },
+      update: {},
+      create: {
+        firstName: "Anjali",
+        lastName: "Poudel",
+        dob: new Date("1992-05-10"),
+        email1: "anjali.poudel@example.com",
+        phone1: "98140789012",
+        profileImage: "https://i.pravatar.cc/150?img=3",
+        bio: "Education specialist with focus on inclusive learning. Seeking workshop facilitator roles.",
+        type: "alumni",
+        empStatus: "seeking",
+        eduStatus: "completed",
+      },
+    });
+
+    await prisma.education.upsert({
+      where: { id: "anjali-edu-1" },
+      update: {},
+      create: {
+        id: "anjali-edu-1",
         personId: anjali.id,
-        content:
-          "After 6 years teaching, exploring new opportunities. Looking for workshop facilitator roles. Open to collaboration! 🌱",
-        postType: "career_update",
+        institution: "Tribhuvan University",
+        level: "Bachelors",
+        name: "Bachelor of Education",
+        sector: "Education",
+        start: new Date("2010-01-15"),
+        end: new Date("2014-12-15"),
+      },
+    });
+
+    const anjaliFellow = await prisma.fellowship.upsert({
+      where: { id: "anjali-fellow-1" },
+      update: {},
+      create: {
+        id: "anjali-fellow-1",
+        cohortId: tesroPaaila.id,
+        personId: anjali.id,
+        years: 2,
+        start: new Date("2015-01-15"),
+        end: new Date("2017-01-15"),
+      },
+    });
+
+    await prisma.experience.upsert({
+      where: { id: "anjali-exp-1" },
+      update: {},
+      create: {
+        id: "anjali-exp-1",
+        personId: anjali.id,
+        orgName: "Shree XYZ Primary School",
+        title: "Teacher & Curriculum Lead",
+        sector: "Education",
+        type: "full_time",
+        description: "Developed inclusive curriculum for multi-grade classrooms",
+        start: new Date("2017-02-01"),
+        end: new Date("2023-12-31"),
+        experienceSkills: {
+          create: [
+            { skillId: findSkillId("Teaching")! },
+            { skillId: findSkillId("Curriculum Design")! },
+            { skillId: findSkillId("Collaboration")! },
+          ],
+        },
+      },
+    });
+
+    console.log("✅ Anjali Poudel (Seeking)");
+
+    // PRADEEP
+    const pradeep = await prisma.person.upsert({
+      where: { email1: "pradeep.khatri@example.com" },
+      update: {},
+      create: {
+        firstName: "Pradeep",
+        lastName: "Khatri",
+        dob: new Date("1988-11-30"),
+        email1: "pradeep.khatri@example.com",
+        phone1: "98140345678",
+        profileImage: "https://i.pravatar.cc/150?img=4",
+        bio: "Principal at Madhav Academy. TFN alumni. Actively recruiting education professionals.",
+        type: "school",
+        empStatus: "employed",
+        eduStatus: "completed",
+      },
+    });
+
+    await prisma.education.upsert({
+      where: { id: "pradeep-edu-1" },
+      update: {},
+      create: {
+        id: "pradeep-edu-1",
+        personId: pradeep.id,
+        institution: "Tribhuvan University",
+        level: "Bachelors",
+        name: "Bachelor of Education",
+        sector: "Education",
+        start: new Date("2006-01-15"),
+        end: new Date("2010-12-15"),
+      },
+    });
+
+    const pradeepFellow = await prisma.fellowship.upsert({
+      where: { id: "pradeep-fellow-1" },
+      update: {},
+      create: {
+        id: "pradeep-fellow-1",
+        cohortId: aatmaPaaila.id,
+        personId: pradeep.id,
+        years: 2,
+        start: new Date("2018-01-15"),
+        end: new Date("2020-01-15"),
+      },
+    });
+
+    await prisma.experience.upsert({
+      where: { id: "pradeep-exp-1" },
+      update: {},
+      create: {
+        id: "pradeep-exp-1",
+        personId: pradeep.id,
+        orgName: "Madhav Academy",
+        title: "Principal",
+        sector: "Education",
+        type: "full_time",
+        description: "Leading transformational initiatives in academic excellence",
+        start: new Date("2020-02-01"),
+        end: null,
+        experienceSkills: {
+          create: [
+            { skillId: findSkillId("Leadership")! },
+            { skillId: findSkillId("Project Management")! },
+            { skillId: findSkillId("Public Speaking")! },
+          ],
+        },
+      },
+    });
+
+    console.log("✅ Pradeep Khatri (Principal)");
+
+    // BIKASH
+    const bikash = await prisma.person.upsert({
+      where: { email1: "bikash.magar@example.com" },
+      update: {},
+      create: {
+        firstName: "Bikash",
+        lastName: "Magar",
+        dob: new Date("1994-09-18"),
+        email1: "bikash.magar@example.com",
+        phone1: "98140567890",
+        profileImage: "https://i.pravatar.cc/150?img=5",
+        bio: "Senior Teacher at ABC School. Passionate about technology in education.",
+        type: "alumni",
+        empStatus: "employed",
+        eduStatus: "completed",
+      },
+    });
+
+    console.log("✅ Bikash Magar (Senior Teacher)");
+
+    // DEEPA
+    const deepa = await prisma.person.upsert({
+      where: { email1: "deepa.sharma@example.com" },
+      update: {},
+      create: {
+        firstName: "Deepa",
+        lastName: "Sharma",
+        dob: new Date("1991-02-28"),
+        email1: "deepa.sharma@example.com",
+        phone1: "98140234567",
+        profileImage: "https://i.pravatar.cc/150?img=6",
+        bio: "Deputy Principal exploring leadership opportunities and mentoring roles.",
+        type: "alumni",
+        empStatus: "employed",
+        eduStatus: "completed",
+      },
+    });
+
+    console.log("✅ Deepa Sharma (Deputy Principal)");
+
+    // KAMAL
+    const kamal = await prisma.person.upsert({
+      where: { email1: "kamal.rai@example.com" },
+      update: {},
+      create: {
+        firstName: "Kamal",
+        lastName: "Rai",
+        dob: new Date("1993-06-12"),
+        email1: "kamal.rai@example.com",
+        phone1: "98140456123",
+        profileImage: "https://i.pravatar.cc/150?img=7",
+        bio: "Open to leadership roles, NGO positions, or curriculum development projects.",
+        type: "alumni",
+        empStatus: "seeking",
+        eduStatus: "completed",
+      },
+    });
+
+    console.log("✅ Kamal Rai (Seeking)");
+
+    // MAYA
+    const maya = await prisma.person.upsert({
+      where: { email1: "maya.gurung@example.com" },
+      update: {},
+      create: {
+        firstName: "Maya",
+        lastName: "Gurung",
+        dob: new Date("1990-04-05"),
+        email1: "maya.gurung@example.com",
+        phone1: "98140789456",
+        profileImage: "https://i.pravatar.cc/150?img=8",
+        bio: "Working on education policy and social impact programs.",
+        type: "alumni",
+        empStatus: "employed",
+        eduStatus: "completed",
+      },
+    });
+
+    console.log("✅ Maya Gurung (Program Officer)\n");
+
+    // ===== Job Postings =====
+    console.log("Creating 7 job postings...");
+
+    const jobs = [
+      {
+        id: "job-1",
+        schoolId: madhavSchool.id,
+        createdById: pradeep.id,
+        title: "Math Coordinator",
+        description: "Seeking experienced math educator for curriculum development.",
+        sector: "Education",
+        location: "Itahari, Lumbini",
+        jobType: "full_time" as const,
+        requiredSkills: JSON.stringify(["Teaching", "Curriculum Design", "Leadership"]),
+        status: "open" as const,
+      },
+      {
+        id: "job-2",
+        createdById: ramesh.id,
+        title: "Education Program Manager",
+        description: "Seeking program manager for rural education initiatives.",
+        sector: "Education",
+        location: "Dang, Lumbini",
+        jobType: "full_time" as const,
+        requiredSkills: JSON.stringify(["Project Management", "Leadership", "Data Analytics"]),
+        status: "open" as const,
+      },
+      {
+        id: "job-3",
+        schoolId: abcSchool.id,
+        createdById: pradeep.id,
+        title: "School Administrator",
+        description: "Seeking administrator with TFN background.",
+        sector: "Education",
+        location: "Gorahi, Dang",
+        jobType: "full_time" as const,
+        requiredSkills: JSON.stringify(["Leadership", "Project Management", "Collaboration"]),
+        status: "open" as const,
+      },
+      {
+        id: "job-4",
+        schoolId: xyzSchool.id,
+        createdById: deepa.id,
+        title: "Language Arts Teacher",
+        description: "Seeking language arts teacher for primary school.",
+        sector: "Education",
+        location: "Tulsipur, Dang",
+        jobType: "full_time" as const,
+        requiredSkills: JSON.stringify(["Teaching", "Collaboration", "Curriculum Design"]),
+        status: "open" as const,
+      },
+      {
+        id: "job-5",
+        createdById: maya.id,
+        title: "Education Research Associate",
+        description: "Seeking research associate for education policy research.",
+        sector: "NGO",
+        location: "Kathmandu",
+        jobType: "full_time" as const,
+        requiredSkills: JSON.stringify(["Data Analytics", "Project Management", "Teaching"]),
+        status: "open" as const,
+      },
+      {
+        id: "job-6",
+        createdById: ramesh.id,
+        title: "Teacher Training Specialist",
+        description: "Hiring teacher training specialist for professional development.",
+        sector: "Education",
+        location: "Dang",
+        jobType: "full_time" as const,
+        requiredSkills: JSON.stringify(["Leadership", "Teaching", "Curriculum Design"]),
+        status: "open" as const,
+      },
+      {
+        id: "job-7",
+        schoolId: madhavSchool.id,
+        createdById: pradeep.id,
+        title: "School Counselor",
+        description: "Seeking school counselor for student wellbeing.",
+        sector: "Education",
+        location: "Itahari, Lumbini",
+        jobType: "full_time" as const,
+        requiredSkills: JSON.stringify(["Collaboration", "Leadership", "Public Speaking"]),
+        status: "open" as const,
       },
     ];
 
-    for (const post of posts) {
-      try {
-        await (prisma as any).post.create({
-          data: { ...post, likes: Math.floor(Math.random() * 30) },
-        });
-      } catch (e: any) {
-        // Post may already exist
-      }
+    for (const job of jobs) {
+      await prisma.jobPosting.upsert({
+        where: { id: job.id },
+        update: {},
+        create: job,
+      });
     }
-    console.log(`✅ ${posts.length} posts created\n`);
+    console.log("✅ 7 job postings ready\n");
+
+    // ===== Job Applications =====
+    console.log("Creating 6 job applications...");
+
+    const applications = [
+      {
+        id: "app-1",
+        jobPostingId: jobs[0].id,
+        personId: anjali.id,
+        status: "applied" as const,
+        message: "My curriculum design experience aligns with your needs.",
+      },
+      {
+        id: "app-2",
+        jobPostingId: jobs[2].id,
+        personId: anjali.id,
+        status: "reviewed" as const,
+        message: "Excited about contributing to ABC School's mission.",
+      },
+      {
+        id: "app-3",
+        jobPostingId: jobs[3].id,
+        personId: kamal.id,
+        status: "applied" as const,
+        message: "I have 5 years teaching experience.",
+      },
+      {
+        id: "app-4",
+        jobPostingId: jobs[4].id,
+        personId: deepa.id,
+        status: "reviewed" as const,
+        message: "My background in education and leadership is a strong fit.",
+      },
+      {
+        id: "app-5",
+        jobPostingId: jobs[5].id,
+        personId: bikash.id,
+        status: "applied" as const,
+        message: "I'm passionate about teacher development.",
+      },
+      {
+        id: "app-6",
+        jobPostingId: jobs[1].id,
+        personId: deepa.id,
+        status: "interviewed" as const,
+        message: "Very interested in joining Nepal Education Foundation.",
+      },
+    ];
+
+    for (const app of applications) {
+      await prisma.jobApplication.upsert({
+        where: { id: app.id },
+        update: {},
+        create: app,
+      });
+    }
+    console.log("✅ 6 job applications ready\n");
+
+    // ===== Activity Feed Posts =====
+    console.log("Creating 14 activity feed posts...");
+
+    const posts = [
+      { id: "post-1", personId: ramesh.id, content: "🎓 Completed Master's in Educational Leadership! Ready to bring insights back. #TFNAlumni", postType: "achievement" as const, likes: 24 },
+      { id: "post-2", personId: sita.id, content: "📊 Tesro Paaila: 58/60 fellows employed, 85% in education. Proud of our impact! #TFN", postType: "career_update" as const, likes: 18 },
+      { id: "post-3", personId: pradeep.id, content: "🏫 Madhav Academy is hiring! Join us transforming rural education.", postType: "job_posting" as const, likes: 12 },
+      { id: "post-4", personId: anjali.id, content: "After 6 years teaching, exploring new opportunities. Looking for facilitator roles. #OpenToOpportunities", postType: "career_update" as const, likes: 8 },
+      { id: "post-5", personId: bikash.id, content: "🚀 New digital learning at ABC School! Students showing remarkable improvement. #EdTech", postType: "achievement" as const, likes: 32 },
+      { id: "post-6", personId: deepa.id, content: "📚 Launched mentorship program connecting experienced teachers with new staff.", postType: "achievement" as const, likes: 19 },
+      { id: "post-7", personId: kamal.id, content: "🌟 Ready for next chapter! Seeking roles to scale impact in policy or curriculum development.", postType: "career_update" as const, likes: 14 },
+      { id: "post-8", personId: maya.id, content: "🎯 Completed research on rural education access. Insights powerful - systemic change needed.", postType: "achievement" as const, likes: 27 },
+      { id: "post-9", personId: ramesh.id, content: "🏆 Keynote speaker at National Education Summit! Sharing teacher development framework. #EdLeadership", postType: "achievement" as const, likes: 41 },
+      { id: "post-10", personId: sita.id, content: "👥 Celebrating Tesro Paaila alumni! From principals to policy researchers. #TFNImpact", postType: "achievement" as const, likes: 35 },
+      { id: "post-11", personId: pradeep.id, content: "💼 Madhav Academy actively hiring! Multiple positions open. Join our team!", postType: "job_posting" as const, likes: 9 },
+      { id: "post-12", personId: anjali.id, content: "🤝 Thanks TFN community for support in career transition. Your advice is invaluable!", postType: "career_update" as const, likes: 22 },
+      { id: "post-13", personId: bikash.id, content: "📖 New blog: 'Technology in Rural Classrooms' - practical insights from our school.", postType: "achievement" as const, likes: 16 },
+      { id: "post-14", personId: deepa.id, content: "🎓 Mentoring TFN fellows this year. Excited to support their growth!", postType: "career_update" as const, likes: 18 },
+    ];
+
+    for (const post of posts) {
+      await prisma.post.upsert({
+        where: { id: post.id },
+        update: {},
+        create: post,
+      });
+    }
+    console.log("✅ 14 posts ready\n");
+
+    // ===== Comments =====
+    console.log("Creating 15 comments...");
+
+    const comments = [
+      { id: "cmt-1", postId: posts[0].id, personId: sita.id, content: "Congratulations Ramesh! Nepal's education sector will benefit!" },
+      { id: "cmt-2", postId: posts[1].id, personId: ramesh.id, content: "Sita, incredible numbers. Tesro Paaila's impact is undeniable!" },
+      { id: "cmt-3", postId: posts[2].id, personId: anjali.id, content: "Pradeep, I'd love to discuss the Math Coordinator position!" },
+      { id: "cmt-4", postId: posts[4].id, personId: ramesh.id, content: "Bikash, fantastic! Tech integration is our strategic priority." },
+      { id: "cmt-5", postId: posts[4].id, personId: sita.id, content: "Love this innovation! Keep pushing boundaries!" },
+      { id: "cmt-6", postId: posts[5].id, personId: deepa.id, content: "Deepa, brilliant! Can we discuss replicating at other schools?" },
+      { id: "cmt-7", postId: posts[6].id, personId: ramesh.id, content: "Kamal, you'd be perfect for our Program Manager role!" },
+      { id: "cmt-8", postId: posts[6].id, personId: maya.id, content: "Kamal, great NGO opportunities available. Happy to connect!" },
+      { id: "cmt-9", postId: posts[7].id, personId: ramesh.id, content: "Maya, exactly what the sector needs. Let's discuss policy!" },
+      { id: "cmt-10", postId: posts[8].id, personId: sita.id, content: "Ramesh, your frameworks transformed our approach. Well-deserved!" },
+      { id: "cmt-11", postId: posts[9].id, personId: anjali.id, content: "Sita, grateful to be part of this community!" },
+      { id: "cmt-12", postId: posts[10].id, personId: bikash.id, content: "Pradeep, excellent initiatives! Would recommend to colleagues." },
+      { id: "cmt-13", postId: posts[11].id, personId: deepa.id, content: "Anjali, you're fantastic. Whoever gets you will be lucky!" },
+      { id: "cmt-14", postId: posts[12].id, personId: deepa.id, content: "Bikash, always insightful! More educators need to read this." },
+      { id: "cmt-15", postId: posts[13].id, personId: bikash.id, content: "Deepa, mentoring is rewarding. Learned as much from them!" },
+    ];
+
+    for (const comment of comments) {
+      await prisma.comment.upsert({
+        where: { id: comment.id },
+        update: {},
+        create: comment,
+      });
+    }
+    console.log("✅ 15 comments ready\n");
 
     console.log("🎉 Database seeded successfully!");
-    console.log("✨ Your TFN-Connect platform is ready!");
+    console.log("✨ TFN-Connect now has:");
+    console.log("   ✓ 8 diverse alumni/staff profiles");
+    console.log("   ✓ 7 job postings");
+    console.log("   ✓ 14 activity feed posts");
+    console.log("   ✓ 15 community comments");
+    console.log("   ✓ 6 job applications");
+    console.log("   ✓ Complete fellowship data");
   } catch (e) {
-    console.error("❌ Error:", e);
+    console.error("❌ Seeding error:", e);
     throw e;
   }
 }
@@ -247,599 +738,7 @@ async function main() {
 main()
   .then(async () => {
     await prisma.$disconnect();
-  })
-  .catch(async (e) => {
-    console.error(e);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
-
-const prisma = new PrismaClient();
-
-async function main() {
-  console.log("🌱 Starting database seed...");
-
-  // Test connection
-  try {
-    await prisma.$executeRaw`SELECT 1`;
-    console.log("✓ Database connection successful");
-  } catch (e) {
-    console.error("✗ Database connection failed:", e);
-    throw e;
-  }
-
-  // Clear existing data
-  try {
-    console.log("prisma.comment:", (prisma as any).comment);
-    console.log("prisma.comment.deleteMany:", (prisma as any).comment?.deleteMany);
-    await (prisma as any).comment.deleteMany({});
-  } catch (e) {
-    console.error("Error clearing comments:", e);
-  }
-
-  // ===== Skills =====
-  const skillsData = [
-    { name: "Leadership", category: "personal" },
-    { name: "Teaching", category: "personal" },
-    { name: "Collaboration", category: "interpersonal" },
-    { name: "MS Suite", category: "technical" },
-    { name: "Data Analytics", category: "technical" },
-    { name: "Curriculum Design", category: "personal" },
-    { name: "Public Speaking", category: "personal" },
-    { name: "Project Management", category: "technical" },
-  ];
-
-  const skills = await Promise.all(
-    skillsData.map((s) => prisma.skill.create({ data: s }))
-  );
-
-  console.log("✅ Skills created");
-
-  // ===== Geographic Data =====
-  const dang = await prisma.localGov.create({
-    data: {
-      name: "Dang",
-      province: "Lumbini",
-    },
-  });
-
-  const lumbini = await prisma.localGov.create({
-    data: {
-      name: "Kapilvastu",
-      province: "Lumbini",
-    },
-  });
-
-  console.log("✅ Regions created");
-
-  // ===== Schools =====
-  const abcSchool = await prisma.school.create({
-    data: {
-      name: "Shree ABC Secondary School",
-      district: "Gorahi",
-      localGovId: dang.id,
-      sector: "Education",
-      type: "secondary",
-    },
-  });
-
-  const xyzSchool = await prisma.school.create({
-    data: {
-      name: "Shree XYZ Primary School",
-      district: "Tulsipur",
-      localGovId: dang.id,
-      sector: "Education",
-      type: "primary",
-    },
-  });
-
-  const madhavSchool = await prisma.school.create({
-    data: {
-      name: "Madhav Academy",
-      district: "Itahari",
-      localGovId: lumbini.id,
-      sector: "Education",
-      type: "secondary",
-    },
-  });
-
-  console.log("✅ Schools created");
-
-  // ===== School Groups =====
-  await prisma.schoolGroup.create({
-    data: {
-      name: "Group 1",
-      groupName: "Group 1 - Dang East",
-      schoolId: abcSchool.id,
-    },
-  });
-
-  // ===== Cohorts =====
-  const tesroPaaila = await prisma.cohort.create({
-    data: {
-      name: "Tesro Paaila",
-      fellowshipNStart: 60,
-      fellowshipNEnd: 58,
-      trainingN: 10,
-      description: "2-year leadership fellowship program (2015-2017)",
-      start: new Date("2015-01-15"),
-      end: new Date("2017-01-15"),
-    },
-  });
-
-  const aatmaPaaila = await prisma.cohort.create({
-    data: {
-      name: "Aatma Paaila",
-      fellowshipNStart: 50,
-      fellowshipNEnd: 48,
-      trainingN: 8,
-      description: "2-year advanced leadership fellowship (2018-2020)",
-      start: new Date("2018-01-15"),
-      end: new Date("2020-01-15"),
-    },
-  });
-
-  console.log("✅ Cohorts created");
-
-  // ===== People: RAMESH SHARMA (Alumni) =====
-  const ramesh = await prisma.person.create({
-    data: {
-      firstName: "Ramesh",
-      lastName: "Sharma",
-      dob: new Date("1990-03-15"),
-      email1: "ramesh.sharma@example.com",
-      phone1: "98140123456",
-      linkedin: "https://linkedin.com/in/rameshsharma",
-      profileImage: "https://i.pravatar.cc/150?img=1",
-      bio: "Education leader passionate about transforming learning outcomes in rural Nepal. Tesro Paaila fellow with 8 years of experience.",
-      type: "alumni",
-      empStatus: "employed",
-      eduStatus: "completed",
-    },
-  });
-
-  // Ramesh Education
-  await prisma.education.create({
-    data: {
-      personId: ramesh.id,
-      institution: "Tribhuvan University",
-      level: "Bachelors",
-      name: "Bachelor of Education",
-      sector: "Education",
-      start: new Date("2008-01-15"),
-      end: new Date("2012-12-15"),
-    },
-  });
-
-  // Ramesh Fellowship
-  const rameshFellowship = await prisma.fellowship.create({
-    data: {
-      cohortId: tesroPaaila.id,
-      personId: ramesh.id,
-      years: 2,
-      start: new Date("2015-01-15"),
-      end: new Date("2017-01-15"),
-    },
-  });
-
-  // Ramesh Experience 1: ABC School
-  const rameshExp1 = await prisma.experience.create({
-    data: {
-      personId: ramesh.id,
-      orgName: "Shree ABC Secondary School",
-      title: "Program Coordinator",
-      sector: "Education",
-      type: "full_time",
-      description: "Led curriculum development and teacher training initiatives",
-      start: new Date("2017-02-01"),
-      end: new Date("2021-06-30"),
-      experienceSkills: {
-        create: [
-          { skillId: skills.find((s) => s.name === "Leadership")!.id },
-          { skillId: skills.find((s) => s.name === "Teaching")!.id },
-          { skillId: skills.find((s) => s.name === "Collaboration")!.id },
-        ],
-      },
-    },
-  });
-
-  // Ramesh Experience 2: Current Role
-  await prisma.experience.create({
-    data: {
-      personId: ramesh.id,
-      orgName: "Nepal Education Foundation",
-      title: "Program Director",
-      sector: "Education",
-      type: "full_time",
-      description: "Strategic oversight of education programs across 5 districts",
-      start: new Date("2021-07-01"),
-      end: null,
-      experienceSkills: {
-        create: [
-          { skillId: skills.find((s) => s.name === "Leadership")!.id },
-          { skillId: skills.find((s) => s.name === "Project Management")!.id },
-          { skillId: skills.find((s) => s.name === "MS Suite")!.id },
-        ],
-      },
-    },
-  });
-
-  // Ramesh Placement
-  await prisma.placement.create({
-    data: {
-      fellowshipId: rameshFellowship.id,
-      schoolId: abcSchool.id,
-      personId: ramesh.id,
-      title: "Program Coordinator",
-      startDate: new Date("2017-02-01"),
-      endDate: new Date("2021-06-30"),
-    },
-  });
-
-  console.log("✅ Ramesh Sharma (Alumni) created");
-
-  // ===== People: SITA THAPA (LDC/Staff) =====
-  const sita = await prisma.person.create({
-    data: {
-      firstName: "Sita",
-      lastName: "Thapa",
-      dob: new Date("1985-07-22"),
-      email1: "sita.thapa@tfn.org",
-      phone1: "98140654321",
-      profileImage: "https://i.pravatar.cc/150?img=2",
-      bio: "Leadership Development Coordinator for Tesro Paaila cohort. Manages 15 fellows and their placements across Lumbini Province.",
-      type: "LDC",
-      empStatus: "employed",
-      eduStatus: "completed",
-    },
-  });
-
-  // Sita Education
-  await prisma.education.create({
-    data: {
-      personId: sita.id,
-      institution: "Kathmandu University",
-      level: "Masters",
-      name: "Master of Arts in Development Studies",
-      sector: "Development",
-      start: new Date("2012-01-15"),
-      end: new Date("2014-12-15"),
-    },
-  });
-
-  // Sita Experience
-  await prisma.experience.create({
-    data: {
-      personId: sita.id,
-      orgName: "Teach For Nepal",
-      title: "Leadership Development Coordinator",
-      sector: "Education",
-      type: "full_time",
-      description: "Manages fellow development, placements, and cohort success metrics",
-      start: new Date("2017-06-01"),
-      end: null,
-      experienceSkills: {
-        create: [
-          { skillId: skills.find((s) => s.name === "Leadership")!.id },
-          { skillId: skills.find((s) => s.name === "Collaboration")!.id },
-          { skillId: skills.find((s) => s.name === "Data Analytics")!.id },
-        ],
-      },
-    },
-  });
-
-  // Sita LDC Assignment to Ramesh's Fellowship
-  await prisma.ldc.create({
-    data: {
-      personId: sita.id,
-      fellowshipId: rameshFellowship.id,
-    },
-  });
-
-  console.log("✅ Sita Thapa (LDC) created");
-
-  // ===== People: ANJALI POUDEL (Alumni, Currently Seeking) =====
-  const anjali = await prisma.person.create({
-    data: {
-      firstName: "Anjali",
-      lastName: "Poudel",
-      dob: new Date("1992-05-10"),
-      email1: "anjali.poudel@example.com",
-      phone1: "98140789012",
-      profileImage: "https://i.pravatar.cc/150?img=3",
-      bio: "Education specialist with focus on inclusive learning. Seeking workshop facilitator or curriculum design roles.",
-      type: "alumni",
-      empStatus: "seeking",
-      eduStatus: "completed",
-    },
-  });
-
-  // Anjali Education
-  await prisma.education.create({
-    data: {
-      personId: anjali.id,
-      institution: "Tribhuvan University",
-      level: "Bachelors",
-      name: "Bachelor of Education",
-      sector: "Education",
-      start: new Date("2010-01-15"),
-      end: new Date("2014-12-15"),
-    },
-  });
-
-  // Anjali Fellowship
-  const anjaliFellowship = await prisma.fellowship.create({
-    data: {
-      cohortId: tesroPaaila.id,
-      personId: anjali.id,
-      years: 2,
-      start: new Date("2015-01-15"),
-      end: new Date("2017-01-15"),
-    },
-  });
-
-  // Anjali Experience
-  const anjaliExp = await prisma.experience.create({
-    data: {
-      personId: anjali.id,
-      orgName: "Shree XYZ Primary School",
-      title: "Teacher & Curriculum Lead",
-      sector: "Education",
-      type: "full_time",
-      description: "Developed inclusive curriculum for multi-grade classrooms",
-      start: new Date("2017-02-01"),
-      end: new Date("2023-12-31"),
-      experienceSkills: {
-        create: [
-          { skillId: skills.find((s) => s.name === "Teaching")!.id },
-          { skillId: skills.find((s) => s.name === "Curriculum Design")!.id },
-          { skillId: skills.find((s) => s.name === "Collaboration")!.id },
-        ],
-      },
-    },
-  });
-
-  // Anjali Placement
-  await prisma.placement.create({
-    data: {
-      fellowshipId: anjaliFellowship.id,
-      schoolId: xyzSchool.id,
-      personId: anjali.id,
-      title: "Teacher",
-      startDate: new Date("2017-02-01"),
-      endDate: new Date("2023-12-31"),
-    },
-  });
-
-  console.log("✅ Anjali Poudel (Alumni) created");
-
-  // ===== People: PRADEEP KHATRI (Alumni, School Hiring) =====
-  const pradeep = await prisma.person.create({
-    data: {
-      firstName: "Pradeep",
-      lastName: "Khatri",
-      dob: new Date("1988-11-30"),
-      email1: "pradeep.khatri@example.com",
-      phone1: "98140345678",
-      profileImage: "https://i.pravatar.cc/150?img=4",
-      bio: "Principal at Madhav Academy. TFN Tesro Paaila alumni. Actively recruiting education professionals.",
-      type: "school",
-      empStatus: "employed",
-      eduStatus: "completed",
-    },
-  });
-
-  // Pradeep Education
-  await prisma.education.create({
-    data: {
-      personId: pradeep.id,
-      institution: "Tribhuvan University",
-      level: "Bachelors",
-      name: "Bachelor of Education",
-      sector: "Education",
-      start: new Date("2006-01-15"),
-      end: new Date("2010-12-15"),
-    },
-  });
-
-  // Pradeep Fellowship
-  const pradeepFellowship = await prisma.fellowship.create({
-    data: {
-      cohortId: aatmaPaaila.id,
-      personId: pradeep.id,
-      years: 2,
-      start: new Date("2018-01-15"),
-      end: new Date("2020-01-15"),
-    },
-  });
-
-  // Pradeep Experience
-  await prisma.experience.create({
-    data: {
-      personId: pradeep.id,
-      orgName: "Madhav Academy",
-      title: "Principal",
-      sector: "Education",
-      type: "full_time",
-      description: "Leading transformational initiatives in academic excellence and student welfare",
-      start: new Date("2020-02-01"),
-      end: null,
-      experienceSkills: {
-        create: [
-          { skillId: skills.find((s) => s.name === "Leadership")!.id },
-          { skillId: skills.find((s) => s.name === "Project Management")!.id },
-          { skillId: skills.find((s) => s.name === "Public Speaking")!.id },
-        ],
-      },
-    },
-  });
-
-  // Pradeep Placement
-  await prisma.placement.create({
-    data: {
-      fellowshipId: pradeepFellowship.id,
-      schoolId: madhavSchool.id,
-      personId: pradeep.id,
-      title: "Teacher",
-      startDate: new Date("2020-02-01"),
-      endDate: null,
-    },
-  });
-
-  console.log("✅ Pradeep Khatri (School) created");
-
-  // ===== Job Postings =====
-  const job1 = await prisma.jobPosting.create({
-    data: {
-      schoolId: madhavSchool.id,
-      createdById: pradeep.id,
-      title: "Math Coordinator",
-      description:
-        "Seeking experienced math educator to lead curriculum development and teacher training for secondary level. Preference for TFN alumni.",
-      sector: "Education",
-      location: "Itahari, Lumbini",
-      jobType: "full_time",
-      requiredSkills: JSON.stringify(["Teaching", "Curriculum Design", "Leadership"]),
-      status: "open",
-    },
-  });
-
-  const job2 = await prisma.jobPosting.create({
-    data: {
-      createdById: ramesh.id,
-      title: "Education Program Manager",
-      description:
-        "Nepal Education Foundation seeks experienced program manager for rural education initiatives. 3+ years management experience required.",
-      sector: "Education",
-      location: "Dang, Lumbini",
-      jobType: "full_time",
-      requiredSkills: JSON.stringify([
-        "Project Management",
-        "Leadership",
-        "Data Analytics",
-      ]),
-      status: "open",
-    },
-  });
-
-  const job3 = await prisma.jobPosting.create({
-    data: {
-      schoolId: abcSchool.id,
-      createdById: pradeep.id,
-      title: "School Administrator",
-      description:
-        "ABC School seeking administrator with TFN background to manage school operations and teacher development.",
-      sector: "Education",
-      location: "Gorahi, Dang",
-      jobType: "full_time",
-      requiredSkills: JSON.stringify(["Leadership", "Project Management", "Collaboration"]),
-      status: "open",
-    },
-  });
-
-  console.log("✅ Job Postings created");
-
-  // ===== Job Applications =====
-  await prisma.jobApplication.create({
-    data: {
-      jobPostingId: job1.id,
-      personId: anjali.id,
-      status: "applied",
-      message:
-        "I'm very interested in this role. My curriculum design experience aligns perfectly with your needs.",
-    },
-  });
-
-  await prisma.jobApplication.create({
-    data: {
-      jobPostingId: job3.id,
-      personId: anjali.id,
-      status: "reviewed",
-      message: "Excited about contributing to ABC School's mission.",
-    },
-  });
-
-  console.log("✅ Job Applications created");
-
-  // ===== Activity Feed: Posts =====
-  const post1 = await prisma.post.create({
-    data: {
-      personId: ramesh.id,
-      content:
-        "🎓 Excited to announce that I've just completed a Master's in Educational Leadership from Harvard! Ready to bring these insights back to Nepal's education sector. #TFNAlumni #Leadership",
-      postType: "achievement",
-      likes: 24,
-    },
-  });
-
-  const post2 = await prisma.post.create({
-    data: {
-      personId: sita.id,
-      content:
-        "📊 Tesro Paaila cohort update: 58/60 fellows employed, 85% in education sector, 12+ placed as leaders. Proud of our community's impact! #TFN #Impact",
-      postType: "career_update",
-      likes: 18,
-    },
-  });
-
-  const post3 = await prisma.post.create({
-    data: {
-      personId: pradeep.id,
-      content:
-        "🏫 Madhav Academy is hiring! We're looking for passionate educators to join our team. If you're interested in transforming rural education, apply now. Link in bio.",
-      postType: "job_posting",
-      likes: 12,
-    },
-  });
-
-  const post4 = await prisma.post.create({
-    data: {
-      personId: anjali.id,
-      content:
-        "After 6 years of teaching in rural Nepal, I'm now exploring new opportunities. Looking for workshop facilitator or curriculum design roles. Open to opportunities! 🌱",
-      postType: "career_update",
-      likes: 8,
-    },
-  });
-
-  console.log("✅ Posts created");
-
-  // ===== Comments =====
-  await prisma.comment.create({
-    data: {
-      postId: post1.id,
-      personId: sita.id,
-      content:
-        "Congratulations Ramesh! This is amazing news. The education sector in Nepal will benefit greatly from your new skills!",
-    },
-  });
-
-  await prisma.comment.create({
-    data: {
-      postId: post2.id,
-      personId: ramesh.id,
-      content:
-        "Sita, these numbers are incredible. The Tesro Paaila impact is undeniable. Let's keep pushing forward!",
-    },
-  });
-
-  await prisma.comment.create({
-    data: {
-      postId: post3.id,
-      personId: anjali.id,
-      content:
-        "Pradeep, I'd love to discuss the Math Coordinator position. Can we connect?",
-    },
-  });
-
-  console.log("✅ Comments created");
-
-  console.log("🎉 Database seeded successfully!");
-}
-
-main()
-  .then(async () => {
-    await prisma.$disconnect();
+    console.log("\n✨ Seed complete!");
   })
   .catch(async (e) => {
     console.error(e);
