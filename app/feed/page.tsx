@@ -74,7 +74,6 @@ export default function FeedPage() {
             <p className="text-gray-600">No posts yet. Be the first to share!</p>
           </div>
         )}
-        </div>
       </div>
     </div>
   )
