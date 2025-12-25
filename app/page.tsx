@@ -16,12 +16,12 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center">
             <Link href="/alumni">
-              <Button size="sm" variant="secondary" className="w-full sm:w-auto">
+              <Button variant="secondary" className="w-full sm:w-auto px-4 py-2">
                 👥 Explore Alumni
               </Button>
             </Link>
             <Link href="/jobs">
-              <Button size="sm" variant="secondary" className="w-full sm:w-auto">
+              <Button variant="secondary" className="w-full sm:w-auto px-4 py-2">
                 💼 Browse Jobs
               </Button>
             </Link>

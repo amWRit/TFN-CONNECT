@@ -46,10 +46,10 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="w-full bg-gray-50 min-h-screen">
+    <div className="w-full bg-neutral-50 min-h-screen">
       <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
         <div className="mb-8 sm:mb-12">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-gray-900">Activity Feed</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-neutral-900">Activity Feed</h1>
           <p className="text-gray-600 text-sm sm:text-base">
             Recent updates from the TFN community
           </p>

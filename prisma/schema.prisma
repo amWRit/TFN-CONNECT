@@ -36,6 +36,7 @@ model Person {
   fellowships   Fellowship[]
   placements    Placement[]
   posts         Post[]
+  comments      Comment[]
   ldcManaging   LDC[]     @relation("LDCManager")
   jobPostings   JobPosting[]
   jobApplications JobApplication[]
@@ -240,6 +241,7 @@ model Comment {
   content       String
   
   post          Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  person        Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

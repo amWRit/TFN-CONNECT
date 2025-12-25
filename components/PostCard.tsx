@@ -50,39 +50,39 @@ export function PostCard({
   };
 
   return (
-    <Card className="border-gray-100 bg-white hover:shadow-md hover:border-blue-200 transition rounded-xl\">
+    <Card className="border-gray-100 bg-white hover:shadow-md hover:border-blue-200 transition rounded-xl">
       <CardHeader>
-        <div className="flex flex-col sm:flex-row items-start justify-between gap-3\">
-          <div className="flex items-start gap-3 flex-1\">
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
+          <div className="flex items-start gap-3 flex-1">
             {author.profileImage && (
               <img
                 src={author.profileImage}
                 alt={author.firstName}
-                className=\"h-10 w-10 rounded-full flex-shrink-0\"
+                className="h-10 w-10 rounded-full flex-shrink-0"
               />
             )}
-            <div className=\"min-w-0 flex-1\">
-              <CardTitle className=\"text-base text-gray-900\">
+            <div className="min-w-0 flex-1">
+              <CardTitle className="text-base text-gray-900">
                 {author.firstName} {author.lastName}
               </CardTitle>
-              <CardDescription className=\"text-xs text-gray-500\">
+              <CardDescription className="text-xs text-gray-500">
                 {formatDate(createdAt)}
               </CardDescription>
             </div>
           </div>
-          <Badge className={`${getPostTypeColor(postType)} flex-shrink-0 text-xs\"}>
-            {postType.replace(/_/g, \" \")}
+          <Badge className={`${getPostTypeColor(postType)} flex-shrink-0 text-xs`}>
+            {postType.replace(/_/g, " ")}
           </Badge>
         </div>
       </CardHeader>
       <CardContent>
-        <p className=\"text-sm text-gray-700 mb-4 leading-relaxed\">{content}</p>
-        <div className=\"flex gap-6 text-xs sm:text-sm text-gray-600\">
-          <button className=\"flex items-center gap-1.5 hover:text-red-500 transition\">
-            <Heart className=\"h-4 w-4\" /> <span className=\"hidden sm:inline\">{likes}</span>
+        <p className="text-sm text-gray-700 mb-4 leading-relaxed">{content}</p>
+        <div className="flex gap-6 text-xs sm:text-sm text-gray-600">
+          <button className="flex items-center gap-1.5 hover:text-red-500 transition">
+            <Heart className="h-4 w-4" /> <span className="hidden sm:inline">{likes}</span>
           </button>
-          <button className=\"flex items-center gap-1.5 hover:text-blue-500 transition\">
-            <MessageCircle className=\"h-4 w-4\" /> <span className=\"hidden sm:inline\">{comments}</span>
+          <button className="flex items-center gap-1.5 hover:text-blue-500 transition">
+            <MessageCircle className="h-4 w-4" /> <span className="hidden sm:inline">{comments}</span>
           </button>
         </div>
       </CardContent>

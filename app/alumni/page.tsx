@@ -94,13 +94,13 @@ export default function AlumniPage() {
                   </CardTitle>
                   
                   {person.experiences && person.experiences[0] && (
-                    <CardDescription className="text-sm text-gray-600 font-medium">
-                      <div className="flex items-center gap-1 mt-2">
+                    <div className="text-sm text-gray-600 font-medium mt-2">
+                      <div className="flex items-center gap-1">
                         <span className="text-lg">💼</span>
                         <span>{person.experiences[0].title}</span>
                       </div>
                       <div className="text-xs text-gray-500 mt-1">{person.experiences[0].orgName}</div>
-                    </CardDescription>
+                    </div>
                   )}
                 </CardHeader>
                 
