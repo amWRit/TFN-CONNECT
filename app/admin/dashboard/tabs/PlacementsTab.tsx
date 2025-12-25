@@ -6,10 +6,12 @@ import { Button } from '@/components/ui/button';
 
 interface Placement {
   id: string;
+  name?: string;
   schoolId: string;
   managerId: string;
   fellowCount: number;
   subjects: string[];
+  school?: School;
 }
 
 interface School {
