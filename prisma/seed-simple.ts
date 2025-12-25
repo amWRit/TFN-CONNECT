@@ -1,6 +1,5 @@
 // prisma/seed.ts - Comprehensive seed script
 import { PrismaClient, PersonType, EduStatus, EmpStatus, SchoolType } from '@prisma/client';
-import { cuid } from '@paralleldrive/cuid2';
 
 const prisma = new PrismaClient();
 
