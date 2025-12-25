@@ -1,6 +1,4 @@
-import type { Config } from "eslint"
-
-const config: Config = {
+const config = {
   extends: ["next"],
   rules: {
     "react/no-unescaped-entities": "off",

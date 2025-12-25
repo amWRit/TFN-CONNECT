@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ExperienceCard } from "@/components/ExperienceCard"
+import { DefaultProfilePicture } from "@/components/DefaultProfilePicture"
 import { Button } from "@/components/ui/button"
 import { MessageSquare, UserPlus } from "lucide-react"
 
@@ -106,34 +107,35 @@ export default function AlumniDetailPage({
         <Card className="bg-white border-2 border-indigo-500 shadow-lg rounded-3xl overflow-hidden mb-8">
           {/* Cover gradient with name overlay */}
           <div className="relative h-40 bg-gradient-to-r from-indigo-500 to-purple-500">
-            <div className="absolute inset-0 flex flex-col justify-end px-6 sm:px-8 pb-6">
-              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">
-                {person.firstName} {person.lastName}
-              </h1>
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge className="text-xs font-semibold bg-white text-indigo-700">⭐ {person.type}</Badge>
-                <Badge className={`text-xs font-semibold ${
-                  person.empStatus === "employed"
-                    ? "bg-green-300 text-green-900"
-                    : "bg-blue-300 text-blue-900"
-                }`}>
-                  {person.empStatus === "employed" && "✓ Employed"}
-                  {person.empStatus === "seeking" && "🔍 Seeking"}
-                </Badge>
+            <div className="absolute inset-0 flex items-end px-6 sm:px-8 pb-6 gap-6">
+              {person.profileImage ? (
+                <img
+                  src={person.profileImage}
+                  alt={person.firstName}
+                  className="h-28 w-28 rounded-2xl border-4 border-indigo-200 shadow-md object-cover flex-shrink-0"
+                />
+              ) : (
+                <div className="flex-shrink-0">
+                  <DefaultProfilePicture name={`${person.firstName} ${person.lastName}`} />
+                </div>
+              )}
+              <div className="flex flex-col justify-end pb-2 flex-1">
+                <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
+                  {person.firstName} {person.lastName}
+                </h1>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge className="text-xs font-semibold bg-red-100 text-red-700 pointer-events-none">⭐ {person.type}</Badge>
+                  <Badge className="text-xs font-semibold bg-red-100 text-red-700 pointer-events-none">
+                    {person.empStatus === "employed" && "✓ Employed"}
+                    {person.empStatus === "seeking" && "🔍 Seeking"}
+                  </Badge>
+                </div>
               </div>
             </div>
           </div>
           
           <div className="relative px-6 sm:px-8 pt-6 pb-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-start gap-6">
-              {person.profileImage && (
-                <img
-                  src={person.profileImage}
-                  alt={person.firstName}
-                  className="h-28 w-28 rounded-2xl border-4 border-indigo-200 shadow-md object-cover -mt-20"
-                />
-              )}
-              
+            <div className="flex flex-col gap-6">
               <div className="flex-1">
                 {person.bio && (
                   <p className="text-gray-600 text-base leading-relaxed mb-5">
@@ -214,49 +216,56 @@ export default function AlumniDetailPage({
         <div className="space-y-6">
           {/* Fellowships */}
           {person.fellowships.length > 0 && (
-            <Card className="border-2 border-blue-400 rounded-xl hover:shadow-lg hover:border-blue-500 transition bg-gradient-to-br from-blue-50 to-cyan-50">
-              <CardHeader>
-                <CardTitle>Fellowships</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {person.fellowships.map((fellowship) => (
-                  <div key={fellowship.id} className="mb-4">
-                    <p className="font-semibold">{fellowship.cohort.name}</p>
+            <div>
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <span className="text-2xl">🎯</span>
+                Fellowships
+              </h2>
+              <div className="space-y-4">
+              {person.fellowships.map((fellowship) => (
+                <Card key={fellowship.id} className="border-2 border-blue-400 rounded-xl hover:shadow-lg hover:border-blue-500 transition bg-white">
+                  <CardHeader>
+                    <CardTitle>{fellowship.cohort.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <p className="text-sm text-gray-600">
-                      {fellowship.years} years
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {new Date(fellowship.start).getFullYear()} -{" "}
+                      {fellowship.years} years · {new Date(fellowship.start).getFullYear()} -{" "}
                       {fellowship.end
                         ? new Date(fellowship.end).getFullYear()
                         : "Present"}
                     </p>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              ))}
+              </div>
+            </div>
           )}
 
           {/* Placements */}
           {person.placements.length > 0 && (
-            <Card className="border-2 border-pink-400 rounded-xl hover:shadow-lg hover:border-pink-500 transition bg-gradient-to-br from-purple-50 to-pink-50">
-              <CardHeader>
-                <CardTitle>Placements</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {person.placements.map((placement) => (
-                  <div key={placement.id} className="mb-4">
-                    <p className="font-semibold">{placement.school.name}</p>
-                    <p className="text-xs text-gray-500">
+            <div>
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <span className="text-2xl">🏫</span>
+                Placements
+              </h2>
+              <div className="space-y-4">
+              {person.placements.map((placement) => (
+                <Card key={placement.id} className="border-2 border-pink-400 rounded-xl hover:shadow-lg hover:border-pink-500 transition bg-white">
+                  <CardHeader>
+                    <CardTitle>{placement.school.name}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-600">
                       {new Date(placement.startDate).getFullYear()} -{" "}
                       {placement.endDate
                         ? new Date(placement.endDate).getFullYear()
                         : "Present"}
                     </p>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              ))}
+              </div>
+            </div>
           )}
         </div>
       </div>

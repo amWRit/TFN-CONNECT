@@ -27,10 +27,10 @@ export function JobPostingCard({
   onApply,
 }: JobPostingProps) {
   const jobTypeColors: { [key: string]: string } = {
-    full_time: "bg-blue-100 text-blue-800",
-    part_time: "bg-purple-100 text-purple-800",
-    contract: "bg-orange-100 text-orange-800",
-    freelance: "bg-green-100 text-green-800",
+    full_time: "bg-red-100 text-red-700",
+    part_time: "bg-red-100 text-red-700",
+    contract: "bg-red-100 text-red-700",
+    freelance: "bg-red-100 text-red-700",
   };
 
   return (
@@ -42,7 +42,7 @@ export function JobPostingCard({
         <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-3 mb-3">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <Badge className={jobTypeColors[jobType] || "bg-gray-100 text-gray-800"}>
+              <Badge className={`${jobTypeColors[jobType] || "bg-gray-100 text-gray-800"} pointer-events-none`}>
                 {jobType === "full_time" && "💼 Full-time"}
                 {jobType === "part_time" && "⏰ Part-time"}
                 {jobType === "contract" && "📋 Contract"}
@@ -84,7 +84,7 @@ export function JobPostingCard({
             <p className="text-xs font-bold mb-2 text-gray-900 uppercase tracking-wide">Required Skills:</p>
             <div className="flex flex-wrap gap-2">
               {requiredSkills.map((skill) => (
-                <Badge key={skill} variant="secondary" className="text-xs font-medium">
+                <Badge key={skill} className="text-xs font-medium bg-red-100 text-red-700 pointer-events-none">
                   ✓ {skill}
                 </Badge>
               ))}

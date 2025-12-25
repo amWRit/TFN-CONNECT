@@ -17,7 +17,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsxImportSource": "react",
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     /* Path mapping */
     "baseUrl": ".",
     "paths": {
@@ -46,7 +46,8 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"
