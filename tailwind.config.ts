@@ -52,6 +52,12 @@ const config = {
       },
     },
   },
+  safelist: [
+    'bg-gray-50',
+    'text-gray-900',
+    'bg-gray-600',
+    'text-gray-600',
+  ],
   plugins: [],
 } satisfies Config
 
