@@ -18,13 +18,8 @@ const nextConfig: NextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
-  // Edge runtime compatibility
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.fallback = { fs: false };
-    }
-    return config;
-  },
+  // Use Turbopack for Next.js 15
+  turbopack: {},
 }
 
 export default nextConfig
