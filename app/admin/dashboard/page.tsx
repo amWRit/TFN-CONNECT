@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,7 @@ import ProgramsTab from './tabs/ProgramsTab';
 import PlacementsTab from './tabs/PlacementsTab';
 import PeopleTab from './tabs/PeopleTab';
 
-export default function AdminDashboard() {
+function AdminDashboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [currentTab, setCurrentTab] = useState('geography');
@@ -87,5 +88,13 @@ export default function AdminDashboard() {
         {currentTab === 'people' && <PeopleTab />}
       </div>
     </div>
+  );
+}
+
+export default function AdminDashboard() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>}>
+      <AdminDashboardContent />
+    </Suspense>
   );
 }
