@@ -46,15 +46,16 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-12">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Activity Feed</h1>
-        <p className="text-gray-600">
-          Recent updates from the TFN community
-        </p>
-      </div>
+    <div className="w-full bg-gray-50 min-h-screen">
+      <div className="max-w-4xl mx-auto px-4 py-8 sm:py-12">
+        <div className="mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-gray-900">Activity Feed</h1>
+          <p className="text-gray-600 text-sm sm:text-base">
+            Recent updates from the TFN community
+          </p>
+        </div>
 
-      <div>
+        <div className="space-y-3 sm:space-y-4">
         {posts.map((post) => (
           <PostCard
             key={post.id}
@@ -68,11 +69,13 @@ export default function FeedPage() {
         ))}
       </div>
 
-      {posts.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-600">No posts yet. Be the first to share!</p>
+        {posts.length === 0 && (
+          <div className="text-center py-12 bg-white rounded-lg">
+            <p className="text-gray-600">No posts yet. Be the first to share!</p>
+          </div>
+        )}
         </div>
-      )}
+      </div>
     </div>
   )
 }
