@@ -78,9 +78,7 @@ export default function ManageTab() {
           </div>
 
           {/* Show only the selected sub-tab content */}
-          {fellowshipSubTab !== 'placements' && (
-            <GeographyTab activeTab={fellowshipSubTab} />
-          )}
+          <GeographyTab activeTab={fellowshipSubTab} />
         </div>
       )}
 

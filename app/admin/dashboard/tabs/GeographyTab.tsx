@@ -115,6 +115,24 @@ export default function GeographyTab({ activeTab = 'localgovs' }: { activeTab?: 
     }
   };
 
+  const createCohort = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/cohorts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cohortForm),
+      });
+      if (res.ok) {
+        setCohortForm({ name: '', startDate: '', endDate: '' });
+        setShowCohortForm(false);
+        fetchData();
+      }
+    } catch (error) {
+      console.error('Failed to create Cohort:', error);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Local Govs */}
