@@ -24,18 +24,21 @@ interface SchoolGroup {
   localGovId: string;
 }
 
-export default function GeographyTab() {
+export default function GeographyTab({ activeTab = 'localgovs' }: { activeTab?: string } = {}) {
   const [localGovs, setLocalGovs] = useState<LocalGov[]>([]);
   const [schools, setSchools] = useState<School[]>([]);
   const [schoolGroups, setSchoolGroups] = useState<SchoolGroup[]>([]);
+  const [cohorts, setCohorts] = useState<any[]>([]);
 
   const [showLocalGovForm, setShowLocalGovForm] = useState(false);
   const [showSchoolForm, setShowSchoolForm] = useState(false);
   const [showGroupForm, setShowGroupForm] = useState(false);
+  const [showCohortForm, setShowCohortForm] = useState(false);
 
   const [localGovForm, setLocalGovForm] = useState({ name: '', province: '' });
   const [schoolForm, setSchoolForm] = useState({ name: '', localGovId: '', district: '', type: 'SECONDARY' });
   const [groupForm, setGroupForm] = useState({ name: '', localGovId: '' });
+  const [cohortForm, setCohortForm] = useState({ name: '', startDate: '', endDate: '' });
 
   useEffect(() => {
     fetchData();
@@ -43,14 +46,16 @@ export default function GeographyTab() {
 
   const fetchData = async () => {
     try {
-      const [lgRes, sRes, sgRes] = await Promise.all([
+      const [lgRes, sRes, sgRes, cRes] = await Promise.all([
         fetch('/api/localgovs'),
         fetch('/api/schools'),
         fetch('/api/schoolgroups'),
+        fetch('/api/cohorts'),
       ]);
       if (lgRes.ok) setLocalGovs(await lgRes.json());
       if (sRes.ok) setSchools(await sRes.json());
       if (sgRes.ok) setSchoolGroups(await sgRes.json());
+      if (cRes.ok) setCohorts(await cRes.json());
     } catch (error) {
       console.error('Failed to fetch data:', error);
     }
@@ -110,160 +115,236 @@ export default function GeographyTab() {
     }
   };
 
+  const createCohort = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/cohorts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(cohortForm),
+      });
+      if (res.ok) {
+        setCohortForm({ name: '', startDate: '', endDate: '' });
+        setShowCohortForm(false);
+        fetchData();
+      }
+    } catch (error) {
+      console.error('Failed to create Cohort:', error);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Local Govs */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Local Governments</h2>
-          <Button onClick={() => setShowLocalGovForm(!showLocalGovForm)}>
-            {showLocalGovForm ? 'Cancel' : '+ Add LocalGov'}
-          </Button>
-        </div>
+      {activeTab === 'localgovs' && (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Local Governments</h2>
+            <Button onClick={() => setShowLocalGovForm(!showLocalGovForm)}>
+              {showLocalGovForm ? 'Cancel' : '+ Add LocalGov'}
+            </Button>
+          </div>
 
-        {showLocalGovForm && (
-          <Card className="p-6 mb-4">
-            <form onSubmit={createLocalGov} className="space-y-4">
-              <input
-                type="text"
-                placeholder="Name (e.g., Dang)"
-                value={localGovForm.name}
-                onChange={(e) => setLocalGovForm({ ...localGovForm, name: e.target.value })}
-                className="w-full px-3 py-2 border rounded"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Province (e.g., Lumbini)"
-                value={localGovForm.province}
-                onChange={(e) => setLocalGovForm({ ...localGovForm, province: e.target.value })}
-                className="w-full px-3 py-2 border rounded"
-                required
-              />
-              <Button type="submit" className="w-full">Create</Button>
-            </form>
-          </Card>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {localGovs.map((lg) => (
-            <Card key={lg.id} className="p-4">
-              <h3 className="font-bold">{lg.name}</h3>
-              <p className="text-sm text-gray-600">{lg.province}</p>
+          {showLocalGovForm && (
+            <Card className="p-6 mb-4">
+              <form onSubmit={createLocalGov} className="space-y-4">
+                <input
+                  type="text"
+                  placeholder="Name (e.g., Dang)"
+                  value={localGovForm.name}
+                  onChange={(e) => setLocalGovForm({ ...localGovForm, name: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Province (e.g., Lumbini)"
+                  value={localGovForm.province}
+                  onChange={(e) => setLocalGovForm({ ...localGovForm, province: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                  required
+                />
+                <Button type="submit" className="w-full">Create</Button>
+              </form>
             </Card>
-          ))}
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {localGovs.map((lg) => (
+              <Card key={lg.id} className="p-4">
+                <h3 className="font-bold">{lg.name}</h3>
+                <p className="text-sm text-gray-600">{lg.province}</p>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Schools */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Schools</h2>
-          <Button onClick={() => setShowSchoolForm(!showSchoolForm)}>
-            {showSchoolForm ? 'Cancel' : '+ Add School'}
-          </Button>
-        </div>
+      {activeTab === 'schools' && (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Schools</h2>
+            <Button onClick={() => setShowSchoolForm(!showSchoolForm)}>
+              {showSchoolForm ? 'Cancel' : '+ Add School'}
+            </Button>
+          </div>
 
-        {showSchoolForm && (
-          <Card className="p-6 mb-4">
-            <form onSubmit={createSchool} className="space-y-4">
-              <input
-                type="text"
-                placeholder="School Name"
-                value={schoolForm.name}
-                onChange={(e) => setSchoolForm({ ...schoolForm, name: e.target.value })}
-                className="w-full px-3 py-2 border rounded"
-                required
-              />
-              <select
-                value={schoolForm.localGovId}
-                onChange={(e) => setSchoolForm({ ...schoolForm, localGovId: e.target.value })}
-                className="w-full px-3 py-2 border rounded"
-                required
-              >
-                <option value="">Select Local Government</option>
-                {localGovs.map((lg) => (
-                  <option key={lg.id} value={lg.id}>{lg.name}</option>
-                ))}
-              </select>
-              <input
-                type="text"
-                placeholder="District"
-                value={schoolForm.district}
-                onChange={(e) => setSchoolForm({ ...schoolForm, district: e.target.value })}
-                className="w-full px-3 py-2 border rounded"
-                required
-              />
-              <select
-                value={schoolForm.type}
-                onChange={(e) => setSchoolForm({ ...schoolForm, type: e.target.value })}
-                className="w-full px-3 py-2 border rounded"
-              >
-                <option value="PRIMARY">Primary</option>
-                <option value="SECONDARY">Secondary</option>
-                <option value="HIGHER">Higher</option>
-              </select>
-              <Button type="submit" className="w-full">Create School</Button>
-            </form>
-          </Card>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {schools.map((s) => (
-            <Card key={s.id} className="p-4">
-              <h3 className="font-bold">{s.name}</h3>
-              <p className="text-sm text-gray-600">{s.district} • {s.type || 'N/A'}</p>
-              <p className="text-xs text-gray-500">LocalGov: {s.localGovId}</p>
+          {showSchoolForm && (
+            <Card className="p-6 mb-4">
+              <form onSubmit={createSchool} className="space-y-4">
+                <input
+                  type="text"
+                  placeholder="School Name"
+                  value={schoolForm.name}
+                  onChange={(e) => setSchoolForm({ ...schoolForm, name: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                  required
+                />
+                <select
+                  value={schoolForm.localGovId}
+                  onChange={(e) => setSchoolForm({ ...schoolForm, localGovId: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                  required
+                >
+                  <option value="">Select Local Government</option>
+                  {localGovs.map((lg) => (
+                    <option key={lg.id} value={lg.id}>{lg.name}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  placeholder="District"
+                  value={schoolForm.district}
+                  onChange={(e) => setSchoolForm({ ...schoolForm, district: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                  required
+                />
+                <select
+                  value={schoolForm.type}
+                  onChange={(e) => setSchoolForm({ ...schoolForm, type: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                >
+                  <option value="PRIMARY">Primary</option>
+                  <option value="SECONDARY">Secondary</option>
+                  <option value="HIGHER">Higher</option>
+                </select>
+                <Button type="submit" className="w-full">Create School</Button>
+              </form>
             </Card>
-          ))}
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {schools.map((s) => (
+              <Card key={s.id} className="p-4">
+                <h3 className="font-bold">{s.name}</h3>
+                <p className="text-sm text-gray-600">{s.district} • {s.type || 'N/A'}</p>
+                <p className="text-xs text-gray-500">LocalGov: {s.localGovId}</p>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* School Groups */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">School Groups</h2>
-          <Button onClick={() => setShowGroupForm(!showGroupForm)}>
-            {showGroupForm ? 'Cancel' : '+ Add Group'}
-          </Button>
-        </div>
+      {activeTab === 'schoolgroups' && (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">School Groups</h2>
+            <Button onClick={() => setShowGroupForm(!showGroupForm)}>
+              {showGroupForm ? 'Cancel' : '+ Add Group'}
+            </Button>
+          </div>
 
-        {showGroupForm && (
-          <Card className="p-6 mb-4">
-            <form onSubmit={createSchoolGroup} className="space-y-4">
-              <input
-                type="text"
-                placeholder="Group Name"
-                value={groupForm.name}
-                onChange={(e) => setGroupForm({ ...groupForm, name: e.target.value })}
-                className="w-full px-3 py-2 border rounded"
-                required
-              />
-              <select
-                value={groupForm.localGovId}
-                onChange={(e) => setGroupForm({ ...groupForm, localGovId: e.target.value })}
-                className="w-full px-3 py-2 border rounded"
-                required
-              >
-                <option value="">Select Local Government</option>
-                {localGovs.map((lg) => (
-                  <option key={lg.id} value={lg.id}>{lg.name}</option>
-                ))}
-              </select>
-              <Button type="submit" className="w-full">Create Group</Button>
-            </form>
-          </Card>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {schoolGroups.map((sg) => (
-            <Card key={sg.id} className="p-4">
-              <h3 className="font-bold">{sg.name}</h3>
-              <p className="text-xs text-gray-500">LocalGov: {sg.localGovId}</p>
+          {showGroupForm && (
+            <Card className="p-6 mb-4">
+              <form onSubmit={createSchoolGroup} className="space-y-4">
+                <input
+                  type="text"
+                  placeholder="Group Name"
+                  value={groupForm.name}
+                  onChange={(e) => setGroupForm({ ...groupForm, name: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                  required
+                />
+                <select
+                  value={groupForm.localGovId}
+                  onChange={(e) => setGroupForm({ ...groupForm, localGovId: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                  required
+                >
+                  <option value="">Select Local Government</option>
+                  {localGovs.map((lg) => (
+                    <option key={lg.id} value={lg.id}>{lg.name}</option>
+                  ))}
+                </select>
+                <Button type="submit" className="w-full">Create Group</Button>
+              </form>
             </Card>
-          ))}
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {schoolGroups.map((sg) => (
+              <Card key={sg.id} className="p-4">
+                <h3 className="font-bold">{sg.name}</h3>
+                <p className="text-xs text-gray-500">LocalGov: {sg.localGovId}</p>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Cohorts */}
+      {activeTab === 'cohorts' && (
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Cohorts</h2>
+            <Button onClick={() => setShowCohortForm(!showCohortForm)}>
+              {showCohortForm ? 'Cancel' : '+ Add Cohort'}
+            </Button>
+          </div>
+
+          {showCohortForm && (
+            <Card className="p-6 mb-4">
+              <form onSubmit={createCohort} className="space-y-4">
+                <input
+                  type="text"
+                  placeholder="Cohort Name (e.g., Tesro Paaila)"
+                  value={cohortForm.name}
+                  onChange={(e) => setCohortForm({ ...cohortForm, name: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                  required
+                />
+                <input
+                  type="date"
+                  placeholder="Start Date"
+                  value={cohortForm.startDate}
+                  onChange={(e) => setCohortForm({ ...cohortForm, startDate: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                />
+                <input
+                  type="date"
+                  placeholder="End Date"
+                  value={cohortForm.endDate}
+                  onChange={(e) => setCohortForm({ ...cohortForm, endDate: e.target.value })}
+                  className="w-full px-3 py-2 border rounded"
+                />
+                <Button type="submit" className="w-full">Create Cohort</Button>
+              </form>
+            </Card>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {cohorts.map((c) => (
+              <Card key={c.id} className="p-4">
+                <h3 className="font-bold">{c.name}</h3>
+                {c.startDate && <p className="text-sm text-gray-600">Start: {new Date(c.startDate).toLocaleDateString()}</p>}
+                {c.endDate && <p className="text-sm text-gray-600">End: {new Date(c.endDate).toLocaleDateString()}</p>}
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
