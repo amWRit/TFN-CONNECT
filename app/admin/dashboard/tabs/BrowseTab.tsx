@@ -103,24 +103,22 @@ export default function BrowseTab() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Browse Data</h2>
-        <div className="flex gap-2 mb-6 flex-wrap">
-          {viewOptions.map((option) => (
-            <button
-              key={option.id}
-              onClick={() => setView(option.id as BrowseView)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                view === option.id
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+    <div className="space-y-4">
+      {/* Section nav removed for compactness */}
+      <div className="flex gap-1 mb-4 flex-wrap">
+        {viewOptions.map((option) => (
+          <button
+            key={option.id}
+            onClick={() => setView(option.id as BrowseView)}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              view === option.id
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            {option.label}
+          </button>
+        ))}
       </div>
 
       {loading ? (
@@ -128,10 +126,10 @@ export default function BrowseTab() {
       ) : (
         <div className="space-y-2">
           {data.length === 0 ? (
-            <Card className="p-6 text-center text-gray-500">No data found</Card>
+            <Card className="p-3 text-center text-gray-500 text-sm">No data found</Card>
           ) : (
             data.map((item) => (
-              <Card key={item.id} className="p-4 hover:shadow-md transition">
+              <Card key={item.id} className="p-3 hover:shadow-md transition text-sm">
                 {view === 'people' && (
                   <div className="flex justify-between items-start">
                     <div>

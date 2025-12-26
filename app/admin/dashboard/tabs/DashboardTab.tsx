@@ -83,9 +83,9 @@ export default function DashboardTab() {
   }, []);
 
   const StatCard = ({ label, value }: { label: string; value: number }) => (
-    <Card className="p-6">
-      <p className="text-gray-600 text-sm font-medium mb-2">{label}</p>
-      <p className="text-4xl font-bold text-blue-600">{value}</p>
+    <Card className="p-3 md:p-4">
+      <p className="text-gray-600 text-xs font-medium mb-1">{label}</p>
+      <p className="text-2xl md:text-3xl font-bold text-blue-600">{value}</p>
     </Card>
   );
 
@@ -94,37 +94,25 @@ export default function DashboardTab() {
   }
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Overview</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <StatCard label="Total People" value={stats.totalPeople} />
-          <StatCard label="Alumni" value={stats.totalAlumni} />
-          <StatCard label="Staff" value={stats.totalStaff} />
-        </div>
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <StatCard label="Total People" value={stats.totalPeople} />
+        <StatCard label="Alumni" value={stats.totalAlumni} />
+        <StatCard label="Staff" value={stats.totalStaff} />
       </div>
-
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Fellowship Program</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <StatCard label="Schools" value={stats.totalSchools} />
-          <StatCard label="Placements" value={stats.totalPlacements} />
-          <StatCard label="Cohorts" value={stats.totalCohorts} />
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <StatCard label="Schools" value={stats.totalSchools} />
+        <StatCard label="Placements" value={stats.totalPlacements} />
+        <StatCard label="Cohorts" value={stats.totalCohorts} />
       </div>
-
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Fellowships & Activity</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <StatCard label="Fellowships" value={stats.totalFellowships} />
-          <StatCard label="Job Postings" value={stats.totalJobPostings} />
-          <StatCard label="Posts" value={stats.totalPosts} />
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <StatCard label="Fellowships" value={stats.totalFellowships} />
+        <StatCard label="Job Postings" value={stats.totalJobPostings} />
+        <StatCard label="Posts" value={stats.totalPosts} />
       </div>
-
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <h3 className="font-bold text-blue-900 mb-2">Future Feature</h3>
-        <p className="text-blue-700 text-sm">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
+        <h3 className="font-bold text-blue-900 mb-1 text-base">Future Feature</h3>
+        <p className="text-blue-700">
           Alumni will be able to create and manage their own profiles, including education, employment history, and fellowship details.
         </p>
       </div>

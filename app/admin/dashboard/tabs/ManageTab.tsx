@@ -16,46 +16,44 @@ export default function ManageTab() {
   const [fellowshipSubTab, setFellowshipSubTab] = useState<FellowshipSubTab>('localgovs');
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Manage Data</h2>
-        <div className="flex gap-2 flex-wrap mb-6">
-          <button
-            onClick={() => setCurrentView('fellowship-program')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              currentView === 'fellowship-program'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Fellowship Program
-          </button>
-          <button
-            onClick={() => setCurrentView('people')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              currentView === 'people'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            People
-          </button>
-          <button
-            onClick={() => setCurrentView('talent')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              currentView === 'talent'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            Talent
-          </button>
-        </div>
+    <div className="space-y-4">
+      {/* Top-level Manage tabs: Fellowship, People, Talent */}
+      <div className="flex gap-2 mb-4 flex-wrap">
+        <button
+          onClick={() => setCurrentView('fellowship-program')}
+          className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+            currentView === 'fellowship-program'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'bg-gray-100 text-gray-700 hover:bg-blue-50'
+          }`}
+        >
+          Fellowship
+        </button>
+        <button
+          onClick={() => setCurrentView('people')}
+          className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+            currentView === 'people'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'bg-gray-100 text-gray-700 hover:bg-blue-50'
+          }`}
+        >
+          People
+        </button>
+        <button
+          onClick={() => setCurrentView('talent')}
+          className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+            currentView === 'talent'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'bg-gray-100 text-gray-700 hover:bg-blue-50'
+          }`}
+        >
+          Talent
+        </button>
       </div>
 
       {/* Fellowship Program Group with Sub-Tabs */}
       {currentView === 'fellowship-program' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="flex gap-2 flex-wrap bg-gray-50 p-4 rounded-lg border border-gray-200">
             {[
               { id: 'localgovs', label: 'Local Governments' },
@@ -76,7 +74,6 @@ export default function ManageTab() {
               </button>
             ))}
           </div>
-
           {/* Show only the selected sub-tab content */}
           <GeographyTab activeTab={fellowshipSubTab} />
         </div>
@@ -85,7 +82,7 @@ export default function ManageTab() {
       {/* People */}
       {currentView === 'people' && <PeopleTab />}
 
-      {/* Talent Group */}
+      {/* Talent Group (Skills) */}
       {currentView === 'talent' && (
         <div>
           <ProgramsTab />
