@@ -75,7 +75,7 @@ export default function ProfilePage() {
     placementId: "",
     subjects: [],
   });
-  const [cohorts, setCohorts] = useState<{ id: string; name: string }[]>([]);
+  const [cohorts, setCohorts] = useState<{ id: string; name: string; start?: string; end?: string }[]>([]);
   const [placements, setPlacements] = useState<{ id: string; school: { name: string } }[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -133,7 +133,13 @@ export default function ProfilePage() {
       const res = await fetch("/api/cohorts");
       if (res.ok) {
         const data = await res.json();
-        setCohorts(data);
+        // Ensure start/end are present for each cohort
+        setCohorts(data.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          start: c.start,
+          end: c.end
+        })));
       }
     } catch (error) {
       console.error("Error fetching cohorts:", error);
@@ -634,22 +640,30 @@ export default function ProfilePage() {
           {showFellowshipForm && (
             <div className="mb-4 p-4 border rounded space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Cohort ID</label>
-                <input
-                  type="text"
+                <label className="block text-sm font-medium mb-1">Cohort</label>
+                <select
                   className="w-full border rounded p-2"
                   value={fellowshipForm.cohortId}
                   onChange={(e) => setFellowshipForm({ ...fellowshipForm, cohortId: e.target.value })}
-                />
+                >
+                  <option value="">Select Cohort</option>
+                  {cohorts.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Placement ID</label>
-                <input
-                  type="text"
+                <label className="block text-sm font-medium mb-1">Placement</label>
+                <select
                   className="w-full border rounded p-2"
                   value={fellowshipForm.placementId}
                   onChange={(e) => setFellowshipForm({ ...fellowshipForm, placementId: e.target.value })}
-                />
+                >
+                  <option value="">Select Placement</option>
+                  {placements.map((p) => (
+                    <option key={p.id} value={p.id}>{p.school?.name || p.id}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Subjects (comma separated)</label>
@@ -663,8 +677,14 @@ export default function ProfilePage() {
               <div className="flex gap-2">
                 <Button onClick={async () => {
                   // Save fellowship
-                  const res = await fetch("/api/fellowships", {
-                    method: editingFellowship ? "PATCH" : "POST",
+                  let url = "/api/fellowships";
+                  let method = "POST";
+                  if (editingFellowship) {
+                    url = `/api/fellowships/${editingFellowship}`;
+                    method = "PATCH";
+                  }
+                  const res = await fetch(url, {
+                    method,
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                       personId: person.id,
@@ -703,50 +723,55 @@ export default function ProfilePage() {
           )}
 
           <div className="space-y-4">
-            {person.fellowships?.map((fellow) => (
-              <div key={fellow.id} className="p-4 border rounded flex justify-between items-start">
-                <div>
-                  <div className="font-semibold">Cohort: {fellow.cohortId}</div>
-                  <div className="text-sm text-gray-600">Placement: {fellow.placementId}</div>
-                  <div className="text-sm text-gray-500">Subjects: {fellow.subjects.join(", ")}</div>
-                  <div className="text-sm text-gray-500 mt-1">{new Date(fellow.createdAt).toLocaleDateString()}</div>
+            {person.fellowships?.map((fellow) => {
+              const cohort = cohorts.find(c => c.id === fellow.cohortId);
+              const placement = placements.find(p => p.id === fellow.placementId);
+              return (
+                <div key={fellow.id} className="p-4 border rounded flex justify-between items-start">
+                  <div>
+                    <div className="font-semibold">Cohort: {cohort?.name || fellow.cohortId}</div>
+                    <div className="text-sm text-gray-600">Start: {cohort?.start ? new Date(cohort.start).toLocaleDateString() : "-"} | End: {cohort?.end ? new Date(cohort.end).toLocaleDateString() : "-"}</div>
+                    <div className="text-sm text-gray-600">Placement: {placement?.school?.name || fellow.placementId}</div>
+                    <div className="text-sm text-gray-500">Subjects: {fellow.subjects.join(", ")}</div>
+                    <div className="text-sm text-gray-500 mt-1">Added: {new Date(fellow.createdAt).toLocaleDateString()}</div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                      onClick={() => {
+                        setEditingFellowship(fellow.id);
+                        setShowFellowshipForm(true);
+                        setFellowshipForm({
+                          cohortId: fellow.cohortId,
+                          placementId: fellow.placementId,
+                          subjects: fellow.subjects,
+                        });
+                      }}
+                    >
+                      <Edit2 size={16} />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-red-600 text-red-600 hover:bg-red-50"
+                      onClick={async () => {
+                        if (!confirm("Are you sure you want to delete this fellowship?")) return;
+                        const res = await fetch(`/api/fellowships/${fellow.id}`, { method: "DELETE" });
+                        if (res.ok) {
+                          await fetchProfile();
+                        } else {
+                          alert("Failed to delete fellowship");
+                        }
+                      }}
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                    onClick={() => {
-                      setEditingFellowship(fellow.id);
-                      setShowFellowshipForm(true);
-                      setFellowshipForm({
-                        cohortId: fellow.cohortId,
-                        placementId: fellow.placementId,
-                        subjects: fellow.subjects,
-                      });
-                    }}
-                  >
-                    <Edit2 size={16} />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-red-600 text-red-600 hover:bg-red-50"
-                    onClick={async () => {
-                      if (!confirm("Are you sure you want to delete this fellowship?")) return;
-                      const res = await fetch(`/api/fellowships/${fellow.id}`, { method: "DELETE" });
-                      if (res.ok) {
-                        await fetchProfile();
-                      } else {
-                        alert("Failed to delete fellowship");
-                      }
-                    }}
-                  >
-                    <Trash2 size={16} />
-                  </Button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
             {(!person.fellowships || person.fellowships.length === 0) && !showFellowshipForm && (
               <div className="text-gray-500 text-center py-4">No fellowship records yet.</div>
             )}
