@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { DefaultProfilePicture } from "@/components/DefaultProfilePicture"
+import { ProfileImage } from "@/components/ProfileImage"
 import Link from "next/link"
 
 interface Person {
@@ -75,17 +75,14 @@ export default function AlumniPage() {
                 <CardHeader>
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-4 flex-1">
-                      {person.profileImage ? (
-                        <img
+                      <div className="h-16 w-16 rounded-full border-3 border-blue-100 overflow-hidden group-hover:border-blue-300 transition shadow-md">
+                        <ProfileImage
                           src={person.profileImage}
-                          alt={person.firstName}
-                          className="h-16 w-16 rounded-full border-3 border-blue-100 object-cover group-hover:border-blue-300 transition shadow-md"
+                          name={`${person.firstName} ${person.lastName}`}
+                          className="h-full w-full object-cover"
+                          alt={`${person.firstName} ${person.lastName}`}
                         />
-                      ) : (
-                        <div className="h-16 w-16 rounded-full border-3 border-blue-100 overflow-hidden group-hover:border-blue-300 transition shadow-md">
-                          <DefaultProfilePicture name={`${person.firstName} ${person.lastName}`} className="h-full w-full" />
-                        </div>
-                      )}
+                      </div>
                       <div className="flex-1">
                         <Badge className="mb-2 text-xs font-semibold bg-red-100 text-red-700 pointer-events-none">
                           ⭐ Alumni

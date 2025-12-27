@@ -83,7 +83,14 @@ npm install
 
 # Setup environment
 cp .env.example .env.local
-# Edit .env.local with your DATABASE_URL
+# Edit .env.local with your DATABASE_URL and Google OAuth credentials
+
+# Required environment variables:
+# DATABASE_URL=postgresql://...
+# GOOGLE_CLIENT_ID=your-google-client-id
+# GOOGLE_CLIENT_SECRET=your-google-client-secret
+# NEXTAUTH_URL=http://localhost:3000 (or your production URL)
+# NEXTAUTH_SECRET=your-random-secret-key (generate with: openssl rand -base64 32)
 
 # Setup database
 npm run db:push
@@ -216,7 +223,25 @@ Currently in MVP mode with open read access:
 - **Recruiters**: Browse skills and profiles
 - **Public**: Read-only access to profiles and jobs
 
-*Authentication & fine-grained permissions coming in Phase 2*
+### 🔐 Google Authentication
+
+The platform uses NextAuth.js with Google OAuth for authentication. 
+
+**Email Whitelisting:**
+- All emails ending with `@teachfornepal.org` are automatically allowed
+- Additional emails can be whitelisted via the `WhitelistEmail` table in the database
+
+**Setup Google OAuth:**
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable Google+ API
+4. Create OAuth 2.0 credentials (Web application)
+5. Add authorized redirect URI: `http://localhost:3000/api/auth/callback/google` (dev) and your production URL
+6. Copy Client ID and Client Secret to your `.env.local` file
+
+**Login:**
+- Visit `/login` to sign in with Google
+- Only whitelisted emails can access the platform
 
 ## 🎨 UI Components Ready
 
