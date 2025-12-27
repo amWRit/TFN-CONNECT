@@ -1,9 +1,10 @@
 "use client";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 
-export default function LoginPage() {
+function LoginPageContent() {
   const searchParams = useSearchParams();
   const error = searchParams?.get("error") || null;
 
@@ -60,5 +61,20 @@ export default function LoginPage() {
         </Button>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
+        <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md text-center">
+          <h1 className="text-2xl font-bold mb-4">Sign in to TFN Connect</h1>
+          <p className="text-sm text-gray-600 mb-6">Loading...</p>
+        </div>
+      </div>
+    }>
+      <LoginPageContent />
+    </Suspense>
   );
 }
