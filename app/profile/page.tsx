@@ -7,6 +7,18 @@ import { Card } from "@/components/ui/card";
 import { Plus, Edit2, Trash2, Save, X, Upload, Image as ImageIcon } from "lucide-react";
 import { ProfileImage } from "@/components/ProfileImage";
 
+
+interface Fellowship {
+  id: string;
+  personId: string;
+  cohortId: string;
+  placementId: string;
+  subjects: string[];
+  createdAt: string;
+  cohort?: any;
+  placement?: any;
+}
+
 interface Person {
   id: string;
   firstName: string;
@@ -23,6 +35,8 @@ interface Person {
   empStatus: string;
   educations: Education[];
   experiences: Experience[];
+  fellowships?: Fellowship[];
+  type?: string;
 }
 
 interface Education {
@@ -50,6 +64,19 @@ interface Experience {
 export default function ProfilePage() {
   const { data: session, status } = useSession();
   const [person, setPerson] = useState<Person | null>(null);
+  const [showFellowshipForm, setShowFellowshipForm] = useState(false);
+  const [editingFellowship, setEditingFellowship] = useState<string | null>(null);
+  const [fellowshipForm, setFellowshipForm] = useState<{
+    cohortId: string;
+    placementId: string;
+    subjects: string[];
+  }>({
+    cohortId: "",
+    placementId: "",
+    subjects: [],
+  });
+  const [cohorts, setCohorts] = useState<{ id: string; name: string }[]>([]);
+  const [placements, setPlacements] = useState<{ id: string; school: { name: string } }[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [editingEducation, setEditingEducation] = useState<string | null>(null);
@@ -96,8 +123,34 @@ export default function ProfilePage() {
   useEffect(() => {
     if (status === "authenticated" && session) {
       fetchProfile();
+      fetchCohorts();
+      fetchPlacements();
     }
   }, [status, session]);
+
+  const fetchCohorts = async () => {
+    try {
+      const res = await fetch("/api/cohorts");
+      if (res.ok) {
+        const data = await res.json();
+        setCohorts(data);
+      }
+    } catch (error) {
+      console.error("Error fetching cohorts:", error);
+    }
+  };
+
+  const fetchPlacements = async () => {
+    try {
+      const res = await fetch("/api/placements");
+      if (res.ok) {
+        const data = await res.json();
+        setPlacements(data);
+      }
+    } catch (error) {
+      console.error("Error fetching placements:", error);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -129,12 +182,12 @@ export default function ProfilePage() {
     try {
       const res = await fetch("/api/profile", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+                      headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
-      });
+                    });
 
-      if (res.ok) {
-        await fetchProfile();
+                    if (res.ok) {
+                      await fetchProfile();
         setEditing(false);
       }
     } catch (error) {
@@ -189,7 +242,7 @@ export default function ProfilePage() {
           start: "",
           end: "",
         });
-      } else {
+                    } else {
         const errorData = await res.json();
         alert(errorData.error || "Failed to save education");
       }
@@ -207,8 +260,8 @@ export default function ProfilePage() {
         method: "DELETE",
       });
 
-      if (res.ok) {
-        await fetchProfile();
+                        if (res.ok) {
+                          await fetchProfile();
       }
     } catch (error) {
       console.error("Error deleting education:", error);
@@ -262,10 +315,10 @@ export default function ProfilePage() {
           start: "",
           end: "",
         });
-      } else {
+                        } else {
         const errorData = await res.json();
         alert(errorData.error || "Failed to save experience");
-      }
+                        }
     } catch (error) {
       console.error("Error saving experience:", error);
       alert("An error occurred while saving experience");
@@ -564,6 +617,143 @@ export default function ProfilePage() {
         )}
       </Card>
 
+
+      {/* Fellowship (only for alumni) */}
+      {person.type && person.type.toLowerCase() === "alumni" && (
+        <Card className="p-6 mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-blue-600">Fellowships</h2>
+            {!showFellowshipForm && (
+              <Button onClick={() => setShowFellowshipForm(true)} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Plus size={16} className="mr-2" />
+                Add Fellowship
+              </Button>
+            )}
+          </div>
+
+          {showFellowshipForm && (
+            <div className="mb-4 p-4 border rounded space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Cohort ID</label>
+                <input
+                  type="text"
+                  className="w-full border rounded p-2"
+                  value={fellowshipForm.cohortId}
+                  onChange={(e) => setFellowshipForm({ ...fellowshipForm, cohortId: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Placement ID</label>
+                <input
+                  type="text"
+                  className="w-full border rounded p-2"
+                  value={fellowshipForm.placementId}
+                  onChange={(e) => setFellowshipForm({ ...fellowshipForm, placementId: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Subjects (comma separated)</label>
+                <input
+                  type="text"
+                  className="w-full border rounded p-2"
+                  value={fellowshipForm.subjects.join(", ")}
+                  onChange={(e) => setFellowshipForm({ ...fellowshipForm, subjects: e.target.value.split(",").map(s => s.trim()) })}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={async () => {
+                  // Save fellowship
+                  const res = await fetch("/api/fellowships", {
+                    method: editingFellowship ? "PATCH" : "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      personId: person.id,
+                      cohortId: fellowshipForm.cohortId,
+                      placementId: fellowshipForm.placementId,
+                      subjects: fellowshipForm.subjects,
+                    }),
+                  });
+                  if (res.ok) {
+                    await fetchProfile();
+                    setShowFellowshipForm(false);
+                    setEditingFellowship(null);
+                    setFellowshipForm({ cohortId: "", placementId: "", subjects: [] });
+                  } else {
+                    alert("Failed to save fellowship");
+                  }
+                }} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Save size={16} className="mr-2" />
+                  Save
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                  onClick={() => {
+                    setShowFellowshipForm(false);
+                    setEditingFellowship(null);
+                    setFellowshipForm({ cohortId: "", placementId: "", subjects: [] });
+                  }}
+                >
+                  <X size={16} className="mr-2" />
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            {person.fellowships?.map((fellow) => (
+              <div key={fellow.id} className="p-4 border rounded flex justify-between items-start">
+                <div>
+                  <div className="font-semibold">Cohort: {fellow.cohortId}</div>
+                  <div className="text-sm text-gray-600">Placement: {fellow.placementId}</div>
+                  <div className="text-sm text-gray-500">Subjects: {fellow.subjects.join(", ")}</div>
+                  <div className="text-sm text-gray-500 mt-1">{new Date(fellow.createdAt).toLocaleDateString()}</div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                    onClick={() => {
+                      setEditingFellowship(fellow.id);
+                      setShowFellowshipForm(true);
+                      setFellowshipForm({
+                        cohortId: fellow.cohortId,
+                        placementId: fellow.placementId,
+                        subjects: fellow.subjects,
+                      });
+                    }}
+                  >
+                    <Edit2 size={16} />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-red-600 text-red-600 hover:bg-red-50"
+                    onClick={async () => {
+                      if (!confirm("Are you sure you want to delete this fellowship?")) return;
+                      const res = await fetch(`/api/fellowships/${fellow.id}`, { method: "DELETE" });
+                      if (res.ok) {
+                        await fetchProfile();
+                      } else {
+                        alert("Failed to delete fellowship");
+                      }
+                    }}
+                  >
+                    <Trash2 size={16} />
+                  </Button>
+                </div>
+              </div>
+            ))}
+            {(!person.fellowships || person.fellowships.length === 0) && !showFellowshipForm && (
+              <div className="text-gray-500 text-center py-4">No fellowship records yet.</div>
+            )}
+          </div>
+        </Card>
+      )}
+      
       {/* Education */}
       <Card className="p-6 mb-6">
         <div className="flex justify-between items-center mb-4">
