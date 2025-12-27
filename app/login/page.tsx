@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
   const searchParams = useSearchParams();
-  const error = searchParams.get("error");
+  const error = searchParams?.get("error") || null;
 
   const getErrorMessage = (error: string | null) => {
     switch (error) {
