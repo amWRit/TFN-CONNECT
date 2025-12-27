@@ -1,8 +1,86 @@
+# Dependencies
 node_modules
-.env
-.env.local
-.env.*.local
-dist
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Next.js
+/.next/
+/out/
+next-env.d.ts
 build
-.next
+dist
+
+# Production
+/build
+/.next
+/out
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local env files
+.env
+.env*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local.example
+.env.example
+
+# Vercel
 .vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE / Editor
+.idea
+.vscode
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Prisma
+prisma/migrations/*.sql
+!prisma/migrations/.gitkeep
+
+# Uploaded files (optional - uncomment if you don't want to track uploaded images)
+# public/profileimages/*.jpg
+# public/profileimages/*.png
+# public/profileimages/*.jpeg
+
+# Temporary files
+*.tmp
+*.temp
+.cache

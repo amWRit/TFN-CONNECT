@@ -1,3 +1,9 @@
+// ===== WHITELISTED EMAILS =====
+model WhitelistEmail {
+  id      String   @id @default(cuid())
+  email   String   @unique
+  createdAt DateTime @default(now())
+}
 // Final Prisma Schema - Teach For Nepal Alumni System
 // Simplified, production-ready structure
 

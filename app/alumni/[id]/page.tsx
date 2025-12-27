@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ExperienceCard } from "@/components/ExperienceCard"
-import { DefaultProfilePicture } from "@/components/DefaultProfilePicture"
+import { ProfileImage } from "@/components/ProfileImage"
 import { Button } from "@/components/ui/button"
 import { MessageSquare, UserPlus } from "lucide-react"
 
@@ -109,17 +109,14 @@ export default function AlumniDetailPage({
           {/* Cover gradient with name overlay */}
           <div className="relative h-40 bg-gradient-to-r from-indigo-500 to-purple-500">
             <div className="absolute inset-0 flex items-end px-6 sm:px-8 pb-6 gap-6">
-              {person.profileImage ? (
-                <img
+              <div className="flex-shrink-0">
+                <ProfileImage
                   src={person.profileImage}
-                  alt={person.firstName}
-                  className="h-28 w-28 rounded-2xl border-4 border-indigo-200 shadow-md object-cover flex-shrink-0"
+                  name={`${person.firstName} ${person.lastName}`}
+                  className="h-28 w-28 rounded-2xl border-4 border-indigo-200 shadow-md object-cover"
+                  alt={`${person.firstName} ${person.lastName}`}
                 />
-              ) : (
-                <div className="flex-shrink-0">
-                  <DefaultProfilePicture name={`${person.firstName} ${person.lastName}`} />
-                </div>
-              )}
+              </div>
               <div className="flex flex-col justify-end pb-2 flex-1">
                 <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
                   {person.firstName} {person.lastName}
