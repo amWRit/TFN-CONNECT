@@ -59,9 +59,29 @@ export async function GET(request: NextRequest) {
           profileImage: session.user.image || null,
         },
         include: {
-          educations: true,
-          experiences: true,
-          fellowships: true,
+          educations: {
+            orderBy: { start: "desc" },
+          },
+          experiences: {
+            orderBy: { start: "desc" },
+            include: {
+              experienceSkills: {
+                include: {
+                  skill: true,
+                },
+              },
+            },
+          },
+          fellowships: {
+            include: {
+              cohort: true,
+              placement: {
+                include: {
+                  school: true,
+                },
+              },
+            },
+          },
         },
       });
     }
