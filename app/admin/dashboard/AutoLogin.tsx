@@ -8,6 +8,7 @@ export default function AdminAutoLogin() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    if (!searchParams) return;
     const auto = searchParams.get('auto');
     if (auto === 'true') {
       // Auto-login with default credentials

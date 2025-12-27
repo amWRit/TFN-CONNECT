@@ -26,6 +26,7 @@ function AdminDashboardContent() {
   const [isAuthed, setIsAuthed] = useState(false);
 
   useEffect(() => {
+    if (!searchParams) return;
     const auto = searchParams.get('auto');
     const auth = localStorage.getItem('adminAuth');
     
