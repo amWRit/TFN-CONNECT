@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Pencil, Trash2 } from 'lucide-react';
 
 interface LocalGov {
   id: string;
@@ -171,9 +172,19 @@ export default function GeographyTab({ activeTab = 'localgovs' }: { activeTab?: 
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {localGovs.map((lg) => (
-              <Card key={lg.id} className="p-4">
-                <h3 className="font-bold">{lg.name}</h3>
-                <p className="text-sm text-gray-600">{lg.province}</p>
+              <Card key={lg.id} className="p-4 flex justify-between items-center border-2 border-blue-500/70 shadow-sm rounded-xl">
+                <div>
+                  <h3 className="font-bold">{lg.name}</h3>
+                  <p className="text-sm text-gray-600">{lg.province}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="icon" variant="outline" onClick={() => alert('Edit LocalGov ' + lg.id)} aria-label="Edit">
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button size="icon" variant="destructive" onClick={() => alert('Delete LocalGov ' + lg.id)} aria-label="Delete">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </Card>
             ))}
           </div>
@@ -236,10 +247,20 @@ export default function GeographyTab({ activeTab = 'localgovs' }: { activeTab?: 
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {schools.map((s) => (
-              <Card key={s.id} className="p-4">
-                <h3 className="font-bold">{s.name}</h3>
-                <p className="text-sm text-gray-600">{s.district} • {s.type || 'N/A'}</p>
-                <p className="text-xs text-gray-500">LocalGov: {s.localGovId}</p>
+              <Card key={s.id} className="p-4 flex justify-between items-center border-2 border-blue-500/70 shadow-sm rounded-xl">
+                <div>
+                  <h3 className="font-bold">{s.name}</h3>
+                  <p className="text-sm text-gray-600">{s.district} • {s.type || 'N/A'}</p>
+                  <p className="text-xs text-gray-500">LocalGov: {s.localGovId}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="icon" variant="outline" onClick={() => alert('Edit School ' + s.id)} aria-label="Edit">
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button size="icon" variant="destructive" onClick={() => alert('Delete School ' + s.id)} aria-label="Delete">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </Card>
             ))}
           </div>
@@ -285,9 +306,19 @@ export default function GeographyTab({ activeTab = 'localgovs' }: { activeTab?: 
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {schoolGroups.map((sg) => (
-              <Card key={sg.id} className="p-4">
-                <h3 className="font-bold">{sg.name}</h3>
-                <p className="text-xs text-gray-500">LocalGov: {sg.localGovId}</p>
+              <Card key={sg.id} className="p-4 flex justify-between items-center border-2 border-blue-500/70 shadow-sm rounded-xl">
+                <div>
+                  <h3 className="font-bold">{sg.name}</h3>
+                  <p className="text-xs text-gray-500">LocalGov: {sg.localGovId}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="icon" variant="outline" onClick={() => alert('Edit School Group ' + sg.id)} aria-label="Edit">
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button size="icon" variant="destructive" onClick={() => alert('Delete School Group ' + sg.id)} aria-label="Delete">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </Card>
             ))}
           </div>
@@ -336,10 +367,20 @@ export default function GeographyTab({ activeTab = 'localgovs' }: { activeTab?: 
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {cohorts.map((c) => (
-              <Card key={c.id} className="p-4">
-                <h3 className="font-bold">{c.name}</h3>
-                {c.startDate && <p className="text-sm text-gray-600">Start: {new Date(c.startDate).toLocaleDateString()}</p>}
-                {c.endDate && <p className="text-sm text-gray-600">End: {new Date(c.endDate).toLocaleDateString()}</p>}
+              <Card key={c.id} className="p-4 flex justify-between items-center border-2 border-blue-500/70 shadow-sm rounded-xl">
+                <div>
+                  <h3 className="font-bold">{c.name}</h3>
+                  {c.startDate && <p className="text-sm text-gray-600">Start: {new Date(c.startDate).toLocaleDateString()}</p>}
+                  {c.endDate && <p className="text-sm text-gray-600">End: {new Date(c.endDate).toLocaleDateString()}</p>}
+                </div>
+                <div className="flex gap-2">
+                  <Button size="icon" variant="outline" onClick={() => alert('Edit Cohort ' + c.id)} aria-label="Edit">
+                    <Pencil className="w-4 h-4" />
+                  </Button>
+                  <Button size="icon" variant="destructive" onClick={() => alert('Delete Cohort ' + c.id)} aria-label="Delete">
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </Card>
             ))}
           </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Pencil, Trash2 } from 'lucide-react';
 
 interface Placement {
   id: string;
@@ -184,15 +185,21 @@ export default function PlacementsTab() {
 
       <div className="grid grid-cols-1 gap-4">
         {placements.map((p) => (
-          <Card key={p.id} className="p-4">
-            <div className="flex justify-between">
-              <div>
-                <h3 className="font-bold">{p.name || `Placement ${p.id}`}</h3>
-                <p className="text-sm text-gray-600">School: {p.school?.name || p.schoolId}</p>
-                <p className="text-sm text-gray-600">Manager: {p.managerId}</p>
-                <p className="text-sm text-gray-600">Fellows: {p.fellowCount}</p>
-                <p className="text-sm text-gray-600">Subjects: {p.subjects.join(', ')}</p>
-              </div>
+          <Card key={p.id} className="p-4 flex justify-between items-center border-2 border-blue-500/70 shadow-sm rounded-xl">
+            <div>
+              <h3 className="font-bold">{p.name || `Placement ${p.id}`}</h3>
+              <p className="text-sm text-gray-600">School: {p.school?.name || p.schoolId}</p>
+              <p className="text-sm text-gray-600">Manager: {p.managerId}</p>
+              <p className="text-sm text-gray-600">Fellows: {p.fellowCount}</p>
+              <p className="text-sm text-gray-600">Subjects: {p.subjects.join(', ')}</p>
+            </div>
+            <div className="flex gap-2">
+              <Button size="icon" variant="outline" onClick={() => alert('Edit Placement ' + p.id)} aria-label="Edit">
+                <Pencil className="w-4 h-4" />
+              </Button>
+              <Button size="icon" variant="destructive" onClick={() => alert('Delete Placement ' + p.id)} aria-label="Delete">
+                <Trash2 className="w-4 h-4" />
+              </Button>
             </div>
           </Card>
         ))}

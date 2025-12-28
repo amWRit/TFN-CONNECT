@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Pencil, Trash2 } from 'lucide-react';
 
 interface Person {
   id: string;
@@ -418,10 +419,20 @@ export default function PeopleTab() {
 
       <div className="grid grid-cols-1 gap-4">
         {people.slice(0, 10).map((p) => (
-          <Card key={p.id} className="p-4">
-            <h3 className="font-bold">{p.firstName} {p.lastName}</h3>
-            <p className="text-sm text-gray-600">{p.email1}</p>
-            <p className="text-xs text-gray-500">{p.type}</p>
+          <Card key={p.id} className="p-4 flex justify-between items-center border-2 border-blue-500/70 shadow-sm rounded-xl">
+            <div>
+              <h3 className="font-bold">{p.firstName} {p.lastName}</h3>
+              <p className="text-sm text-gray-600">{p.email1}</p>
+              <p className="text-xs text-gray-500">{p.type}</p>
+            </div>
+            <div className="flex gap-2">
+              <Button size="icon" variant="outline" onClick={() => alert('Edit Person ' + p.id)} aria-label="Edit">
+                <Pencil className="w-4 h-4" />
+              </Button>
+              <Button size="icon" variant="destructive" onClick={() => alert('Delete Person ' + p.id)} aria-label="Delete">
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
           </Card>
         ))}
       </div>

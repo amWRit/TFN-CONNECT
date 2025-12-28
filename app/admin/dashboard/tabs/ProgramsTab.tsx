@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Pencil, Trash2 } from 'lucide-react';
 
 
 
@@ -92,9 +93,19 @@ export default function ProgramsTab() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {skills.map((s) => (
-            <Card key={s.id} className="p-4">
-              <h3 className="font-bold">{s.name}</h3>
-              <p className="text-xs text-gray-500 capitalize">{s.category}</p>
+            <Card key={s.id} className="p-4 flex justify-between items-center border-2 border-blue-500/70 shadow-sm rounded-xl">
+              <div>
+                <h3 className="font-bold">{s.name}</h3>
+                <p className="text-xs text-gray-500 capitalize">{s.category}</p>
+              </div>
+              <div className="flex gap-2">
+                <Button size="icon" variant="outline" onClick={() => alert('Edit Skill ' + s.id)} aria-label="Edit">
+                  <Pencil className="w-4 h-4" />
+                </Button>
+                <Button size="icon" variant="destructive" onClick={() => alert('Delete Skill ' + s.id)} aria-label="Delete">
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
             </Card>
           ))}
         </div>

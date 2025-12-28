@@ -9,7 +9,7 @@ import PlacementsTab from './PlacementsTab';
 import PeopleTab from './PeopleTab';
 
 type ManageView = 'fellowship-program' | 'people' | 'talent';
-type FellowshipSubTab = 'localgovs' | 'schools' | 'schoolgroups' | 'cohorts';
+type FellowshipSubTab = 'localgovs' | 'schools' | 'schoolgroups' | 'cohorts' | 'placements';
 
 export default function ManageTab() {
   const [currentView, setCurrentView] = useState<ManageView>('fellowship-program');
@@ -60,6 +60,7 @@ export default function ManageTab() {
               { id: 'schools', label: 'Schools' },
               { id: 'schoolgroups', label: 'School Groups' },
               { id: 'cohorts', label: 'Cohorts' },
+              { id: 'placements', label: 'Placements' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -75,7 +76,11 @@ export default function ManageTab() {
             ))}
           </div>
           {/* Show only the selected sub-tab content */}
-          <GeographyTab activeTab={fellowshipSubTab} />
+          {fellowshipSubTab === 'placements' ? (
+            <PlacementsTab />
+          ) : (
+            <GeographyTab activeTab={fellowshipSubTab} />
+          )}
         </div>
       )}
 
