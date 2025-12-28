@@ -1,15 +1,18 @@
-'use client';
+"use client";
 
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import GeographyTab from './GeographyTab';
-import ProgramsTab from './ProgramsTab';
-import PlacementsTab from './PlacementsTab';
-import PeopleTab from './PeopleTab';
+import LocalGovTab from './fellowship/LocalGovTab';
+import SchoolsTab from './fellowship/SchoolsTab';
+import SchoolGroupsTab from './fellowship/SchoolGroupsTab';
+import CohortsTab from './fellowship/CohortsTab';
+import PlacementsTab from './fellowship/PlacementsTab';
+import PeopleTab from './people/PeopleTab';
+import SkillsTab from './talent/SkillsTab';
 
 type ManageView = 'fellowship-program' | 'people' | 'talent';
-type FellowshipSubTab = 'localgovs' | 'schools' | 'schoolgroups' | 'cohorts';
+type FellowshipSubTab = 'localgovs' | 'schools' | 'schoolgroups' | 'cohorts' | 'placements';
 
 export default function ManageTab() {
   const [currentView, setCurrentView] = useState<ManageView>('fellowship-program');
@@ -60,6 +63,7 @@ export default function ManageTab() {
               { id: 'schools', label: 'Schools' },
               { id: 'schoolgroups', label: 'School Groups' },
               { id: 'cohorts', label: 'Cohorts' },
+              { id: 'placements', label: 'Placements' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -75,7 +79,11 @@ export default function ManageTab() {
             ))}
           </div>
           {/* Show only the selected sub-tab content */}
-          <GeographyTab activeTab={fellowshipSubTab} />
+          {fellowshipSubTab === 'localgovs' && <LocalGovTab />}
+          {fellowshipSubTab === 'schools' && <SchoolsTab />}
+          {fellowshipSubTab === 'schoolgroups' && <SchoolGroupsTab />}
+          {fellowshipSubTab === 'cohorts' && <CohortsTab />}
+          {fellowshipSubTab === 'placements' && <PlacementsTab />}
         </div>
       )}
 
@@ -85,7 +93,7 @@ export default function ManageTab() {
       {/* Talent Group (Skills) */}
       {currentView === 'talent' && (
         <div>
-          <ProgramsTab />
+          <SkillsTab />
         </div>
       )}
     </div>

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -14,7 +14,7 @@ export default function AdminAutoLogin() {
       // Auto-login with default credentials
       localStorage.setItem('adminAuth', 'true');
       localStorage.setItem('adminEmail', 'adminconnect@teachfornepal.org');
-      router.push('/admin/dashboard');
+      router.push('/admin/home');
     }
   }, [searchParams, router]);
 

@@ -22,6 +22,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const placement = await prisma.placement.create({
       data: {
+        name: body.name,
         schoolId: body.schoolId,
         managerId: body.managerId,
         fellowCount: body.fellowCount || 0,
@@ -34,3 +35,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to create placement' }, { status: 500 });
   }
 }
+
+// Removed PUT and DELETE handlers as they require an id param and should be in [id]/route.ts

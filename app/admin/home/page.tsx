@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
+import { LogOut } from 'lucide-react';
 import {
   LayoutDashboard,
   Search,
@@ -13,10 +14,10 @@ import {
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import DashboardTab from './tabs/DashboardTab';
-import BrowseTab from './tabs/BrowseTab';
-import ManageTab from './tabs/ManageTab';
-import SettingsTab from './tabs/SettingsTab';
+import DashboardTab from '../tabs/dashboard/IndexTab';
+import BrowseTab from '../tabs/browse/BrowseTab';
+import ManageTab from '../tabs/manage/ManageTab';
+import SettingsTab from '../tabs/settings/SettingsTab';
 
 function AdminDashboardContent() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -61,7 +62,7 @@ function AdminDashboardContent() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 flex">
       {/* Sidebar */}
       <aside
-        className={`min-h-screen sticky top-0 z-30 flex flex-col justify-between transition-all duration-200 ${
+        className={`min-h-screen sticky top-0 z-30 flex flex-col transition-all duration-200 ${
           sidebarOpen ? 'w-40' : 'w-12'
         } bg-white/90 border-r shadow-lg rounded-r-3xl`}
       >
@@ -94,10 +95,17 @@ function AdminDashboardContent() {
                 {sidebarOpen && <span>{tab.label}</span>}
               </button>
             ))}
+            <button
+              onClick={handleLogout}
+              className={`flex items-center gap-3 text-left px-3 py-2 rounded-lg font-semibold transition-colors text-sm w-full mt-4
+                bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 hover:text-red-900
+                ${sidebarOpen ? '' : 'justify-center px-2'}`}
+              title="Logout"
+            >
+              <LogOut size={18} className="inline-block" />
+              {sidebarOpen && <span>Logout</span>}
+            </button>
           </nav>
-        </div>
-        <div className={`px-4 pb-6 ${sidebarOpen ? '' : 'flex justify-center'}`}>
-          <Button onClick={handleLogout} variant="outline" className="w-full">Logout</Button>
         </div>
       </aside>
       {/* Main Content */}

@@ -20,7 +20,7 @@ export default function AdminLoginPage() {
       // Set session/auth token
       localStorage.setItem('adminAuth', 'true');
       localStorage.setItem('adminEmail', email);
-      router.push('/admin/dashboard');
+      router.push('/admin/home');
     } else {
       setError('Invalid email or password');
     }

@@ -64,7 +64,7 @@ export default function WhitelistEmailsTab() {
           className="border rounded px-3 py-2 flex-1"
           required
         />
-        <Button type="submit">Add</Button>
+        <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700">Add</Button>
       </form>
       {loading ? (
         <div>Loading...</div>

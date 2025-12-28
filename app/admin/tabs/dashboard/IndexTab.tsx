@@ -15,7 +15,7 @@ interface Stats {
   totalPosts: number;
 }
 
-export default function DashboardTab() {
+export default function IndexTab() {
   const [stats, setStats] = useState<Stats>({
     totalPeople: 0,
     totalAlumni: 0,
@@ -57,7 +57,6 @@ export default function DashboardTab() {
         const cohorts = (cohortsRes.ok ? await cohortsRes.json() : []) || [];
         const jobs = (jobsRes.ok ? await jobsRes.json() : []) || [];
         const posts = (postsRes.ok ? await postsRes.json() : []) || [];
-
         const alumni = people.filter((p: any) => p.type === 'ALUMNI');
         const staff = people.filter((p: any) => p.type === 'STAFF');
 
