@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, Edit2, Trash2, Save, X, Upload, Image as ImageIcon } from "lucide-react";
+import { Plus, Edit2, Trash2, Save, X, Upload, Image as ImageIcon, Mail, Phone, Calendar, Linkedin, Info, Star, GraduationCap, Briefcase, Globe, User } from "lucide-react";
 import { ProfileImage } from "@/components/ProfileImage";
 
 
@@ -428,8 +428,17 @@ export default function ProfilePage() {
       </div>
 
       {/* Basic Information */}
-      <Card className="p-6 mb-6 border-2 border-blue-400 rounded-xl shadow-sm">
+      <Card className="relative p-6 mb-6 border-2 border-blue-400 rounded-xl shadow-sm">
         <h2 className="text-xl font-semibold mb-4 text-blue-600">Basic Information</h2>
+        {/* Alumni Type Label in Top Right of Card */}
+        {person.type && (
+          <div className="absolute top-0 right-0 mt-2 mr-2 z-20">
+            <span className="inline-flex items-center gap-1 bg-yellow-400 text-yellow-900 text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wide shadow-lg border-2 border-yellow-500" style={{ boxShadow: '0 0 8px 2px #facc15, 0 0 16px 4px #fde68a' }}>
+              <Star size={16} className="text-yellow-700 drop-shadow" fill="#facc15" stroke="#b45309" />
+              {person.type}
+            </span>
+          </div>
+        )}
         
         {/* Profile Image Section */}
         <div className="mb-6 flex items-center gap-6">
@@ -608,17 +617,62 @@ export default function ProfilePage() {
             </div>
           </div>
         ) : (
-          <div className="space-y-2">
-            <div><strong>Name:</strong> {person.firstName} {person.lastName}</div>
-            <div><strong>Email:</strong> {person.email1}</div>
-            {person.email2 && <div><strong>Secondary Email:</strong> {person.email2}</div>}
-            {person.phone1 && <div><strong>Phone 1:</strong> {person.phone1}</div>}
-            {person.phone2 && <div><strong>Phone 2:</strong> {person.phone2}</div>}
-            {person.linkedin && <div><strong>LinkedIn:</strong> <a href={person.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600">{person.linkedin}</a></div>}
-            {person.dob && <div><strong>Date of Birth:</strong> {new Date(person.dob).toLocaleDateString()}</div>}
-            <div><strong>Education Status:</strong> {person.eduStatus}</div>
-            <div><strong>Employment Status:</strong> {person.empStatus}</div>
-            {person.bio && <div><strong>Bio:</strong> {person.bio}</div>}
+          <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 text-left">
+            {/* Name | DOB */}
+            <div className="flex items-center gap-2 text-lg font-semibold">
+              <User size={22} className="text-blue-500" />
+              <span>{person.firstName} {person.lastName}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {person.dob && (
+                <span className="inline-flex items-center gap-2 text-base font-normal text-gray-700 bg-purple-50 py-1 rounded"><Calendar size={16} className="text-purple-500" />{new Date(person.dob).toLocaleDateString()}</span>
+              )}
+            </div>
+            {/* Email1 | Email2 */}
+            <div className="flex items-center gap-2">
+              <Mail size={18} className="text-blue-500" />
+              <span>{person.email1}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {person.email2 && <><Mail size={18} className="text-blue-500" /><span>{person.email2}</span></>}
+            </div>
+            {/* Phone1 | Phone2 */}
+            <div className="flex items-center gap-2">
+              {person.phone1 && <><Phone size={18} className="text-green-500" /><span>{person.phone1}</span></>}
+            </div>
+            <div className="flex items-center gap-2">
+              {person.phone2 && <><Phone size={18} className="text-green-500" /><span>{person.phone2}</span></>}
+            </div>
+            {/* LinkedIn and Website (two columns) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 col-span-1 sm:col-span-2">
+              <div className="flex items-center gap-2">
+                {person.linkedin && <>
+                  <Linkedin size={18} className="text-blue-700" />
+                  <a href={person.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">{person.linkedin}</a>
+                </>}
+              </div>
+              <div className="flex items-center gap-2">
+                <Globe size={18} className="text-blue-700" />
+                <a href="https://www.teachfornepal.org" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">www.teachfornepal.org</a>
+              </div>
+            </div>
+            {/* Statuses */}
+            <div className="flex items-center gap-2">
+              <GraduationCap size={18} className="text-blue-500" />
+              <span className="font-medium text-gray-700">Education Status:</span>
+              <span className="font-normal">{person.eduStatus}</span>
+            </div>
+            <div className="flex items-center gap-2 justify-start">
+              <Briefcase size={18} className="text-green-600" />
+              <span className="font-medium text-gray-700">Employment Status:</span>
+              <span className="font-normal">{person.empStatus}</span>
+            </div>
+            {/* Bio (full width) */}
+            {person.bio && (
+              <blockquote className="col-span-1 sm:col-span-2 border-l-4 border-yellow-400 bg-yellow-50/60 px-4 py-3 my-2 italic text-yellow-900 relative">
+                <span className="pl-6 block">{person.bio}</span>
+              </blockquote>
+            )}
           </div>
         )}
       </Card>
