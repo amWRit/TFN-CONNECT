@@ -36,32 +36,4 @@ export async function POST(request: Request) {
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
-  try {
-    const { id } = params;
-    await prisma.placement.delete({ where: { id } });
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to delete placement' }, { status: 500 });
-  }
-}
-
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
-  try {
-    const { id } = params;
-    const body = await request.json();
-    const updated = await prisma.placement.update({
-      where: { id },
-      data: {
-        name: body.name,
-        schoolId: body.schoolId,
-        managerId: body.managerId,
-        fellowCount: body.fellowCount || 0,
-        subjects: body.subjects,
-      },
-    });
-    return NextResponse.json(updated);
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to update placement' }, { status: 500 });
-  }
-}
+// Removed PUT and DELETE handlers as they require an id param and should be in [id]/route.ts
