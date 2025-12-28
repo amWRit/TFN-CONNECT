@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { ExperienceCard } from "@/components/ExperienceCard"
 import { ProfileImage } from "@/components/ProfileImage"
 import { Button } from "@/components/ui/button"
-import { MessageSquare, UserPlus } from "lucide-react"
+import { Bookmark, BookmarkCheck, Briefcase, Mail, Phone, Linkedin, Globe, GraduationCap } from "lucide-react"
 
 interface PersonDetail {
   id: string
@@ -16,6 +16,11 @@ interface PersonDetail {
   bio?: string
   type: string
   empStatus: string
+  email1?: string
+  email2?: string
+  phone1?: string
+  phone2?: string
+  linkedin?: string
   educations: Array<{
     id: string
     name: string
@@ -28,6 +33,7 @@ interface PersonDetail {
     id: string
     title: string
     orgName: string
+    type?: string
     description?: string
     start: string
     end?: string
@@ -66,6 +72,7 @@ export default function AlumniDetailPage({
   const [person, setPerson] = useState<PersonDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [id, setId] = useState<string | null>(null)
+  const [bookmarked, setBookmarked] = useState(false)
 
   useEffect(() => {
     params.then(({ id }) => {
@@ -105,8 +112,18 @@ export default function AlumniDetailPage({
     <div className="w-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 min-h-screen py-8 sm:py-12">
       <div className="max-w-5xl mx-auto px-4">
         {/* Profile Header Card */}
-        <Card className="bg-white border-2 border-indigo-500 shadow-lg rounded-3xl overflow-hidden mb-8">
-          {/* Cover gradient with name overlay */}
+        <Card className="bg-white border-2 border-indigo-500 shadow-lg rounded-3xl overflow-hidden mb-8 relative">
+          {/* Bookmark Button */}
+          <div className="group absolute top-4 right-4 z-10">
+            <button
+              aria-label={bookmarked ? "Remove Bookmark" : "Add Bookmark"}
+              onClick={() => setBookmarked((b) => !b)}
+              className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${bookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110`}
+            >
+              {bookmarked ? <BookmarkCheck size={28} /> : <Bookmark size={28} />}
+            </button>
+            <span className="opacity-0 group-hover:opacity-100 transition bg-gray-800 text-white text-xs rounded px-2 py-1 absolute right-0 mt-2 whitespace-nowrap pointer-events-none shadow-lg" style={{top: '100%'}}>Save</span>
+          </div>
           <div className="relative h-40 bg-gradient-to-r from-indigo-500 to-purple-500">
             <div className="absolute inset-0 flex items-end px-6 sm:px-8 pb-6 gap-6">
               <div className="flex-shrink-0">
@@ -140,17 +157,95 @@ export default function AlumniDetailPage({
                     {person.bio}
                   </p>
                 )}
-                
-                <div className="flex gap-3 flex-wrap">
-                  <Button className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2">
-                    <UserPlus className="h-4 w-4" />
-                    Connect
-                  </Button>
-                  <Button className="bg-cyan-600 hover:bg-cyan-700 flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4" />
-                    Message
-                  </Button>
+
+                {/* Bio (full width) */}
+                {/* {person.bio && (
+                  <div className="text-gray-600 text-base leading-relaxed mb-5 col-span-1 sm:col-span-2">
+                    <blockquote className="border-l-4 border-yellow-400 bg-yellow-50/60 px-4 py-3 my-2 text-yellow-900 relative">
+                      <span className="absolute -left-3 top-2 text-yellow-400">
+                      </span>
+                      <span className="pl-6 block">{person.bio}</span>
+                    </blockquote>
+                  </div>
+                )} */}
+
+                {/* Two-column Info Layout */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 mb-4 text-sm">
+                  {/* Email1 */}
+                  <div className="flex items-center gap-2">
+                    <Mail size={18} className="text-blue-500" />
+                    <span>{person.email1}</span>
+                  </div>
+                  {/* Email2 */}
+                  <div className="flex items-center gap-2">
+                    {person.email2 && <><Mail size={18} className="text-blue-500" /><span>{person.email2}</span></>}
+                  </div>
+                  {/* Phone1 */}
+                  <div className="flex items-center gap-2">
+                    {person.phone1 && <><Phone size={18} className="text-green-500" /><span>{person.phone1}</span></>}
+                  </div>
+                  {/* Phone2 */}
+                  <div className="flex items-center gap-2">
+                    {person.phone2 && <><Phone size={18} className="text-green-500" /><span>{person.phone2}</span></>}
+                  </div>
+                  {/* LinkedIn */}
+                  <div className="flex items-center gap-2">
+                    <Linkedin size={18} className="text-blue-700" />
+                    {person.linkedin ? (
+                      <a href={person.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">{person.linkedin}</a>
+                    ) : (
+                      <span className="text-gray-400">--</span>
+                    )}
+                  </div>
+                  {/* Website */}
+                  <div className="flex items-center gap-2">
+                    <Globe size={18} className="text-blue-700" />
+                    <a href="https://www.teachfornepal.org" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">www.teachfornepal.org</a>
+                  </div>
+                  {/* Education Status */}
+                  <div className="flex items-center gap-2">
+                    <GraduationCap size={18} className="text-blue-500" />
+                    <span className="font-medium text-gray-700">Education Status:</span>
+                    <span className="font-normal">{(() => {
+                      // Assume most recent education status is the person's status
+                      return person.educations && person.educations.length > 0 ? 'COMPLETED' : 'N/A';
+                    })()}</span>
+                  </div>
+                  {/* Recent Degree */}
+                  <div className="flex items-center gap-2">
+                    {person.educations && person.educations.length > 0 && (() => {
+                      const recentEdu = [...person.educations].sort((a, b) => {
+                        const aDate = new Date(a.end || a.start).getTime();
+                        const bDate = new Date(b.end || b.start).getTime();
+                        return bDate - aDate;
+                      })[0];
+                      return recentEdu ? (
+                        <span className="flex items-center gap-1 text-blue-800">Recent: {recentEdu.name}</span>
+                      ) : null;
+                    })()}
+                  </div>
+                  {/* Employment Status */}
+                  <div className="flex items-center gap-2">
+                    <Briefcase size={18} className="text-green-600" />
+                    <span className="font-medium text-gray-700">Employment Status:</span>
+                    <span className="font-normal">{person.empStatus}</span>
+                  </div>
+                  {/* Recent Job */}
+                  <div className="flex items-center gap-2">
+                    {person.empStatus === "EMPLOYED" && person.experiences && person.experiences.length > 0 && (() => {
+                      const recentExp = [...person.experiences].sort((a, b) => {
+                        const aDate = new Date(a.end || a.start).getTime();
+                        const bDate = new Date(b.end || b.start).getTime();
+                        return bDate - aDate;
+                      })[0];
+                      return recentExp ? (
+                        <span className="flex items-center gap-1 text-green-800">Recent: {recentExp.type ? recentExp.type.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) : 'N/A'} at {recentExp.orgName}</span>
+                      ) : null;
+                    })()}
+                  </div>
                 </div>
+
+                {/* Bookmark button moved to card top right */}
               </div>
             </div>
           </div>
