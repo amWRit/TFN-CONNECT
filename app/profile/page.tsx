@@ -428,7 +428,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Basic Information */}
-      <Card className="p-6 mb-6">
+      <Card className="p-6 mb-6 border-2 border-blue-400 rounded-xl shadow-sm">
         <h2 className="text-xl font-semibold mb-4 text-blue-600">Basic Information</h2>
         
         {/* Profile Image Section */}
@@ -626,7 +626,7 @@ export default function ProfilePage() {
 
       {/* Fellowship (only for alumni) */}
       {person.type && person.type.toLowerCase() === "alumni" && (
-        <Card className="p-6 mb-6">
+        <Card className="p-6 mb-6 border-2 border-purple-400 rounded-xl shadow-sm">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-blue-600">Fellowships</h2>
             {!showFellowshipForm && (
@@ -727,7 +727,7 @@ export default function ProfilePage() {
               const cohort = cohorts.find(c => c.id === fellow.cohortId);
               const placement = placements.find(p => p.id === fellow.placementId);
               return (
-                <div key={fellow.id} className="p-4 border rounded flex justify-between items-start">
+                <div key={fellow.id} className="p-4 border rounded flex justify-between items-start border-l-4 border-purple-400 bg-purple-50/30">
                   <div>
                     <div className="font-semibold">Cohort: {cohort?.name || fellow.cohortId}</div>
                     <div className="text-sm text-gray-600">Start: {cohort?.start ? new Date(cohort.start).toLocaleDateString() : "-"} | End: {cohort?.end ? new Date(cohort.end).toLocaleDateString() : "-"}</div>
@@ -779,7 +779,7 @@ export default function ProfilePage() {
       )}
       
       {/* Education */}
-      <Card className="p-6 mb-6">
+      <Card className="p-6 mb-6 border-2 border-green-400 rounded-xl shadow-sm">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-blue-600">Education</h2>
           {!showEducationForm && (
@@ -894,7 +894,7 @@ export default function ProfilePage() {
 
         <div className="space-y-4">
           {person.educations?.map((edu) => (
-            <div key={edu.id} className="p-4 border rounded">
+            <div key={edu.id} className="p-4 border rounded border-l-4 border-green-400 bg-green-50/30">
               {editingEducation === edu.id ? (
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -1034,7 +1034,7 @@ export default function ProfilePage() {
       </Card>
 
       {/* Experience */}
-      <Card className="p-6">
+      <Card className="p-6 border-2 border-orange-400 rounded-xl shadow-sm">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-blue-600">Experience</h2>
           {!showExperienceForm && (
@@ -1152,7 +1152,7 @@ export default function ProfilePage() {
 
         <div className="space-y-4">
           {person.experiences?.map((exp) => (
-            <div key={exp.id} className="p-4 border rounded">
+            <div key={exp.id} className="p-4 border rounded border-l-4 border-orange-400 bg-orange-50/30">
               {editingExperience === exp.id ? (
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
