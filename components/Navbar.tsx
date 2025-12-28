@@ -19,7 +19,6 @@ export default function Navbar() {
           <a href="/alumni" className="text-gray-700 hover:text-blue-600 font-semibold transition">Alumni</a>
           <a href="/jobs" className="text-gray-700 hover:text-blue-600 font-semibold transition">Jobs</a>
           <a href="/feed" className="text-gray-700 hover:text-blue-600 font-semibold transition">Feed</a>
-          <a href="/admin/dashboard?auto=true" className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded font-semibold transition">Admin</a>
           <UserMenu />
         </div>
       </div>
