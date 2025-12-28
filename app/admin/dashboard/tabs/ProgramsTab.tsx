@@ -59,7 +59,7 @@ export default function ProgramsTab() {
       <div>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">Skills</h2>
-          <Button onClick={() => setShowSkillForm(!showSkillForm)}>
+          <Button onClick={() => setShowSkillForm(!showSkillForm)} className="bg-blue-600 text-white hover:bg-blue-700">
             {showSkillForm ? 'Cancel' : '+ Add Skill'}
           </Button>
         </div>
@@ -86,7 +86,7 @@ export default function ProgramsTab() {
                 <option value="interpersonal">Interpersonal</option>
                 <option value="technical">Technical</option>
               </select>
-              <Button type="submit" className="w-full">Create Skill</Button>
+              <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700">Create Skill</Button>
             </form>
           </Card>
         )}
@@ -99,7 +99,7 @@ export default function ProgramsTab() {
                 <p className="text-xs text-gray-500 capitalize">{s.category}</p>
               </div>
               <div className="flex gap-2">
-                <Button size="icon" variant="outline" onClick={() => alert('Edit Skill ' + s.id)} aria-label="Edit">
+                <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => alert('Edit Skill ' + s.id)} aria-label="Edit">
                   <Pencil className="w-4 h-4" />
                 </Button>
                 <Button size="icon" variant="destructive" onClick={() => alert('Delete Skill ' + s.id)} aria-label="Delete">

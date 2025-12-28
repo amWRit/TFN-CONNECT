@@ -22,6 +22,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const placement = await prisma.placement.create({
       data: {
+        name: body.name,
         schoolId: body.schoolId,
         managerId: body.managerId,
         fellowCount: body.fellowCount || 0,
@@ -32,5 +33,35 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error creating placement:', error);
     return NextResponse.json({ error: 'Failed to create placement' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const { id } = params;
+    await prisma.placement.delete({ where: { id } });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to delete placement' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
+  try {
+    const { id } = params;
+    const body = await request.json();
+    const updated = await prisma.placement.update({
+      where: { id },
+      data: {
+        name: body.name,
+        schoolId: body.schoolId,
+        managerId: body.managerId,
+        fellowCount: body.fellowCount || 0,
+        subjects: body.subjects,
+      },
+    });
+    return NextResponse.json(updated);
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to update placement' }, { status: 500 });
   }
 }

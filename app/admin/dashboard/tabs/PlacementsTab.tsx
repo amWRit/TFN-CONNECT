@@ -40,6 +40,22 @@ export default function PlacementsTab() {
     fellowCount: 0,
     subjects: [] as string[],
   });
+  const [editId, setEditId] = useState<string | null>(null);
+
+  // Delete placement handler
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this placement?')) return;
+    try {
+      const res = await fetch(`/api/placements/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setPlacements((prev) => prev.filter((p) => p.id !== id));
+      } else {
+        alert('Failed to delete placement');
+      }
+    } catch (err) {
+      alert('Error deleting placement');
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -77,20 +93,32 @@ export default function PlacementsTab() {
     }
 
     try {
-      const res = await fetch('/api/placements', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
+      let res;
+      if (editId) {
+        // Edit mode
+        res = await fetch(`/api/placements/${editId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        });
+      } else {
+        // Create mode
+        res = await fetch('/api/placements', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        });
+      }
       if (res.ok) {
         setForm({ name: '', schoolId: '', managerId: '', fellowCount: 0, subjects: [] });
         setShowForm(false);
+        setEditId(null);
         fetchData();
       } else {
-        alert('Failed to create placement');
+        alert('Failed to save placement');
       }
     } catch (error) {
-      console.error('Failed to create placement:', error);
+      console.error('Failed to save placement:', error);
     }
   };
 
@@ -100,13 +128,15 @@ export default function PlacementsTab() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold">Placements</h2>
-        <Button onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Cancel' : '+ Create Placement'}
-        </Button>
+        {editId === null && (
+          <Button onClick={() => setShowForm(!showForm)} className="bg-blue-600 text-white hover:bg-blue-700">
+            {showForm ? 'Cancel' : '+ Create Placement'}
+          </Button>
+        )}
       </div>
 
       {showForm && (
-        <Card className="p-6">
+        <Card className="p-6 border-2 border-blue-500/70 shadow-sm rounded-xl">
           <form onSubmit={createPlacement} className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1">Placement Name *</label>
@@ -178,7 +208,35 @@ export default function PlacementsTab() {
               />
             </div>
 
-            <Button type="submit" className="w-full">Create Placement</Button>
+            <div className="flex gap-2">
+              {editId ? (
+                <>
+                  <Button
+                    type="submit"
+                    className="w-full bg-blue-600 text-white hover:bg-blue-700"
+                    variant="default"
+                  >
+                    Update Placement
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    className="w-full"
+                    onClick={() => {
+                      setEditId(null);
+                      setForm({ name: '', schoolId: '', managerId: '', fellowCount: 0, subjects: [] });
+                      setShowForm(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </>
+              ) : (
+                <Button type="submit" className="w-full" variant="default">
+                  Create Placement
+                </Button>
+              )}
+            </div>
           </form>
         </Card>
       )}
@@ -187,17 +245,27 @@ export default function PlacementsTab() {
         {placements.map((p) => (
           <Card key={p.id} className="p-4 flex justify-between items-center border-2 border-blue-500/70 shadow-sm rounded-xl">
             <div>
-              <h3 className="font-bold">{p.name || `Placement ${p.id}`}</h3>
+              <h3 className="font-bold">{p.name && p.name.trim() !== '' ? p.name : (p.school?.name ? `${p.school.name} Placement` : `Placement`)}</h3>
               <p className="text-sm text-gray-600">School: {p.school?.name || p.schoolId}</p>
-              <p className="text-sm text-gray-600">Manager: {p.managerId}</p>
+              <p className="text-sm text-gray-600">Manager: {p.manager && p.manager.firstName ? `${p.manager.firstName} ${p.manager.lastName}` : p.managerId}</p>
               <p className="text-sm text-gray-600">Fellows: {p.fellowCount}</p>
               <p className="text-sm text-gray-600">Subjects: {p.subjects.join(', ')}</p>
             </div>
             <div className="flex gap-2">
-              <Button size="icon" variant="outline" onClick={() => alert('Edit Placement ' + p.id)} aria-label="Edit">
+              <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => {
+                setEditId(p.id);
+                setShowForm(true);
+                setForm({
+                  name: p.name || '',
+                  schoolId: p.schoolId,
+                  managerId: p.managerId,
+                  fellowCount: p.fellowCount,
+                  subjects: p.subjects || [],
+                });
+              }} aria-label="Edit">
                 <Pencil className="w-4 h-4" />
               </Button>
-              <Button size="icon" variant="destructive" onClick={() => alert('Delete Placement ' + p.id)} aria-label="Delete">
+              <Button size="icon" variant="destructive" onClick={() => handleDelete(p.id)} aria-label="Delete">
                 <Trash2 className="w-4 h-4" />
               </Button>
             </div>

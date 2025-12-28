@@ -185,7 +185,7 @@ export default function PeopleTab() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-bold">People</h2>
-        <Button onClick={() => setShowForm(!showForm)}>
+        <Button onClick={() => setShowForm(!showForm)} className="bg-blue-600 text-white hover:bg-blue-700">
           {showForm ? 'Cancel' : '+ Add Person'}
         </Button>
       </div>
@@ -309,7 +309,7 @@ export default function PeopleTab() {
                       </div>
                     </div>
                   ))}
-                  <Button type="button" onClick={handleAddEducation} variant="outline" className="text-sm">
+                  <Button type="button" onClick={handleAddEducation} className="text-sm bg-blue-600 text-white hover:bg-blue-700">
                     + Add Education
                   </Button>
                 </div>
@@ -367,7 +367,7 @@ export default function PeopleTab() {
                       </div>
                     </div>
                   ))}
-                  <Button type="button" onClick={handleAddExperience} variant="outline" className="text-sm">
+                  <Button type="button" onClick={handleAddExperience} className="text-sm bg-blue-600 text-white hover:bg-blue-700">
                     + Add Experience
                   </Button>
                 </div>
@@ -426,7 +426,7 @@ export default function PeopleTab() {
               <p className="text-xs text-gray-500">{p.type}</p>
             </div>
             <div className="flex gap-2">
-              <Button size="icon" variant="outline" onClick={() => alert('Edit Person ' + p.id)} aria-label="Edit">
+              <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => alert('Edit Person ' + p.id)} aria-label="Edit">
                 <Pencil className="w-4 h-4" />
               </Button>
               <Button size="icon" variant="destructive" onClick={() => alert('Delete Person ' + p.id)} aria-label="Delete">

@@ -141,8 +141,8 @@ export default function GeographyTab({ activeTab = 'localgovs' }: { activeTab?: 
         <div>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Local Governments</h2>
-            <Button onClick={() => setShowLocalGovForm(!showLocalGovForm)}>
-              {showLocalGovForm ? 'Cancel' : '+ Add LocalGov'}
+            <Button onClick={() => setShowLocalGovForm(!showLocalGovForm)} className="bg-blue-600 text-white hover:bg-blue-700">
+              {showLocalGovForm ? 'Cancel' : '+ Add Local Government'}
             </Button>
           </div>
 
@@ -165,7 +165,7 @@ export default function GeographyTab({ activeTab = 'localgovs' }: { activeTab?: 
                   className="w-full px-3 py-2 border rounded"
                   required
                 />
-                <Button type="submit" className="w-full">Create</Button>
+                <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700">Create</Button>
               </form>
             </Card>
           )}
@@ -178,7 +178,7 @@ export default function GeographyTab({ activeTab = 'localgovs' }: { activeTab?: 
                   <p className="text-sm text-gray-600">{lg.province}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="icon" variant="outline" onClick={() => alert('Edit LocalGov ' + lg.id)} aria-label="Edit">
+                  <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => alert('Edit LocalGov ' + lg.id)} aria-label="Edit">
                     <Pencil className="w-4 h-4" />
                   </Button>
                   <Button size="icon" variant="destructive" onClick={() => alert('Delete LocalGov ' + lg.id)} aria-label="Delete">
@@ -196,7 +196,7 @@ export default function GeographyTab({ activeTab = 'localgovs' }: { activeTab?: 
         <div>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Schools</h2>
-            <Button onClick={() => setShowSchoolForm(!showSchoolForm)}>
+            <Button onClick={() => setShowSchoolForm(!showSchoolForm)} className="bg-blue-600 text-white hover:bg-blue-700">
               {showSchoolForm ? 'Cancel' : '+ Add School'}
             </Button>
           </div>
@@ -240,7 +240,7 @@ export default function GeographyTab({ activeTab = 'localgovs' }: { activeTab?: 
                   <option value="SECONDARY">Secondary</option>
                   <option value="HIGHER">Higher</option>
                 </select>
-                <Button type="submit" className="w-full">Create School</Button>
+                <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700">Create School</Button>
               </form>
             </Card>
           )}
@@ -254,7 +254,7 @@ export default function GeographyTab({ activeTab = 'localgovs' }: { activeTab?: 
                   <p className="text-xs text-gray-500">LocalGov: {s.localGovId}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="icon" variant="outline" onClick={() => alert('Edit School ' + s.id)} aria-label="Edit">
+                  <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => alert('Edit School ' + s.id)} aria-label="Edit">
                     <Pencil className="w-4 h-4" />
                   </Button>
                   <Button size="icon" variant="destructive" onClick={() => alert('Delete School ' + s.id)} aria-label="Delete">
@@ -272,7 +272,7 @@ export default function GeographyTab({ activeTab = 'localgovs' }: { activeTab?: 
         <div>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">School Groups</h2>
-            <Button onClick={() => setShowGroupForm(!showGroupForm)}>
+            <Button onClick={() => setShowGroupForm(!showGroupForm)} className="bg-blue-600 text-white hover:bg-blue-700">
               {showGroupForm ? 'Cancel' : '+ Add Group'}
             </Button>
           </div>
@@ -299,7 +299,7 @@ export default function GeographyTab({ activeTab = 'localgovs' }: { activeTab?: 
                     <option key={lg.id} value={lg.id}>{lg.name}</option>
                   ))}
                 </select>
-                <Button type="submit" className="w-full">Create Group</Button>
+                <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700">Create Group</Button>
               </form>
             </Card>
           )}
@@ -312,7 +312,7 @@ export default function GeographyTab({ activeTab = 'localgovs' }: { activeTab?: 
                   <p className="text-xs text-gray-500">LocalGov: {sg.localGovId}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="icon" variant="outline" onClick={() => alert('Edit School Group ' + sg.id)} aria-label="Edit">
+                  <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => alert('Edit School Group ' + sg.id)} aria-label="Edit">
                     <Pencil className="w-4 h-4" />
                   </Button>
                   <Button size="icon" variant="destructive" onClick={() => alert('Delete School Group ' + sg.id)} aria-label="Delete">
@@ -330,7 +330,7 @@ export default function GeographyTab({ activeTab = 'localgovs' }: { activeTab?: 
         <div>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Cohorts</h2>
-            <Button onClick={() => setShowCohortForm(!showCohortForm)}>
+            <Button onClick={() => setShowCohortForm(!showCohortForm)} className="bg-blue-600 text-white hover:bg-blue-700">
               {showCohortForm ? 'Cancel' : '+ Add Cohort'}
             </Button>
           </div>
@@ -360,7 +360,7 @@ export default function GeographyTab({ activeTab = 'localgovs' }: { activeTab?: 
                   onChange={(e) => setCohortForm({ ...cohortForm, endDate: e.target.value })}
                   className="w-full px-3 py-2 border rounded"
                 />
-                <Button type="submit" className="w-full">Create Cohort</Button>
+                <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700">Create Cohort</Button>
               </form>
             </Card>
           )}
@@ -374,7 +374,7 @@ export default function GeographyTab({ activeTab = 'localgovs' }: { activeTab?: 
                   {c.endDate && <p className="text-sm text-gray-600">End: {new Date(c.endDate).toLocaleDateString()}</p>}
                 </div>
                 <div className="flex gap-2">
-                  <Button size="icon" variant="outline" onClick={() => alert('Edit Cohort ' + c.id)} aria-label="Edit">
+                  <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => alert('Edit Cohort ' + c.id)} aria-label="Edit">
                     <Pencil className="w-4 h-4" />
                   </Button>
                   <Button size="icon" variant="destructive" onClick={() => alert('Delete Cohort ' + c.id)} aria-label="Delete">
