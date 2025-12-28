@@ -4,8 +4,20 @@ import { useSession } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, Edit2, Trash2, Save, X, Upload, Image as ImageIcon } from "lucide-react";
+import { Plus, Edit2, Trash2, Save, X, Upload, Image as ImageIcon, Mail, Phone, Calendar, Linkedin, Info, Star, GraduationCap, Briefcase, Globe, User } from "lucide-react";
 import { ProfileImage } from "@/components/ProfileImage";
+
+
+interface Fellowship {
+  id: string;
+  personId: string;
+  cohortId: string;
+  placementId: string;
+  subjects: string[];
+  createdAt: string;
+  cohort?: any;
+  placement?: any;
+}
 
 interface Person {
   id: string;
@@ -23,6 +35,8 @@ interface Person {
   empStatus: string;
   educations: Education[];
   experiences: Experience[];
+  fellowships?: Fellowship[];
+  type?: string;
 }
 
 interface Education {
@@ -50,6 +64,19 @@ interface Experience {
 export default function ProfilePage() {
   const { data: session, status } = useSession();
   const [person, setPerson] = useState<Person | null>(null);
+  const [showFellowshipForm, setShowFellowshipForm] = useState(false);
+  const [editingFellowship, setEditingFellowship] = useState<string | null>(null);
+  const [fellowshipForm, setFellowshipForm] = useState<{
+    cohortId: string;
+    placementId: string;
+    subjects: string[];
+  }>({
+    cohortId: "",
+    placementId: "",
+    subjects: [],
+  });
+  const [cohorts, setCohorts] = useState<{ id: string; name: string; start?: string; end?: string }[]>([]);
+  const [placements, setPlacements] = useState<{ id: string; school: { name: string } }[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [editingEducation, setEditingEducation] = useState<string | null>(null);
@@ -96,8 +123,40 @@ export default function ProfilePage() {
   useEffect(() => {
     if (status === "authenticated" && session) {
       fetchProfile();
+      fetchCohorts();
+      fetchPlacements();
     }
   }, [status, session]);
+
+  const fetchCohorts = async () => {
+    try {
+      const res = await fetch("/api/cohorts");
+      if (res.ok) {
+        const data = await res.json();
+        // Ensure start/end are present for each cohort
+        setCohorts(data.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          start: c.start,
+          end: c.end
+        })));
+      }
+    } catch (error) {
+      console.error("Error fetching cohorts:", error);
+    }
+  };
+
+  const fetchPlacements = async () => {
+    try {
+      const res = await fetch("/api/placements");
+      if (res.ok) {
+        const data = await res.json();
+        setPlacements(data);
+      }
+    } catch (error) {
+      console.error("Error fetching placements:", error);
+    }
+  };
 
   const fetchProfile = async () => {
     try {
@@ -129,12 +188,12 @@ export default function ProfilePage() {
     try {
       const res = await fetch("/api/profile", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+                      headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
-      });
+                    });
 
-      if (res.ok) {
-        await fetchProfile();
+                    if (res.ok) {
+                      await fetchProfile();
         setEditing(false);
       }
     } catch (error) {
@@ -189,7 +248,7 @@ export default function ProfilePage() {
           start: "",
           end: "",
         });
-      } else {
+                    } else {
         const errorData = await res.json();
         alert(errorData.error || "Failed to save education");
       }
@@ -207,8 +266,8 @@ export default function ProfilePage() {
         method: "DELETE",
       });
 
-      if (res.ok) {
-        await fetchProfile();
+                        if (res.ok) {
+                          await fetchProfile();
       }
     } catch (error) {
       console.error("Error deleting education:", error);
@@ -262,10 +321,10 @@ export default function ProfilePage() {
           start: "",
           end: "",
         });
-      } else {
+                        } else {
         const errorData = await res.json();
         alert(errorData.error || "Failed to save experience");
-      }
+                        }
     } catch (error) {
       console.error("Error saving experience:", error);
       alert("An error occurred while saving experience");
@@ -369,8 +428,17 @@ export default function ProfilePage() {
       </div>
 
       {/* Basic Information */}
-      <Card className="p-6 mb-6">
+      <Card className="relative p-6 mb-6 border-2 border-blue-400 rounded-xl shadow-sm">
         <h2 className="text-xl font-semibold mb-4 text-blue-600">Basic Information</h2>
+        {/* Alumni Type Label in Top Right of Card */}
+        {person.type && (
+          <div className="absolute top-0 right-0 mt-2 mr-2 z-20">
+            <span className="inline-flex items-center gap-1 bg-yellow-400 text-yellow-900 text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wide shadow-lg border-2 border-yellow-500" style={{ boxShadow: '0 0 8px 2px #facc15, 0 0 16px 4px #fde68a' }}>
+              <Star size={16} className="text-yellow-700 drop-shadow" fill="#facc15" stroke="#b45309" />
+              {person.type}
+            </span>
+          </div>
+        )}
         
         {/* Profile Image Section */}
         <div className="mb-6 flex items-center gap-6">
@@ -549,23 +617,259 @@ export default function ProfilePage() {
             </div>
           </div>
         ) : (
-          <div className="space-y-2">
-            <div><strong>Name:</strong> {person.firstName} {person.lastName}</div>
-            <div><strong>Email:</strong> {person.email1}</div>
-            {person.email2 && <div><strong>Secondary Email:</strong> {person.email2}</div>}
-            {person.phone1 && <div><strong>Phone 1:</strong> {person.phone1}</div>}
-            {person.phone2 && <div><strong>Phone 2:</strong> {person.phone2}</div>}
-            {person.linkedin && <div><strong>LinkedIn:</strong> <a href={person.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600">{person.linkedin}</a></div>}
-            {person.dob && <div><strong>Date of Birth:</strong> {new Date(person.dob).toLocaleDateString()}</div>}
-            <div><strong>Education Status:</strong> {person.eduStatus}</div>
-            <div><strong>Employment Status:</strong> {person.empStatus}</div>
-            {person.bio && <div><strong>Bio:</strong> {person.bio}</div>}
+          <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 text-left">
+            {/* Name | DOB */}
+            <div className="flex items-center gap-2 text-lg font-semibold">
+              <User size={22} className="text-blue-500" />
+              <span>{person.firstName} {person.lastName}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {person.dob && (
+                <span className="inline-flex items-center gap-2 text-base font-normal text-gray-700 bg-purple-50 py-1 rounded"><Calendar size={16} className="text-purple-500" />{new Date(person.dob).toLocaleDateString()}</span>
+              )}
+            </div>
+            {/* Email1 | Email2 */}
+            <div className="flex items-center gap-2">
+              <Mail size={18} className="text-blue-500" />
+              <span>{person.email1}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              {person.email2 && <><Mail size={18} className="text-blue-500" /><span>{person.email2}</span></>}
+            </div>
+            {/* Phone1 | Phone2 */}
+            <div className="flex items-center gap-2">
+              {person.phone1 && <><Phone size={18} className="text-green-500" /><span>{person.phone1}</span></>}
+            </div>
+            <div className="flex items-center gap-2">
+              {person.phone2 && <><Phone size={18} className="text-green-500" /><span>{person.phone2}</span></>}
+            </div>
+            {/* LinkedIn and Website (two columns) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 col-span-1 sm:col-span-2">
+              <div className="flex items-center gap-2">
+                {person.linkedin && <>
+                  <Linkedin size={18} className="text-blue-700" />
+                  <a href={person.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">{person.linkedin}</a>
+                </>}
+              </div>
+              <div className="flex items-center gap-2">
+                <Globe size={18} className="text-blue-700" />
+                <a href="https://www.teachfornepal.org" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">www.teachfornepal.org</a>
+              </div>
+            </div>
+            {/* Statuses */}
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <GraduationCap size={18} className="text-blue-500" />
+                <span className="font-medium text-gray-700">Education Status:</span>
+                <span className="font-normal">{person.eduStatus}</span>
+              </div>
+              {(person.eduStatus === "ENROLLED" || person.eduStatus === "COMPLETED") && person.educations && person.educations.length > 0 && (
+                (() => {
+                  // Find most recent education by start date (or end date if available)
+                  const recentEdu = [...person.educations].sort((a, b) => {
+                    const aDate = new Date(a.end || a.start).getTime();
+                    const bDate = new Date(b.end || b.start).getTime();
+                    return bDate - aDate;
+                  })[0];
+                  return recentEdu ? (
+                    <div className="flex items-center gap-2 text-sm text-blue-800 pl-7">
+                      <span className="font-semibold">Recent:</span>
+                      <span>{recentEdu.name}</span>
+                    </div>
+                  ) : null;
+                })()
+              )}
+            </div>
+            <div className="flex flex-col gap-1 justify-start">
+              <div className="flex items-center gap-2">
+                <Briefcase size={18} className="text-green-600" />
+                <span className="font-medium text-gray-700">Employment Status:</span>
+                <span className="font-normal">{person.empStatus}</span>
+              </div>
+              {person.empStatus === "EMPLOYED" && person.experiences && person.experiences.length > 0 && (
+                (() => {
+                  // Find most recent experience by start date (or end date if available)
+                  const recentExp = [...person.experiences].sort((a, b) => {
+                    const aDate = new Date(a.end || a.start).getTime();
+                    const bDate = new Date(b.end || b.start).getTime();
+                    return bDate - aDate;
+                  })[0];
+                  return recentExp ? (
+                    <div className="flex items-center gap-2 text-sm text-green-800 pl-7">
+                      <span className="font-semibold">Recent:</span>
+                      <span>{recentExp.type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())} at {recentExp.orgName}</span>
+                    </div>
+                  ) : null;
+                })()
+              )}
+            </div>
+            {/* Bio (full width) */}
+            {person.bio && (
+              <blockquote className="col-span-1 sm:col-span-2 border-l-4 border-yellow-400 bg-yellow-50/60 px-4 py-3 my-2 italic text-yellow-900 relative">
+                <span className="pl-6 block">{person.bio}</span>
+              </blockquote>
+            )}
           </div>
         )}
       </Card>
 
+
+      {/* Fellowship (only for alumni) */}
+      {person.type && person.type.toLowerCase() === "alumni" && (
+        <Card className="p-6 mb-6 border-2 border-purple-400 rounded-xl shadow-sm">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-blue-600">Fellowships</h2>
+            {!showFellowshipForm && (
+              <Button onClick={() => setShowFellowshipForm(true)} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Plus size={16} className="mr-2" />
+                Add Fellowship
+              </Button>
+            )}
+          </div>
+
+          {showFellowshipForm && (
+            <div className="mb-4 p-4 border rounded space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Cohort</label>
+                <select
+                  className="w-full border rounded p-2"
+                  value={fellowshipForm.cohortId}
+                  onChange={(e) => setFellowshipForm({ ...fellowshipForm, cohortId: e.target.value })}
+                >
+                  <option value="">Select Cohort</option>
+                  {cohorts.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Placement</label>
+                <select
+                  className="w-full border rounded p-2"
+                  value={fellowshipForm.placementId}
+                  onChange={(e) => setFellowshipForm({ ...fellowshipForm, placementId: e.target.value })}
+                >
+                  <option value="">Select Placement</option>
+                  {placements.map((p) => (
+                    <option key={p.id} value={p.id}>{p.school?.name || p.id}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Subjects (comma separated)</label>
+                <input
+                  type="text"
+                  className="w-full border rounded p-2"
+                  value={fellowshipForm.subjects.join(", ")}
+                  onChange={(e) => setFellowshipForm({ ...fellowshipForm, subjects: e.target.value.split(",").map(s => s.trim()) })}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={async () => {
+                  // Save fellowship
+                  let url = "/api/fellowships";
+                  let method = "POST";
+                  if (editingFellowship) {
+                    url = `/api/fellowships/${editingFellowship}`;
+                    method = "PATCH";
+                  }
+                  const res = await fetch(url, {
+                    method,
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      personId: person.id,
+                      cohortId: fellowshipForm.cohortId,
+                      placementId: fellowshipForm.placementId,
+                      subjects: fellowshipForm.subjects,
+                    }),
+                  });
+                  if (res.ok) {
+                    await fetchProfile();
+                    setShowFellowshipForm(false);
+                    setEditingFellowship(null);
+                    setFellowshipForm({ cohortId: "", placementId: "", subjects: [] });
+                  } else {
+                    alert("Failed to save fellowship");
+                  }
+                }} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Save size={16} className="mr-2" />
+                  Save
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                  onClick={() => {
+                    setShowFellowshipForm(false);
+                    setEditingFellowship(null);
+                    setFellowshipForm({ cohortId: "", placementId: "", subjects: [] });
+                  }}
+                >
+                  <X size={16} className="mr-2" />
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            {person.fellowships?.map((fellow) => {
+              const cohort = cohorts.find(c => c.id === fellow.cohortId);
+              const placement = placements.find(p => p.id === fellow.placementId);
+              return (
+                <div key={fellow.id} className="p-4 border rounded flex justify-between items-start border-l-4 border-purple-400 bg-purple-50/30">
+                  <div>
+                    <div className="font-semibold">Cohort: {cohort?.name || fellow.cohortId}</div>
+                    <div className="text-sm text-gray-600">Start: {cohort?.start ? new Date(cohort.start).toLocaleDateString() : "-"} | End: {cohort?.end ? new Date(cohort.end).toLocaleDateString() : "-"}</div>
+                    <div className="text-sm text-gray-600">Placement: {placement?.school?.name || fellow.placementId}</div>
+                    <div className="text-sm text-gray-500">Subjects: {fellow.subjects.join(", ")}</div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                      onClick={() => {
+                        setEditingFellowship(fellow.id);
+                        setShowFellowshipForm(true);
+                        setFellowshipForm({
+                          cohortId: fellow.cohortId,
+                          placementId: fellow.placementId,
+                          subjects: fellow.subjects,
+                        });
+                      }}
+                    >
+                      <Edit2 size={16} />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-red-600 text-red-600 hover:bg-red-50"
+                      onClick={async () => {
+                        if (!confirm("Are you sure you want to delete this fellowship?")) return;
+                        const res = await fetch(`/api/fellowships/${fellow.id}`, { method: "DELETE" });
+                        if (res.ok) {
+                          await fetchProfile();
+                        } else {
+                          alert("Failed to delete fellowship");
+                        }
+                      }}
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+            {(!person.fellowships || person.fellowships.length === 0) && !showFellowshipForm && (
+              <div className="text-gray-500 text-center py-4">No fellowship records yet.</div>
+            )}
+          </div>
+        </Card>
+      )}
+      
       {/* Education */}
-      <Card className="p-6 mb-6">
+      <Card className="p-6 mb-6 border-2 border-green-400 rounded-xl shadow-sm">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-blue-600">Education</h2>
           {!showEducationForm && (
@@ -680,7 +984,7 @@ export default function ProfilePage() {
 
         <div className="space-y-4">
           {person.educations?.map((edu) => (
-            <div key={edu.id} className="p-4 border rounded">
+            <div key={edu.id} className="p-4 border rounded border-l-4 border-green-400 bg-green-50/30">
               {editingEducation === edu.id ? (
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -820,7 +1124,7 @@ export default function ProfilePage() {
       </Card>
 
       {/* Experience */}
-      <Card className="p-6">
+      <Card className="p-6 border-2 border-orange-400 rounded-xl shadow-sm">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-blue-600">Experience</h2>
           {!showExperienceForm && (
@@ -938,7 +1242,7 @@ export default function ProfilePage() {
 
         <div className="space-y-4">
           {person.experiences?.map((exp) => (
-            <div key={exp.id} className="p-4 border rounded">
+            <div key={exp.id} className="p-4 border rounded border-l-4 border-orange-400 bg-orange-50/30">
               {editingExperience === exp.id ? (
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">

@@ -30,22 +30,16 @@ export function ProfileImage({ src, name, className = "", alt }: ProfileImagePro
   // If no src or image failed to load, show default
   if (!src || imageError) {
     const initials = getInitials(name);
-    
-    // If className has rounded-full, use a circular default
-    if (className.includes("rounded-full")) {
-      return (
-        <div className={`${className} bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold`}>
-          <span className={className.includes("h-16") ? "text-lg" : className.includes("h-8") ? "text-xs" : "text-2xl"}>
-            {initials}
-          </span>
-        </div>
-      );
-    }
-    
-    // For other shapes, use DefaultProfilePicture
+    // Always use a circular, centered avatar for initials
     const sizeMatch = className.match(/(h-\d+|w-\d+)/g);
-    const sizeClasses = sizeMatch ? sizeMatch.join(" ") : "h-28 w-28";
-    return <DefaultProfilePicture name={name} className={sizeClasses} />;
+    const sizeClasses = sizeMatch ? sizeMatch.join(" ") : "h-16 w-16";
+    return (
+      <div className={`rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold border-2 border-indigo-200 shadow-md ${sizeClasses}`}>
+        <span className={sizeClasses.includes("h-16") ? "text-lg" : sizeClasses.includes("h-8") ? "text-xs" : "text-2xl"}>
+          {initials}
+        </span>
+      </div>
+    );
   }
 
   return (
