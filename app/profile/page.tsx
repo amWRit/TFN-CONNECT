@@ -733,7 +733,6 @@ export default function ProfilePage() {
                     <div className="text-sm text-gray-600">Start: {cohort?.start ? new Date(cohort.start).toLocaleDateString() : "-"} | End: {cohort?.end ? new Date(cohort.end).toLocaleDateString() : "-"}</div>
                     <div className="text-sm text-gray-600">Placement: {placement?.school?.name || fellow.placementId}</div>
                     <div className="text-sm text-gray-500">Subjects: {fellow.subjects.join(", ")}</div>
-                    <div className="text-sm text-gray-500 mt-1">Added: {new Date(fellow.createdAt).toLocaleDateString()}</div>
                   </div>
                   <div className="flex gap-2">
                     <Button
