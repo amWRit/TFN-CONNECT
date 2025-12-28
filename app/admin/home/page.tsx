@@ -13,10 +13,10 @@ import {
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import DashboardTab from './tabs/DashboardTab';
-import BrowseTab from './tabs/BrowseTab';
-import ManageTab from './tabs/ManageTab';
-import SettingsTab from './tabs/SettingsTab';
+import DashboardTab from '../tabs/dashboard/IndexTab';
+import BrowseTab from '../tabs/browse/BrowseTab';
+import ManageTab from '../tabs/manage/ManageTab';
+import SettingsTab from '../tabs/settings/SettingsTab';
 
 function AdminDashboardContent() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
