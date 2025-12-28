@@ -657,15 +657,51 @@ export default function ProfilePage() {
               </div>
             </div>
             {/* Statuses */}
-            <div className="flex items-center gap-2">
-              <GraduationCap size={18} className="text-blue-500" />
-              <span className="font-medium text-gray-700">Education Status:</span>
-              <span className="font-normal">{person.eduStatus}</span>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <GraduationCap size={18} className="text-blue-500" />
+                <span className="font-medium text-gray-700">Education Status:</span>
+                <span className="font-normal">{person.eduStatus}</span>
+              </div>
+              {(person.eduStatus === "ENROLLED" || person.eduStatus === "COMPLETED") && person.educations && person.educations.length > 0 && (
+                (() => {
+                  // Find most recent education by start date (or end date if available)
+                  const recentEdu = [...person.educations].sort((a, b) => {
+                    const aDate = new Date(a.end || a.start).getTime();
+                    const bDate = new Date(b.end || b.start).getTime();
+                    return bDate - aDate;
+                  })[0];
+                  return recentEdu ? (
+                    <div className="flex items-center gap-2 text-sm text-blue-800 pl-7">
+                      <span className="font-semibold">Recent:</span>
+                      <span>{recentEdu.name}</span>
+                    </div>
+                  ) : null;
+                })()
+              )}
             </div>
-            <div className="flex items-center gap-2 justify-start">
-              <Briefcase size={18} className="text-green-600" />
-              <span className="font-medium text-gray-700">Employment Status:</span>
-              <span className="font-normal">{person.empStatus}</span>
+            <div className="flex flex-col gap-1 justify-start">
+              <div className="flex items-center gap-2">
+                <Briefcase size={18} className="text-green-600" />
+                <span className="font-medium text-gray-700">Employment Status:</span>
+                <span className="font-normal">{person.empStatus}</span>
+              </div>
+              {person.empStatus === "EMPLOYED" && person.experiences && person.experiences.length > 0 && (
+                (() => {
+                  // Find most recent experience by start date (or end date if available)
+                  const recentExp = [...person.experiences].sort((a, b) => {
+                    const aDate = new Date(a.end || a.start).getTime();
+                    const bDate = new Date(b.end || b.start).getTime();
+                    return bDate - aDate;
+                  })[0];
+                  return recentExp ? (
+                    <div className="flex items-center gap-2 text-sm text-green-800 pl-7">
+                      <span className="font-semibold">Recent:</span>
+                      <span>{recentExp.type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())} at {recentExp.orgName}</span>
+                    </div>
+                  ) : null;
+                })()
+              )}
             </div>
             {/* Bio (full width) */}
             {person.bio && (
