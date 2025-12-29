@@ -100,16 +100,16 @@ export default function BookmarksPage() {
         <div className="space-y-10">
           {Object.entries(bookmarks).map(([type, items]) => {
             // Assign a color scheme per type
-            let border = "border-blue-400";
-            if (type === "jobs") border = "border-green-400";
-            if (type === "posts") border = "border-purple-400";
-            if (type === "jobApplications") border = "border-yellow-400";
+            let border = "border-blue-400", label = "text-blue-700";
+            if (type === "jobs") { border = "border-green-400"; label = "text-green-700"; }
+            if (type === "posts") { border = "border-purple-400"; label = "text-purple-700"; }
+            if (type === "jobApplications") { border = "border-yellow-400"; label = "text-yellow-700"; }
             return (
               <section
                 key={type}
                 className={`rounded-xl border-2 ${border} bg-blue-50 px-6 py-5 shadow-sm`}
               >
-                <h2 className={`text-xl font-semibold mb-4 capitalize ${border} text-blue-700`}>{type.replace(/([A-Z])/g, ' $1')}</h2>
+                <h2 className={`text-xl font-semibold mb-4 capitalize ${border} ${label}`}>{type.replace(/([A-Z])/g, ' $1')}</h2>
                 {Array.isArray(items) && items.length > 0 ? (
                   <div className="grid gap-4">
                     {type === "people"
