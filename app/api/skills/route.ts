@@ -22,13 +22,37 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    // 1. Find or create the category
+    let category = await prisma.category.findUnique({
+      where: { name: body.category },
+    });
+    if (!category) {
+      category = await prisma.category.create({
+        data: { name: body.category },
+      });
+    }
+
+    // 2. Create the skill
     const skill = await prisma.skill.create({
       data: {
         name: body.name,
-        category: body.category,
+        categories: {
+          create: [{ categoryId: category.id }],
+        },
+      },
+      include: {
+        categories: {
+          include: { category: true },
+        },
       },
     });
-    return NextResponse.json(skill, { status: 201 });
+    // 3. Return skill with category name for frontend compatibility
+    const result = {
+      id: skill.id,
+      name: skill.name,
+      category: skill.categories[0]?.category.name || body.category,
+    };
+    return NextResponse.json(result, { status: 201 });
   } catch (error) {
     console.error('Error creating skill:', error);
     return NextResponse.json({ error: 'Failed to create skill' }, { status: 500 });

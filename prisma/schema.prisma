@@ -208,14 +208,31 @@ model Experience {
 model Skill {
   id           String           @id @default(cuid())
   name         String           @unique
-  category     String           // "technical", "teaching", "leadership"
   description  String?
-  
+
   experiences  ExperienceSkill[]
-  
+  categories   SkillCategory[]
+
   createdAt    DateTime         @default(now())
 }
 
+model SkillCategory {
+  skillId     String
+  categoryId  String
+
+  skill       Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([skillId, categoryId])
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  skills    SkillCategory[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
 model ExperienceSkill {
   experienceId String
   skillId      String
