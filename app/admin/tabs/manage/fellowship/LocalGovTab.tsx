@@ -92,7 +92,20 @@ export default function LocalGovTab() {
                 <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => alert('Edit LocalGov ' + lg.id)} aria-label="Edit">
                   <Pencil className="w-4 h-4" />
                 </Button>
-                <Button size="icon" variant="destructive" onClick={() => alert('Delete LocalGov ' + lg.id)} aria-label="Delete">
+                <Button size="icon" variant="destructive" onClick={async () => {
+                  if (!window.confirm('Are you sure you want to delete this local government?')) return;
+                  try {
+                    const res = await fetch(`/api/localgovs/${lg.id}`, { method: 'DELETE' });
+                    if (res.ok) {
+                      fetchData();
+                    } else {
+                      const errorData = await res.json();
+                      alert(errorData.error || 'Failed to delete local government');
+                    }
+                  } catch (error) {
+                    alert('Failed to delete local government');
+                  }
+                }} aria-label="Delete">
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
