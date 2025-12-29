@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
@@ -8,6 +7,7 @@ import { Pencil, Trash2 } from 'lucide-react';
 interface Cohort {
   id: string;
   name: string;
+  description?: string;
   startDate?: string;
   endDate?: string;
 }
@@ -15,9 +15,9 @@ interface Cohort {
 export default function CohortsTab() {
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
   const [showCohortForm, setShowCohortForm] = useState(false);
-  const [cohortForm, setCohortForm] = useState({ name: '', startDate: '', endDate: '' });
+  const [cohortForm, setCohortForm] = useState({ name: '', description: '', startDate: '', endDate: '' });
   const [editId, setEditId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ name: '', startDate: '', endDate: '' });
+  const [editForm, setEditForm] = useState({ name: '', description: '', startDate: '', endDate: '' });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -37,13 +37,19 @@ export default function CohortsTab() {
     e.preventDefault();
     setLoading(true);
     try {
+      const body = {
+        name: cohortForm.name,
+        description: cohortForm.description || null,
+        start: cohortForm.startDate ? new Date(cohortForm.startDate).toISOString() : null,
+        end: cohortForm.endDate ? new Date(cohortForm.endDate).toISOString() : null,
+      };
       const res = await fetch('/api/cohorts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(cohortForm),
+        body: JSON.stringify(body),
       });
       if (res.ok) {
-        setCohortForm({ name: '', startDate: '', endDate: '' });
+        setCohortForm({ name: '', description: '', startDate: '', endDate: '' });
         setShowCohortForm(false);
         fetchData();
       }
@@ -58,6 +64,7 @@ export default function CohortsTab() {
     setEditId(c.id);
     setEditForm({
       name: c.name,
+      description: c.description || '',
       startDate: c.startDate || '',
       endDate: c.endDate || '',
     });
@@ -65,7 +72,7 @@ export default function CohortsTab() {
 
   const cancelEdit = () => {
     setEditId(null);
-    setEditForm({ name: '', startDate: '', endDate: '' });
+    setEditForm({ name: '', description: '', startDate: '', endDate: '' });
   };
 
   const saveEdit = async (e: React.FormEvent) => {
@@ -73,7 +80,6 @@ export default function CohortsTab() {
     if (!editId) return;
     setLoading(true);
     try {
-      // Ensure valid ISO date or null
       const start = editForm.startDate ? new Date(editForm.startDate).toISOString() : null;
       const end = editForm.endDate ? new Date(editForm.endDate).toISOString() : null;
       const body = {
@@ -89,7 +95,7 @@ export default function CohortsTab() {
       });
       if (res.ok) {
         setEditId(null);
-        setEditForm({ name: '', startDate: '', endDate: '' });
+        setEditForm({ name: '', description: '', startDate: '', endDate: '' });
         fetchData();
       } else {
         const errorData = await res.json();
@@ -144,6 +150,14 @@ export default function CohortsTab() {
                 required
                 disabled={loading}
               />
+              <textarea
+                placeholder="Description (optional)"
+                value={cohortForm.description}
+                onChange={(e) => setCohortForm({ ...cohortForm, description: e.target.value })}
+                className="w-full px-3 py-2 border rounded"
+                rows={2}
+                disabled={loading}
+              />
               <input
                 type="date"
                 placeholder="Start Date"
@@ -176,6 +190,14 @@ export default function CohortsTab() {
                     onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                     className="px-3 py-2 border rounded"
                     required
+                    disabled={loading}
+                  />
+                  <textarea
+                    placeholder="Description (optional)"
+                    value={editForm.description}
+                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                    className="px-3 py-2 border rounded"
+                    rows={2}
                     disabled={loading}
                   />
                   <input
