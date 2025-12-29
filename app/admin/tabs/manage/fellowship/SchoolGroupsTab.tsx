@@ -190,7 +190,7 @@ export default function SchoolGroupsTab() {
                 <>
                   <div>
                     <h3 className="font-bold">{sg.name}</h3>
-                    <p className="text-xs text-gray-500">LocalGov: {sg.localGovId}</p>
+                    <p className="text-xs text-gray-500">LocalGov: {localGovs.find(lg => lg.id === sg.localGovId)?.name || sg.localGovId}</p>
                   </div>
                   <div className="flex gap-2">
                     <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => startEdit(sg)} aria-label="Edit">
