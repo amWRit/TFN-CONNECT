@@ -705,13 +705,13 @@ export default function ProfilePage() {
           </div>
         ) : (
           <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 text-left">
-            {/* Name | DOB */}
+            {/* Name | DOB (DOB only for admin or profile owner) */}
             <div className="flex items-center gap-2 text-lg font-semibold">
               <User size={22} className="text-blue-500" />
               <span>{person.firstName} {person.lastName}</span>
             </div>
             <div className="flex items-center gap-2">
-              {person.dob && (
+              {(isProfileOwner || isAdmin) && person.dob && (
                 <span className="inline-flex items-center gap-2 text-base font-normal text-gray-700 bg-purple-50 py-1 rounded"><Calendar size={16} className="text-purple-500" />{new Date(person.dob).toLocaleDateString()}</span>
               )}
             </div>
