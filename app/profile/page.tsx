@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useSession } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
@@ -64,12 +65,18 @@ interface Experience {
 }
 
 export default function ProfilePage() {
+      // ...existing code...
     // ...existing code...
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const [clientReady, setClientReady] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [person, setPerson] = useState<Person | null>(null);
+  // Determine if the current session user is the profile owner
+  // Use useMemo to ensure isProfileOwner updates when person or session changes
+  const isProfileOwner = React.useMemo(() => {
+    return session && person && session.user && session.user.id === person.id;
+  }, [session, person]);
   const [showFellowshipForm, setShowFellowshipForm] = useState(false);
   const [editingFellowship, setEditingFellowship] = useState<string | null>(null);
   const [fellowshipForm, setFellowshipForm] = useState<{
@@ -210,6 +217,11 @@ export default function ProfilePage() {
           eduStatus: data.eduStatus || "COMPLETED",
           empStatus: data.empStatus || "SEEKING",
         });
+        // Force session refetch to ensure session.user.id is up-to-date
+        if (typeof window !== 'undefined' && window.location) {
+          // This will trigger next-auth to refetch session
+          window.dispatchEvent(new Event('visibilitychange'));
+        }
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -222,8 +234,14 @@ export default function ProfilePage() {
     if (!clientReady) return;
     const params = searchParams ?? new URLSearchParams();
     const id = params.get("id");
-    if (id && isAdmin) {
-      setReadOnly(true);
+    if (id && session && session.user && session.user.id === id) {
+      // If the signed-in user is viewing their own profile via ?id, treat as owner
+      setReadOnly(false);
+      fetchProfileById(id);
+      fetchCohorts();
+      fetchPlacements();
+    } else if (id) {
+      setReadOnly(!isAdmin);
       fetchProfileById(id);
       fetchCohorts();
       fetchPlacements();
@@ -248,7 +266,8 @@ export default function ProfilePage() {
     return <div className="text-center py-12">Loading...</div>;
   }
   if (!isAdmin && status !== "loading" && !session) {
-    return <div className="text-center py-12">Please sign in to view your profile.</div>;
+    // Public view: allow anyone to view the profile page
+    // No sign-in message or redirect; continue rendering
   }
 
   if (!person) {
@@ -483,11 +502,12 @@ export default function ProfilePage() {
     <div className="max-w-4xl mx-auto py-8 px-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">My Profile</h1>
-        {!editing && (
-          <Button onClick={() => setEditing(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
-            <Edit2 size={16} className="mr-2" />
-            Edit Profile
-          </Button>
+        {/* Only show edit button if signed in as user or admin and viewing own profile or as admin */}
+        {!editing && (isProfileOwner || isAdmin) && (
+            <Button onClick={() => setEditing(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Edit2 size={16} className="mr-2" />
+              Edit Profile
+            </Button>
         )}
       </div>
 
@@ -515,47 +535,50 @@ export default function ProfilePage() {
               alt={`${person.firstName} ${person.lastName}`}
             />
           </div>
-          <div>
-            <h3 className="font-semibold mb-2">Profile Picture</h3>
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageUpload}
-            />
-            <Button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploadingImage}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-              size="sm"
-            >
-              {uploadingImage ? (
-                <>
-                  <Upload size={16} className="mr-2 animate-spin" />
-                  Uploading...
-                </>
-              ) : (
-                <>
-                  <ImageIcon size={16} className="mr-2" />
-                  {person.profileImage ? "Change Image" : "Upload Image"}
-                </>
-              )}
-            </Button>
-            {person.profileImage && (
+          {/* Only show label and upload if signed in as user or admin and viewing own profile or as admin */}
+          {(isProfileOwner || isAdmin) && (
+            <div>
+              <h3 className="font-semibold mb-2">Profile Picture</h3>
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageUpload}
+              />
               <Button
-                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingImage}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
                 size="sm"
-                className="ml-2 border-red-600 text-red-600 hover:bg-red-50"
-                onClick={handleRemoveImage}
               >
-                Remove
+                {uploadingImage ? (
+                  <>
+                    <Upload size={16} className="mr-2 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <ImageIcon size={16} className="mr-2" />
+                    {person.profileImage ? "Change Image" : "Upload Image"}
+                  </>
+                )}
               </Button>
-            )}
-          </div>
+              {person.profileImage && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="ml-2 border-red-600 text-red-600 hover:bg-red-50"
+                  onClick={handleRemoveImage}
+                >
+                  Remove
+                </Button>
+              )}
+            </div>
+          )}
         </div>
 
-        {editing ? (
+        {editing && (isProfileOwner || isAdmin) ? (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -692,28 +715,40 @@ export default function ProfilePage() {
                 <span className="inline-flex items-center gap-2 text-base font-normal text-gray-700 bg-purple-50 py-1 rounded"><Calendar size={16} className="text-purple-500" />{new Date(person.dob).toLocaleDateString()}</span>
               )}
             </div>
-            {/* Email1 | Email2 */}
-            <div className="flex items-center gap-2">
-              <Mail size={18} className="text-blue-500" />
-              <span>{person.email1}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              {person.email2 && <><Mail size={18} className="text-blue-500" /><span>{person.email2}</span></>}
-            </div>
-            {/* Phone1 | Phone2 */}
-            <div className="flex items-center gap-2">
-              {person.phone1 && <><Phone size={18} className="text-green-500" /><span>{person.phone1}</span></>}
-            </div>
-            <div className="flex items-center gap-2">
-              {person.phone2 && <><Phone size={18} className="text-green-500" /><span>{person.phone2}</span></>}
-            </div>
+            {/* Email/Phone: Only show if signed in as user or admin, else show connect message */}
+            {(session || isAdmin) ? (
+              <>
+                <div className="flex items-center gap-2">
+                  <Mail size={18} className="text-blue-500" />
+                  <span>{person.email1}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {person.email2 && (<><Mail size={18} className="text-blue-500" /><span>{person.email2}</span></>)}
+                </div>
+                <div className="flex items-center gap-2">
+                  {person.phone1 && (<><Phone size={18} className="text-green-500" /><span>{person.phone1}</span></>)}
+                </div>
+                <div className="flex items-center gap-2">
+                  {person.phone2 && (<><Phone size={18} className="text-green-500" /><span>{person.phone2}</span></>)}
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center gap-2 text-base font-normal text-gray-700 py-2 col-span-1 sm:col-span-2">
+                <Mail size={18} className="text-blue-500" />
+                <span>
+                  Email <a href="mailto:connect@teachfornepal.org" className="text-blue-700 underline font-semibold">connect@teachfornepal.org</a> to connect with this person
+                </span>
+              </div>
+            )}
             {/* LinkedIn and Website (two columns) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 col-span-1 sm:col-span-2">
               <div className="flex items-center gap-2">
-                {person.linkedin && <>
-                  <Linkedin size={18} className="text-blue-700" />
+                <Linkedin size={18} className="text-blue-700" />
+                {person.linkedin ? (
                   <a href={person.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">{person.linkedin}</a>
-                </>}
+                ) : (
+                  <span className="text-gray-400">---</span>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <Globe size={18} className="text-blue-700" />
@@ -780,100 +815,101 @@ export default function ProfilePage() {
 
       {/* Fellowship (only for alumni) */}
       {person.type && person.type.toLowerCase() === "alumni" && (
-        <Card className="p-6 mb-6 border-2 border-purple-400 rounded-xl shadow-sm">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-blue-600">Fellowships</h2>
-            {!showFellowshipForm && (
-              <Button onClick={() => setShowFellowshipForm(true)} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
-                <Plus size={16} className="mr-2" />
-                Add Fellowship
-              </Button>
-            )}
-          </div>
-
-          {showFellowshipForm && (
-            <div className="mb-4 p-4 border rounded space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Cohort</label>
-                <select
-                  className="w-full border rounded p-2"
-                  value={fellowshipForm.cohortId}
-                  onChange={(e) => setFellowshipForm({ ...fellowshipForm, cohortId: e.target.value })}
-                >
-                  <option value="">Select Cohort</option>
-                  {cohorts.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Placement</label>
-                <select
-                  className="w-full border rounded p-2"
-                  value={fellowshipForm.placementId}
-                  onChange={(e) => setFellowshipForm({ ...fellowshipForm, placementId: e.target.value })}
-                >
-                  <option value="">Select Placement</option>
-                  {placements.map((p) => (
-                    <option key={p.id} value={p.id}>{p.school?.name || p.id}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Subjects (comma separated)</label>
-                <input
-                  type="text"
-                  className="w-full border rounded p-2"
-                  value={fellowshipForm.subjects.join(", ")}
-                  onChange={(e) => setFellowshipForm({ ...fellowshipForm, subjects: e.target.value.split(",").map(s => s.trim()) })}
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button onClick={async () => {
-                  // Save fellowship
-                  let url = "/api/fellowships";
-                  let method = "POST";
-                  if (editingFellowship) {
-                    url = `/api/fellowships/${editingFellowship}`;
-                    method = "PATCH";
-                  }
-                  const res = await fetch(url, {
-                    method,
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      personId: person.id,
-                      cohortId: fellowshipForm.cohortId,
-                      placementId: fellowshipForm.placementId,
-                      subjects: fellowshipForm.subjects,
-                    }),
-                  });
-                  if (res.ok) {
-                    await fetchProfile();
-                    setShowFellowshipForm(false);
-                    setEditingFellowship(null);
-                    setFellowshipForm({ cohortId: "", placementId: "", subjects: [] });
-                  } else {
-                    alert("Failed to save fellowship");
-                  }
-                }} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
-                  <Save size={16} className="mr-2" />
-                  Save
+          <Card className="p-6 mb-6 border-2 border-purple-400 rounded-xl shadow-sm">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-blue-600">Fellowships</h2>
+              {/* Only show add button if signed in as user or admin and viewing own profile or as admin */}
+              {!showFellowshipForm && (isProfileOwner || isAdmin) && (
+                <Button onClick={() => setShowFellowshipForm(true)} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Plus size={16} className="mr-2" />
+                  Add Fellowship
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                  onClick={() => {
-                    setShowFellowshipForm(false);
-                    setEditingFellowship(null);
-                    setFellowshipForm({ cohortId: "", placementId: "", subjects: [] });
-                  }}
-                >
-                  <X size={16} className="mr-2" />
-                  Cancel
-                </Button>
-              </div>
+              )}
             </div>
+
+          {showFellowshipForm && (isProfileOwner || isAdmin) && (
+              <div className="mb-4 p-4 border rounded space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Cohort</label>
+                  <select
+                    className="w-full border rounded p-2"
+                    value={fellowshipForm.cohortId}
+                    onChange={(e) => setFellowshipForm({ ...fellowshipForm, cohortId: e.target.value })}
+                  >
+                    <option value="">Select Cohort</option>
+                    {cohorts.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Placement</label>
+                  <select
+                    className="w-full border rounded p-2"
+                    value={fellowshipForm.placementId}
+                    onChange={(e) => setFellowshipForm({ ...fellowshipForm, placementId: e.target.value })}
+                  >
+                    <option value="">Select Placement</option>
+                    {placements.map((p) => (
+                      <option key={p.id} value={p.id}>{p.school?.name || p.id}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Subjects (comma separated)</label>
+                  <input
+                    type="text"
+                    className="w-full border rounded p-2"
+                    value={fellowshipForm.subjects.join(", ")}
+                    onChange={(e) => setFellowshipForm({ ...fellowshipForm, subjects: e.target.value.split(",").map(s => s.trim()) })}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={async () => {
+                    // Save fellowship
+                    let url = "/api/fellowships";
+                    let method = "POST";
+                    if (editingFellowship) {
+                      url = `/api/fellowships/${editingFellowship}`;
+                      method = "PATCH";
+                    }
+                    const res = await fetch(url, {
+                      method,
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        personId: person.id,
+                        cohortId: fellowshipForm.cohortId,
+                        placementId: fellowshipForm.placementId,
+                        subjects: fellowshipForm.subjects,
+                      }),
+                    });
+                    if (res.ok) {
+                      await fetchProfile();
+                      setShowFellowshipForm(false);
+                      setEditingFellowship(null);
+                      setFellowshipForm({ cohortId: "", placementId: "", subjects: [] });
+                    } else {
+                      alert("Failed to save fellowship");
+                    }
+                  }} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Save size={16} className="mr-2" />
+                    Save
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                    onClick={() => {
+                      setShowFellowshipForm(false);
+                      setEditingFellowship(null);
+                      setFellowshipForm({ cohortId: "", placementId: "", subjects: [] });
+                    }}
+                  >
+                    <X size={16} className="mr-2" />
+                    Cancel
+                  </Button>
+                </div>
+              </div>
           )}
 
           <div className="space-y-4">
@@ -888,40 +924,43 @@ export default function ProfilePage() {
                     <div className="text-sm text-gray-600">Placement: {placement?.school?.name || fellow.placementId}</div>
                     <div className="text-sm text-gray-500">Subjects: {fellow.subjects.join(", ")}</div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                      onClick={() => {
-                        setEditingFellowship(fellow.id);
-                        setShowFellowshipForm(true);
-                        setFellowshipForm({
-                          cohortId: fellow.cohortId,
-                          placementId: fellow.placementId,
-                          subjects: fellow.subjects,
-                        });
-                      }}
-                    >
-                      <Edit2 size={16} />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-red-600 text-red-600 hover:bg-red-50"
-                      onClick={async () => {
-                        if (!confirm("Are you sure you want to delete this fellowship?")) return;
-                        const res = await fetch(`/api/fellowships/${fellow.id}`, { method: "DELETE" });
-                        if (res.ok) {
-                          await fetchProfile();
-                        } else {
-                          alert("Failed to delete fellowship");
-                        }
-                      }}
-                    >
-                      <Trash2 size={16} />
-                    </Button>
-                  </div>
+                  {/* Only show edit/delete if signed in as user or admin and viewing own profile or as admin */}
+                  {(isProfileOwner || isAdmin) && (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                        onClick={() => {
+                          setEditingFellowship(fellow.id);
+                          setShowFellowshipForm(true);
+                          setFellowshipForm({
+                            cohortId: fellow.cohortId,
+                            placementId: fellow.placementId,
+                            subjects: fellow.subjects,
+                          });
+                        }}
+                      >
+                        <Edit2 size={16} />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-red-600 text-red-600 hover:bg-red-50"
+                        onClick={async () => {
+                          if (!confirm("Are you sure you want to delete this fellowship?")) return;
+                          const res = await fetch(`/api/fellowships/${fellow.id}`, { method: "DELETE" });
+                          if (res.ok) {
+                            await fetchProfile();
+                          } else {
+                            alert("Failed to delete fellowship");
+                          }
+                        }}
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -936,7 +975,8 @@ export default function ProfilePage() {
       <Card className="p-6 mb-6 border-2 border-green-400 rounded-xl shadow-sm">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-blue-600">Education</h2>
-          {!showEducationForm && (
+          {/* Only show add button if signed in as user or admin and viewing own profile or as admin */}
+          {!showEducationForm && (isProfileOwner || isAdmin) && (
             <Button onClick={() => setShowEducationForm(true)} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
               <Plus size={16} className="mr-2" />
               Add Education
@@ -944,7 +984,7 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {showEducationForm && (
+        {showEducationForm && (isProfileOwner || isAdmin) && (
           <div className="mb-4 p-4 border rounded space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -1148,35 +1188,37 @@ export default function ProfilePage() {
                       {new Date(edu.start).toLocaleDateString()} - {edu.end ? new Date(edu.end).toLocaleDateString() : "Present"}
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                      onClick={() => {
-                        setEditingEducation(edu.id);
-                        setEducationForm({
-                          institution: edu.institution,
-                          university: edu.university || "",
-                          level: edu.level,
-                          name: edu.name,
-                          sector: edu.sector || "",
-                          start: new Date(edu.start).toISOString().split("T")[0],
-                          end: edu.end ? new Date(edu.end).toISOString().split("T")[0] : "",
-                        });
-                      }}
-                    >
-                      <Edit2 size={16} />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-red-600 text-red-600 hover:bg-red-50"
-                      onClick={() => handleDeleteEducation(edu.id)}
-                    >
-                      <Trash2 size={16} />
-                    </Button>
-                  </div>
+                  {(isProfileOwner || isAdmin) && (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                        onClick={() => {
+                          setEditingEducation(edu.id);
+                          setEducationForm({
+                            institution: edu.institution,
+                            university: edu.university || "",
+                            level: edu.level,
+                            name: edu.name,
+                            sector: edu.sector || "",
+                            start: new Date(edu.start).toISOString().split("T")[0],
+                            end: edu.end ? new Date(edu.end).toISOString().split("T")[0] : "",
+                          });
+                        }}
+                      >
+                        <Edit2 size={16} />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-red-600 text-red-600 hover:bg-red-50"
+                        onClick={() => handleDeleteEducation(edu.id)}
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1191,7 +1233,8 @@ export default function ProfilePage() {
       <Card className="p-6 border-2 border-orange-400 rounded-xl shadow-sm">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-blue-600">Experience</h2>
-          {!showExperienceForm && (
+          {/* Only show add button if signed in as user or admin and viewing own profile or as admin */}
+          {!showExperienceForm && (isProfileOwner || isAdmin) && (
             <Button onClick={() => setShowExperienceForm(true)} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
               <Plus size={16} className="mr-2" />
               Add Experience
@@ -1199,7 +1242,7 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {showExperienceForm && (
+        {showExperienceForm && (isProfileOwner || isAdmin) && (
           <div className="mb-4 p-4 border rounded space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -1420,35 +1463,37 @@ export default function ProfilePage() {
                       {new Date(exp.start).toLocaleDateString()} - {exp.end ? new Date(exp.end).toLocaleDateString() : "Present"}
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                      onClick={() => {
-                        setEditingExperience(exp.id);
-                        setExperienceForm({
-                          orgName: exp.orgName,
-                          title: exp.title,
-                          sector: exp.sector,
-                          type: exp.type,
-                          description: exp.description || "",
-                          start: new Date(exp.start).toISOString().split("T")[0],
-                          end: exp.end ? new Date(exp.end).toISOString().split("T")[0] : "",
-                        });
-                      }}
-                    >
-                      <Edit2 size={16} />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-red-600 text-red-600 hover:bg-red-50"
-                      onClick={() => handleDeleteExperience(exp.id)}
-                    >
-                      <Trash2 size={16} />
-                    </Button>
-                  </div>
+                  {(isProfileOwner || isAdmin) && (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                        onClick={() => {
+                          setEditingExperience(exp.id);
+                          setExperienceForm({
+                            orgName: exp.orgName,
+                            title: exp.title,
+                            sector: exp.sector,
+                            type: exp.type,
+                            description: exp.description || "",
+                            start: new Date(exp.start).toISOString().split("T")[0],
+                            end: exp.end ? new Date(exp.end).toISOString().split("T")[0] : "",
+                          });
+                        }}
+                      >
+                        <Edit2 size={16} />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-red-600 text-red-600 hover:bg-red-50"
+                        onClick={() => handleDeleteExperience(exp.id)}
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

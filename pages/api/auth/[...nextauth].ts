@@ -64,9 +64,17 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       // Attach user id/email to session
-      if (session.user) {
-        session.user.email = session.user.email || "";
+      if (session.user?.email) {
+        // Fetch user from DB and attach id
+        const user = await prisma.person.findUnique({
+          where: { email1: session.user.email },
+          select: { id: true }
+        });
+        if (user) {
+          session.user.id = user.id;
+        }
       }
+      session.user.email = session.user.email || "";
       return session;
     },
   },
