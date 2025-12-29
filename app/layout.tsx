@@ -29,10 +29,9 @@ export default function RootLayout({
                   alt="TFN-Connect Logo" 
                   className="h-8 w-auto group-hover:opacity-80 transition"
                 />
-                <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">TFN-Connect</h1>
+                <h1 className="hidden lg:block text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">TFN-Connect</h1>
               </a>
               <div className="flex gap-3 sm:gap-6 text-xs sm:text-sm items-center">
-                <a href="/" className="text-gray-700 hover:text-blue-600 font-semibold transition">Home</a>
                 <a href="/alumni" className="text-gray-700 hover:text-blue-600 font-semibold transition">Alumni</a>
                 <a href="/jobs" className="text-gray-700 hover:text-blue-600 font-semibold transition">Jobs</a>
                 <a href="/feed" className="text-gray-700 hover:text-blue-600 font-semibold transition">Feed</a>

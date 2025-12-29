@@ -1,4 +1,15 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import NextAuth, { NextAuthOptions, Session } from "next-auth";
+// Extend the NextAuth Session type to include id on user
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id?: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+    };
+  }
+}
 import GoogleProvider from "next-auth/providers/google";
 import prisma from "@/lib/prisma";
 
@@ -64,9 +75,17 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       // Attach user id/email to session
-      if (session.user) {
-        session.user.email = session.user.email || "";
+      if (session.user?.email) {
+        // Fetch user from DB and attach id
+        const user = await prisma.person.findUnique({
+          where: { email1: session.user.email },
+          select: { id: true }
+        });
+        if (user) {
+          session.user.id = user.id;
+        }
       }
+      session.user.email = session.user.email || "";
       return session;
     },
   },

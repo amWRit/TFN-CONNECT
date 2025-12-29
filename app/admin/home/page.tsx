@@ -84,7 +84,7 @@ function AdminDashboardContent() {
               <button
                 key={tab.id}
                 onClick={() => setCurrentTab(tab.id)}
-                className={`flex items-center gap-3 text-left px-3 py-2 rounded-lg font-medium transition-colors text-sm w-full ${
+                className={`flex items-center gap-3 text-left px-3 py-2 font-medium transition-colors text-sm w-full ${
                   currentTab === tab.id
                     ? 'bg-blue-600 text-white shadow-sm'
                     : 'bg-gray-100 text-gray-700 hover:bg-blue-50'
@@ -97,7 +97,7 @@ function AdminDashboardContent() {
             ))}
             <button
               onClick={handleLogout}
-              className={`flex items-center gap-3 text-left px-3 py-2 rounded-lg font-semibold transition-colors text-sm w-full mt-4
+              className={`flex items-center gap-3 text-left px-3 py-2 font-semibold transition-colors text-sm w-full mt-4
                 bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 hover:text-red-900
                 ${sidebarOpen ? '' : 'justify-center px-2'}`}
               title="Logout"

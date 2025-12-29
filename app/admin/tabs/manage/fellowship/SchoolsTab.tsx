@@ -22,6 +22,9 @@ export default function SchoolsTab() {
   const [localGovs, setLocalGovs] = useState<LocalGov[]>([]);
   const [showSchoolForm, setShowSchoolForm] = useState(false);
   const [schoolForm, setSchoolForm] = useState({ name: '', localGovId: '', district: '', type: 'SECONDARY' });
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', localGovId: '', district: '', type: 'SECONDARY' });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -42,6 +45,7 @@ export default function SchoolsTab() {
 
   const createSchool = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const res = await fetch('/api/schools', {
         method: 'POST',
@@ -55,6 +59,68 @@ export default function SchoolsTab() {
       }
     } catch (error) {
       console.error('Failed to create School:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startEdit = (s: School) => {
+    setEditId(s.id);
+    setEditForm({
+      name: s.name,
+      localGovId: s.localGovId,
+      district: s.district,
+      type: s.type || 'SECONDARY',
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditId(null);
+    setEditForm({ name: '', localGovId: '', district: '', type: 'SECONDARY' });
+  };
+
+  const saveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editId) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/schools/${editId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editForm),
+      });
+      if (res.ok) {
+        setEditId(null);
+        setEditForm({ name: '', localGovId: '', district: '', type: 'SECONDARY' });
+        fetchData();
+      } else {
+        const errorData = await res.json();
+        alert(errorData.error || 'Failed to update school');
+      }
+    } catch (error) {
+      console.error('Failed to update School:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this school?')) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/schools/${id}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        fetchData();
+      } else {
+        const errorData = await res.json();
+        alert(errorData.error || 'Failed to delete school');
+      }
+    } catch (error) {
+      alert('Failed to delete school');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -78,12 +144,14 @@ export default function SchoolsTab() {
                 onChange={(e) => setSchoolForm({ ...schoolForm, name: e.target.value })}
                 className="w-full px-3 py-2 border rounded"
                 required
+                disabled={loading}
               />
               <select
                 value={schoolForm.localGovId}
                 onChange={(e) => setSchoolForm({ ...schoolForm, localGovId: e.target.value })}
                 className="w-full px-3 py-2 border rounded"
                 required
+                disabled={loading}
               >
                 <option value="">Select Local Government</option>
                 {localGovs.map((lg) => (
@@ -97,17 +165,19 @@ export default function SchoolsTab() {
                 onChange={(e) => setSchoolForm({ ...schoolForm, district: e.target.value })}
                 className="w-full px-3 py-2 border rounded"
                 required
+                disabled={loading}
               />
               <select
                 value={schoolForm.type}
                 onChange={(e) => setSchoolForm({ ...schoolForm, type: e.target.value })}
                 className="w-full px-3 py-2 border rounded"
+                disabled={loading}
               >
                 <option value="PRIMARY">Primary</option>
                 <option value="SECONDARY">Secondary</option>
                 <option value="HIGHER">Higher</option>
               </select>
-              <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700">Create School</Button>
+              <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700" disabled={loading}>Create School</Button>
             </form>
           </Card>
         )}
@@ -115,19 +185,68 @@ export default function SchoolsTab() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {schools.map((s) => (
             <Card key={s.id} className="p-4 flex justify-between items-center border-2 border-blue-500/70 shadow-sm rounded-xl">
-              <div>
-                <h3 className="font-bold">{s.name}</h3>
-                <p className="text-sm text-gray-600">{s.district} • {s.type || 'N/A'}</p>
-                <p className="text-xs text-gray-500">LocalGov: {s.localGovId}</p>
-              </div>
-              <div className="flex gap-2">
-                <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => alert('Edit School ' + s.id)} aria-label="Edit">
-                  <Pencil className="w-4 h-4" />
-                </Button>
-                <Button size="icon" variant="destructive" onClick={() => alert('Delete School ' + s.id)} aria-label="Delete">
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
+              {editId === s.id ? (
+                <form onSubmit={saveEdit} className="flex-1 flex flex-col gap-2">
+                  <input
+                    type="text"
+                    value={editForm.name}
+                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                    className="px-3 py-2 border rounded"
+                    required
+                    disabled={loading}
+                  />
+                  <select
+                    value={editForm.localGovId}
+                    onChange={(e) => setEditForm({ ...editForm, localGovId: e.target.value })}
+                    className="px-3 py-2 border rounded"
+                    required
+                    disabled={loading}
+                  >
+                    <option value="">Select Local Government</option>
+                    {localGovs.map((lg) => (
+                      <option key={lg.id} value={lg.id}>{lg.name}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    value={editForm.district}
+                    onChange={(e) => setEditForm({ ...editForm, district: e.target.value })}
+                    className="px-3 py-2 border rounded"
+                    required
+                    disabled={loading}
+                  />
+                  <select
+                    value={editForm.type}
+                    onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}
+                    className="px-3 py-2 border rounded"
+                    disabled={loading}
+                  >
+                    <option value="PRIMARY">Primary</option>
+                    <option value="SECONDARY">Secondary</option>
+                    <option value="HIGHER">Higher</option>
+                  </select>
+                  <div className="flex gap-2 mt-2">
+                    <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700" disabled={loading}>Save</Button>
+                    <Button type="button" variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50" onClick={cancelEdit} disabled={loading}>Cancel</Button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <div>
+                    <h3 className="font-bold">{s.name}</h3>
+                    <p className="text-sm text-gray-600">{s.district} • {s.type || 'N/A'}</p>
+                    <p className="text-xs text-gray-500">LocalGov: {localGovs.find(lg => lg.id === s.localGovId)?.name || s.localGovId}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => startEdit(s)} aria-label="Edit">
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button size="icon" variant="destructive" onClick={() => handleDelete(s.id)} aria-label="Delete">
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </>
+              )}
             </Card>
           ))}
         </div>
