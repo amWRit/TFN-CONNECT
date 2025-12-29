@@ -1,4 +1,15 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import NextAuth, { NextAuthOptions, Session } from "next-auth";
+// Extend the NextAuth Session type to include id on user
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id?: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+    };
+  }
+}
 import GoogleProvider from "next-auth/providers/google";
 import prisma from "@/lib/prisma";
 
