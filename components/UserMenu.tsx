@@ -9,6 +9,14 @@ export default function UserMenu() {
   const { data: session, status } = useSession();
   const [open, setOpen] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    // Check admin login from localStorage
+    if (typeof window !== "undefined") {
+      setIsAdmin(localStorage.getItem("adminAuth") === "true");
+    }
+  }, []);
 
   useEffect(() => {
     if (session?.user?.email) {
@@ -29,6 +37,39 @@ export default function UserMenu() {
   };
 
   if (status === "loading") return null;
+
+  // Admin session: show admin info
+  if (isAdmin) {
+    return (
+      <div className="relative">
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="flex items-center gap-2 px-2 py-1 rounded hover:bg-blue-100 transition"
+          aria-label="Admin menu"
+        >
+          <UserCircle size={24} />
+        </button>
+        {open && (
+          <div className="absolute right-0 mt-2 w-56 bg-white border rounded-lg shadow-lg z-50">
+            <div className="px-4 py-3 border-b text-xs text-gray-500">
+              <span className="font-semibold text-gray-800">Signed in as admin</span>
+            </div>
+            <button
+              onClick={() => {
+                setOpen(false);
+                localStorage.removeItem("adminAuth");
+                localStorage.removeItem("adminEmail");
+                window.location.href = "/admin/login";
+              }}
+              className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-blue-50 text-gray-700 text-sm"
+            >
+              <LogOut size={16} /> Logout
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   if (!session) {
     return (

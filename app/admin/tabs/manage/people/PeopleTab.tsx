@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2 } from 'lucide-react';
+import { User as UserIcon } from 'lucide-react';
 
 interface Person {
 	id: string;
@@ -393,37 +394,32 @@ export default function PeopleTab() {
 							<p className="text-xs text-gray-500">{p.type}</p>
 						</div>
 						<div className="flex gap-2">
-							<Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => {
-								setEditingPerson(p);
-								setShowForm(true);
-								setFormStep(1);
-								setBasicForm({
-									firstName: p.firstName,
-									lastName: p.lastName,
-									email1: p.email1,
-									dob: '', // Set if available
-									phone1: '', // Set if available
-									type: p.type || 'ALUMNI',
-								});
-							}} aria-label="Edit">
-								<Pencil className="w-4 h-4" />
-							</Button>
-							<Button size="icon" variant="destructive" onClick={async () => {
-								if (!window.confirm('Are you sure you want to delete this person?')) return;
-								try {
-									const res = await fetch(`/api/people/${p.id}`, { method: 'DELETE' });
-									if (res.ok) {
-										fetchData();
-									} else {
-										const errorData = await res.json();
-										alert(errorData.error || 'Failed to delete person');
+							<a href={`/profile?id=${p.id}`} target="_blank" rel="noopener noreferrer">
+								<span title="Go to Profile">
+									<Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" aria-label="View Profile">
+										<span className="sr-only">View Profile</span>
+										<UserIcon className="w-4 h-4" />
+									</Button>
+								</span>
+							</a>
+							<span title="Delete Person">
+								<Button size="icon" variant="destructive" onClick={async () => {
+									if (!window.confirm('Are you sure you want to delete this person?')) return;
+									try {
+										const res = await fetch(`/api/people/${p.id}`, { method: 'DELETE' });
+										if (res.ok) {
+											fetchData();
+										} else {
+											const errorData = await res.json();
+											alert(errorData.error || 'Failed to delete person');
+										}
+									} catch (error) {
+										alert('Failed to delete person');
 									}
-								} catch (error) {
-									alert('Failed to delete person');
-								}
-							}} aria-label="Delete">
-								<Trash2 className="w-4 h-4" />
-							</Button>
+								}} aria-label="Delete">
+									<Trash2 className="w-4 h-4" />
+								</Button>
+							</span>
 						</div>
 					</Card>
 				))}

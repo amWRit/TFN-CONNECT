@@ -2,6 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Plus, Edit2, Trash2, Save, X, Upload, Image as ImageIcon, Mail, Phone, Calendar, Linkedin, Info, Star, GraduationCap, Briefcase, Globe, User } from "lucide-react";
@@ -50,6 +51,7 @@ interface Education {
   end?: string;
 }
 
+
 interface Experience {
   id: string;
   orgName: string;
@@ -62,7 +64,11 @@ interface Experience {
 }
 
 export default function ProfilePage() {
+    // ...existing code...
   const { data: session, status } = useSession();
+  const searchParams = useSearchParams();
+  const [clientReady, setClientReady] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [person, setPerson] = useState<Person | null>(null);
   const [showFellowshipForm, setShowFellowshipForm] = useState(false);
   const [editingFellowship, setEditingFellowship] = useState<string | null>(null);
@@ -85,6 +91,14 @@ export default function ProfilePage() {
   const [showExperienceForm, setShowExperienceForm] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [readOnly, setReadOnly] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsAdmin(localStorage.getItem("adminAuth") === "true");
+      setClientReady(true);
+    }
+  }, []);
 
   // Form states
   const [formData, setFormData] = useState({
@@ -120,20 +134,12 @@ export default function ProfilePage() {
     end: "",
   });
 
-  useEffect(() => {
-    if (status === "authenticated" && session) {
-      fetchProfile();
-      fetchCohorts();
-      fetchPlacements();
-    }
-  }, [status, session]);
-
+  // Fetch cohorts
   const fetchCohorts = async () => {
     try {
       const res = await fetch("/api/cohorts");
       if (res.ok) {
         const data = await res.json();
-        // Ensure start/end are present for each cohort
         setCohorts(data.map((c: any) => ({
           id: c.id,
           name: c.name,
@@ -146,6 +152,7 @@ export default function ProfilePage() {
     }
   };
 
+  // Fetch placements
   const fetchPlacements = async () => {
     try {
       const res = await fetch("/api/placements");
@@ -155,6 +162,33 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error("Error fetching placements:", error);
+    }
+  };
+
+  // Move all fetch functions above useEffect to avoid ReferenceError
+  const fetchProfileById = async (id: string) => {
+    try {
+      const res = await fetch(`/api/people/${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setPerson(data);
+        setFormData({
+          firstName: data.firstName || "",
+          lastName: data.lastName || "",
+          email2: data.email2 || "",
+          phone1: data.phone1 || "",
+          phone2: data.phone2 || "",
+          linkedin: data.linkedin || "",
+          bio: data.bio || "",
+          dob: data.dob ? new Date(data.dob).toISOString().split("T")[0] : "",
+          eduStatus: data.eduStatus || "COMPLETED",
+          empStatus: data.empStatus || "SEEKING",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching profile by id:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -183,6 +217,43 @@ export default function ProfilePage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!clientReady) return;
+    const params = searchParams ?? new URLSearchParams();
+    const id = params.get("id");
+    if (id && isAdmin) {
+      setReadOnly(true);
+      fetchProfileById(id);
+      fetchCohorts();
+      fetchPlacements();
+    } else if (status === "authenticated" && session) {
+      setReadOnly(false);
+      fetchProfile();
+      fetchCohorts();
+      fetchPlacements();
+    }
+  }, [clientReady, isAdmin, status, session, searchParams]);
+
+  if (loading) {
+    return <div className="text-center py-12">Loading...</div>;
+  }
+
+  // Only require session for non-admin view
+
+  const params = searchParams ?? new URLSearchParams();
+  const id = params.get("id");
+
+  if (!clientReady) {
+    return <div className="text-center py-12">Loading...</div>;
+  }
+  if (!isAdmin && status !== "loading" && !session) {
+    return <div className="text-center py-12">Please sign in to view your profile.</div>;
+  }
+
+  if (!person) {
+    return <div className="text-center py-12">Profile not found.</div>;
+  }
 
   const handleUpdateProfile = async () => {
     try {
@@ -403,13 +474,6 @@ export default function ProfilePage() {
     }
   };
 
-  if (status === "loading" || loading) {
-    return <div className="text-center py-12">Loading...</div>;
-  }
-
-  if (!session) {
-    return <div className="text-center py-12">Please sign in to view your profile.</div>;
-  }
 
   if (!person) {
     return <div className="text-center py-12">Profile not found.</div>;
