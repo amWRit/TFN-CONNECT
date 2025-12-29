@@ -17,6 +17,7 @@ type Bookmark = {
 type BookmarksResponse = {
   people: Bookmark[];
   jobs: Bookmark[];
+  jobApplications?: Bookmark[];
   posts: Bookmark[];
 };
 
@@ -98,7 +99,10 @@ export default function BookmarksPage() {
       {error && <p className="text-center text-red-500">{error}</p>}
       {bookmarks && (
         <div className="space-y-10">
-          {Object.entries(bookmarks).map(([type, items]) => {
+          {['people', 'jobs', 'jobApplications', 'posts']
+            .filter((type) => bookmarks[type as keyof BookmarksResponse])
+            .map((type) => {
+              const items = bookmarks[type as keyof BookmarksResponse] as Bookmark[];
             // Assign a color scheme per type
             let border = "border-blue-400", label = "text-blue-700";
             if (type === "jobs") { border = "border-green-400"; label = "text-green-700"; }
