@@ -1,0 +1,11 @@
+# 1. Use db push (ignores migrations, applies schema directly)
+npx prisma db push
+
+# 2. Generate client
+npx prisma generate
+
+# 3. Mark migrations as applied so deploy works
+npx prisma migrate resolve --applied "0_init"
+
+# 4. Now Vercel deploy works
+npx prisma migrate deploy
