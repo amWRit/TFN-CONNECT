@@ -10,6 +10,7 @@ import CohortsTab from './fellowship/CohortsTab';
 import PlacementsTab from './fellowship/PlacementsTab';
 import PeopleTab from './people/PeopleTab';
 import SkillsTab from './talent/SkillsTab';
+import SkillCategoryTab from './talent/SkillCategoryTab';
 
 type ManageView = 'fellowship-program' | 'people' | 'talent';
 type FellowshipSubTab = 'localgovs' | 'schools' | 'schoolgroups' | 'cohorts' | 'placements';
@@ -92,7 +93,8 @@ export default function ManageTab() {
 
       {/* Talent Group (Skills) */}
       {currentView === 'talent' && (
-        <div>
+        <div className="space-y-8">
+          <SkillCategoryTab />
           <SkillsTab />
         </div>
       )}

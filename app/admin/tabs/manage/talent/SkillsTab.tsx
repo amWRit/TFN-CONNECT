@@ -3,22 +3,49 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import Select from 'react-select';
+import { MultiValue } from 'react-select';
 import { Pencil, Trash2 } from 'lucide-react';
 
-interface Skill {
-	id: string;
+type CategoryOption = { value: string; label: string };
+
+interface EditState {
+	id: string | null;
 	name: string;
-	category: string;
+	categories: CategoryOption[];
+	description: string;
+}
+
+interface Skill {
+  id: string;
+  name: string;
+  categories: string[];
+  description?: string;
 }
 
 export default function SkillsTab() {
 	const [skills, setSkills] = useState<Skill[]>([]);
+	const [categories, setCategories] = useState<CategoryOption[]>([]);
 	const [showSkillForm, setShowSkillForm] = useState(false);
-	const [skillForm, setSkillForm] = useState({ name: '', category: 'teaching' });
+	const [skillForm, setSkillForm] = useState<{ name: string; categories: CategoryOption[]; description: string }>({ name: '', categories: [], description: '' });
+	const [editState, setEditState] = useState<EditState>({ id: null, name: '', categories: [], description: '' });
+	const [loading, setLoading] = useState(false);
 
 	useEffect(() => {
 		fetchData();
+		fetchCategories();
 	}, []);
+	const fetchCategories = async () => {
+		try {
+			const res = await fetch('/api/skillcategories');
+			if (res.ok) {
+				const cats = await res.json();
+				setCategories(cats.map((cat: { id: string; name: string }) => ({ value: cat.id, label: cat.name })));
+			}
+		} catch (error) {
+			console.error('Failed to fetch categories:', error);
+		}
+	};
 
 	const fetchData = async () => {
 		try {
@@ -38,7 +65,7 @@ export default function SkillsTab() {
 				body: JSON.stringify(skillForm),
 			});
 			if (res.ok) {
-				setSkillForm({ name: '', category: 'teaching' });
+				setSkillForm({ name: '', categories: [], description: '' });
 				setShowSkillForm(false);
 				fetchData();
 			}
@@ -47,6 +74,74 @@ export default function SkillsTab() {
 		}
 	};
 
+	// ...existing code...
+	const startEdit = (s: Skill) => {
+		setEditState({
+			id: s.id,
+			name: s.name,
+			categories: Array.isArray(s.categories)
+				? s.categories.map((cat) => {
+						const found = categories.find((c) => c.label === cat);
+						return found ? found : { value: '', label: cat };
+					})
+				: [],
+			description: s.description || '',
+		});
+	};
+
+	const cancelEdit = () => {
+		setEditState({ id: null, name: '', categories: [], description: '' });
+	};
+
+	const saveEdit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!editState.id) return;
+		setLoading(true);
+		try {
+			const res = await fetch(`/api/skills/${editState.id}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					name: editState.name,
+					categories: editState.categories,
+					description: editState.description,
+				}),
+			});
+			if (res.ok) {
+				cancelEdit();
+				fetchData();
+			} else {
+				const errorData = await res.json();
+				alert(errorData.error || 'Failed to update skill');
+			}
+		} catch (error) {
+			console.error('Failed to update skill:', error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const handleDelete = async (id: string) => {
+		if (!window.confirm('Are you sure you want to delete this skill?')) return;
+		setLoading(true);
+		try {
+			const res = await fetch(`/api/skills/${id}`, {
+				method: 'DELETE',
+			});
+			if (res.ok) {
+				fetchData();
+			} else {
+				const errorData = await res.json();
+				alert(errorData.error || 'Failed to delete skill');
+			}
+		} catch (error) {
+			console.error('Failed to delete skill:', error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	// ...existing code...
 	return (
 		<div className="space-y-6">
 			{/* Skills */}
@@ -69,37 +164,90 @@ export default function SkillsTab() {
 								className="w-full px-3 py-2 border rounded"
 								required
 							/>
-							<select
-								value={skillForm.category}
-								onChange={(e) => setSkillForm({ ...skillForm, category: e.target.value })}
+							<input
+								type="text"
+								placeholder="Description"
+								value={skillForm.description}
+								onChange={(e) => setSkillForm({ ...skillForm, description: e.target.value })}
 								className="w-full px-3 py-2 border rounded"
-							>
-								<option value="teaching">Teaching</option>
-								<option value="leadership">Leadership</option>
-								<option value="personal">Personal</option>
-								<option value="interpersonal">Interpersonal</option>
-								<option value="technical">Technical</option>
-							</select>
+							/>
+							<Select<CategoryOption, true>
+								isMulti
+								options={categories as readonly CategoryOption[]}
+								value={skillForm.categories}
+								onChange={(selected) => setSkillForm({ ...skillForm, categories: Array.isArray(selected) ? [...selected] : [] })}
+								classNamePrefix="react-select"
+								placeholder="Select categories..."
+							/>
 							<Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700">Create Skill</Button>
 						</form>
 					</Card>
 				)}
 
-				<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 					{skills.map((s) => (
 						<Card key={s.id} className="p-4 flex justify-between items-center border-2 border-blue-500/70 shadow-sm rounded-xl">
-							<div>
-								<h3 className="font-bold">{s.name}</h3>
-								<p className="text-xs text-gray-500 capitalize">{s.category}</p>
-							</div>
-							<div className="flex gap-2">
-								<Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => alert('Edit Skill ' + s.id)} aria-label="Edit">
-									<Pencil className="w-4 h-4" />
-								</Button>
-								<Button size="icon" variant="destructive" onClick={() => alert('Delete Skill ' + s.id)} aria-label="Delete">
-									<Trash2 className="w-4 h-4" />
-								</Button>
-							</div>
+							{editState.id === s.id ? (
+								<form onSubmit={saveEdit} className="flex-1 flex flex-col gap-2">
+									<input
+										type="text"
+										value={editState.name}
+										onChange={(e) => setEditState({ ...editState, name: e.target.value })}
+										className="px-3 py-2 border rounded w-full"
+										required
+										disabled={loading}
+									/>
+									<input
+										type="text"
+										value={editState.description}
+										onChange={(e) => setEditState({ ...editState, description: e.target.value })}
+										className="px-3 py-2 border rounded w-full"
+										placeholder="Description"
+										disabled={loading}
+									/>
+									<Select<CategoryOption, true>
+										isMulti
+										options={categories as readonly CategoryOption[]}
+										value={editState.categories}
+										onChange={(selected) => setEditState({ ...editState, categories: Array.isArray(selected) ? [...selected] : [] })}
+										classNamePrefix="react-select"
+										placeholder="Select categories..."
+										isDisabled={loading}
+									/>
+									<div className="flex gap-2 mt-2">
+										<Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700" disabled={loading}>Save</Button>
+										<Button type="button" variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50" onClick={cancelEdit} disabled={loading}>Cancel</Button>
+									</div>
+								</form>
+							) : (
+								<>
+									<div>
+										<h3 className="font-bold mb-1">{s.name}</h3>
+										<div className="mb-1 flex flex-wrap gap-1 items-center">
+											<span className="text-xs text-gray-600">Category:</span>
+											{Array.isArray(s.categories) && s.categories.length > 0
+												? s.categories.map((cat, idx) => (
+														<span key={idx} className="inline-block bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded">
+															{cat}
+														</span>
+													))
+												: <span className="text-xs text-gray-400">---</span>}
+										</div>
+										<div className="mt-1">
+											  <span className="text-xs text-gray-600">Description: </span>
+											<span className="text-xs text-gray-700">{s.description ? s.description : '---'}</span>
+										</div>
+									</div>
+									<div className="flex gap-2">
+										<Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => startEdit(s)} aria-label="Edit">
+											<Pencil className="w-4 h-4" />
+										</Button>
+										<Button size="icon" variant="destructive" onClick={() => handleDelete(s.id)} aria-label="Delete">
+											<Trash2 className="w-4 h-4" />
+										</Button>
+									</div>
+								</>
+							)}
 						</Card>
 					))}
 				</div>
