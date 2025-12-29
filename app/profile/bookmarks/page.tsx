@@ -84,9 +84,11 @@ export default function BookmarksPage() {
     if (res.ok) {
       setBookmarks((prev) => {
         if (!prev) return prev;
+        const items = prev[type as keyof BookmarksResponse];
+        if (!Array.isArray(items)) return prev;
         return {
           ...prev,
-          [type]: prev[type as keyof BookmarksResponse].filter((b) => b.id !== bm.id),
+          [type]: items.filter((b) => b.id !== bm.id),
         };
       });
     }
