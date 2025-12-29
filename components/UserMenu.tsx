@@ -115,6 +115,13 @@ export default function UserMenu() {
           >
             <User size={16} /> Profile
           </Link>
+          <Link
+            href="/profile/bookmarks"
+            className="flex items-center gap-2 px-4 py-2 hover:bg-blue-50 text-gray-700 text-sm"
+            onClick={() => setOpen(false)}
+          >
+            <span role="img" aria-label="Bookmarks">🔖</span> My Bookmarks
+          </Link>
           <button
             onClick={() => { setOpen(false); signOut(); }}
             className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-blue-50 text-gray-700 text-sm"
