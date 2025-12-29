@@ -7,11 +7,13 @@ import Select from 'react-select';
 import { MultiValue } from 'react-select';
 import { Pencil, Trash2 } from 'lucide-react';
 
+type CategoryOption = { value: string; label: string };
+
 interface EditState {
-  id: string | null;
-  name: string;
+	id: string | null;
+	name: string;
 	categories: CategoryOption[];
-  description: string;
+	description: string;
 }
 
 interface Skill {
@@ -23,7 +25,6 @@ interface Skill {
 
 export default function SkillsTab() {
 	const [skills, setSkills] = useState<Skill[]>([]);
-	type CategoryOption = { value: string; label: string };
 	const [categories, setCategories] = useState<CategoryOption[]>([]);
 	const [showSkillForm, setShowSkillForm] = useState(false);
 	const [skillForm, setSkillForm] = useState<{ name: string; categories: CategoryOption[]; description: string }>({ name: '', categories: [], description: '' });
