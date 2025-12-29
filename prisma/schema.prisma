@@ -150,7 +150,7 @@ model Person {
   jobApplications JobApplication[] @relation("JobApplications")
   posts          Post[]           @relation("Posts")
   comments       Comment[]        @relation("Comments")
-  
+  bookmarks      Bookmark[]
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 }
@@ -302,4 +302,27 @@ model Comment {
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+// ===== BOOKMARKS =====
+enum BookmarkType {
+  PERSON
+  JOB_POSTING
+  POST
+  JOB_APPLICATION
+}
+
+model Bookmark {
+  id        String      @id @default(cuid())
+  personId  String
+  type      BookmarkType
+  targetId  String?
+  createdAt DateTime    @default(now())
+
+  person    Person      @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@index([personId])
+  @@index([type])
+  @@index([targetId])
+  @@unique([personId, type, targetId])
 }

@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
+import { useSession } from "next-auth/react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ExperienceCard } from "@/components/ExperienceCard"
@@ -73,6 +74,31 @@ export default function AlumniDetailPage({
   const [loading, setLoading] = useState(true)
   const [id, setId] = useState<string | null>(null)
   const [bookmarked, setBookmarked] = useState(false)
+  const [bookmarkLoading, setBookmarkLoading] = useState(false)
+
+  // Get current signed-in user
+  const { data: session, status } = useSession();
+
+  // Determine if the current session user is the profile owner
+  const isProfileOwner = useMemo(() => {
+    return session && session.user && id && session.user.id === id;
+  }, [session, id]);
+
+  // Only show bookmark if signed in and not profile owner
+  const showBookmark = session && session.user && !isProfileOwner;
+
+  // Check if this person is already bookmarked by the current user
+  useEffect(() => {
+    if (!showBookmark || !id) return;
+    setBookmarkLoading(true);
+    fetch(`/api/bookmarks/person?targetPersonId=${id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setBookmarked(!!data.bookmarked);
+        setBookmarkLoading(false);
+      })
+      .catch(() => setBookmarkLoading(false));
+  }, [showBookmark, id]);
 
   useEffect(() => {
     params.then(({ id }) => {
@@ -113,17 +139,34 @@ export default function AlumniDetailPage({
       <div className="max-w-5xl mx-auto px-4">
         {/* Profile Header Card */}
         <Card className="bg-white border-2 border-indigo-500 shadow-lg rounded-3xl overflow-hidden mb-8 relative">
-          {/* Bookmark Button */}
-          <div className="group absolute top-4 right-4 z-10">
-            <button
-              aria-label={bookmarked ? "Remove Bookmark" : "Add Bookmark"}
-              onClick={() => setBookmarked((b) => !b)}
-              className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${bookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110`}
-            >
-              {bookmarked ? <BookmarkCheck size={28} /> : <Bookmark size={28} />}
-            </button>
-            <span className="opacity-0 group-hover:opacity-100 transition bg-gray-800 text-white text-xs rounded px-2 py-1 absolute right-0 mt-2 whitespace-nowrap pointer-events-none shadow-lg" style={{top: '100%'}}>Save</span>
-          </div>
+            {/* Bookmark Button (only for signed-in users who are not the profile owner) */}
+            {showBookmark && (
+              <div className="group absolute top-4 right-4 z-10">
+                <button
+                  aria-label={bookmarked ? "Remove Bookmark" : "Add Bookmark"}
+                  disabled={bookmarkLoading}
+                  onClick={async () => {
+                    setBookmarkLoading(true);
+                    try {
+                      const res = await fetch("/api/bookmarks/person", {
+                        method: bookmarked ? "DELETE" : "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ targetPersonId: id }),
+                      });
+                      if (res.ok) {
+                        setBookmarked((b) => !b);
+                      }
+                    } finally {
+                      setBookmarkLoading(false);
+                    }
+                  }}
+                  className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${bookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110 disabled:opacity-60`}
+                >
+                  {bookmarked ? <BookmarkCheck size={28} /> : <Bookmark size={28} />}
+                </button>
+                <span className="opacity-0 group-hover:opacity-100 transition bg-gray-800 text-white text-xs rounded px-2 py-1 absolute right-0 mt-2 whitespace-nowrap pointer-events-none shadow-lg" style={{top: '100%'}}>Save</span>
+              </div>
+            )}
           <div className="relative h-40 bg-gradient-to-r from-indigo-500 to-purple-500">
             <div className="absolute inset-0 flex items-end px-6 sm:px-8 pb-6 gap-6">
               <div className="flex-shrink-0">
