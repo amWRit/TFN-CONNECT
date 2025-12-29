@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 import { ProfileImage } from "@/components/ProfileImage";
 
 type Bookmark = {
@@ -60,6 +62,35 @@ export default function BookmarksPage() {
     fetchBookmarks();
   }, []);
 
+  // Delete bookmark handler
+  async function handleDelete(bm: Bookmark, type: string) {
+    let url = "/api/bookmarks/";
+    let body: any = {};
+    if (type === "people") {
+      url += "person";
+      body = { targetPersonId: bm.targetId };
+    } else {
+      // For other types, you would implement their respective API endpoints
+      // For now, just show an alert
+      alert("Unbookmarking for this type is not implemented yet.");
+      return;
+    }
+    const res = await fetch(url, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (res.ok) {
+      setBookmarks((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          [type]: prev[type as keyof BookmarksResponse].filter((b) => b.id !== bm.id),
+        };
+      });
+    }
+  }
+
   return (
     <div className="max-w-2xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-8 text-center text-blue-700">My Bookmarks</h1>
@@ -86,7 +117,7 @@ export default function BookmarksPage() {
                           const person = personDetails[bm.targetId];
                           return (
                             <Card key={bm.id} className="flex items-center gap-4 p-4 hover:shadow-lg transition-shadow bg-white border-l-4 border-blue-300">
-                              <CardHeader className="flex flex-row items-center gap-4 p-0 pr-4 bg-transparent">
+                              <CardHeader className="flex flex-row items-center gap-4 p-0 pr-4 bg-transparent w-full">
                                 {person ? (
                                   <ProfileImage
                                     src={person.profileImage}
@@ -97,7 +128,7 @@ export default function BookmarksPage() {
                                 ) : (
                                   <div className="h-12 w-12 rounded-full bg-gray-200" />
                                 )}
-                                <CardTitle className="text-lg font-semibold text-blue-700">
+                                <CardTitle className="text-lg font-semibold text-blue-700 flex-1">
                                   {person ? (
                                     <Link href={`/profile?id=${person.id}`} className="hover:underline">
                                       {person.firstName} {person.lastName}
@@ -106,17 +137,35 @@ export default function BookmarksPage() {
                                     <span>Person ID: {bm.targetId}</span>
                                   )}
                                 </CardTitle>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-red-500 hover:bg-red-100 ml-2"
+                                  title="Remove bookmark"
+                                  onClick={() => handleDelete(bm, type)}
+                                >
+                                  <Trash2 />
+                                </Button>
                               </CardHeader>
                             </Card>
                           );
                         })
                       : items.map((bm) => (
-                          <Card key={bm.id} className="p-4 bg-white border-l-4 border-blue-300">
-                            <CardHeader className="p-0">
+                          <Card key={bm.id} className="p-4 bg-white border-l-4 border-blue-300 flex items-center">
+                            <CardHeader className="p-0 flex-1">
                               <CardTitle className="text-lg font-semibold text-blue-700">
                                 {bm.type} - {bm.targetId}
                               </CardTitle>
                             </CardHeader>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-red-500 hover:bg-red-100 ml-2"
+                              title="Remove bookmark"
+                              onClick={() => handleDelete(bm, type)}
+                            >
+                              <Trash2 />
+                            </Button>
                           </Card>
                         ))}
                   </div>
