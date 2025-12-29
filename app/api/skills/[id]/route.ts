@@ -10,14 +10,31 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     if (!id || typeof id !== "string") {
       return NextResponse.json({ error: "Invalid or missing skill id" }, { status: 400 });
     }
+    // body.categories is an array of { value: categoryId, label: categoryName }
+    const categoryIds = Array.isArray(body.categories) ? body.categories.map((cat: any) => cat.value) : [];
+    // Remove all existing category relations and set new ones
     const updated = await prisma.skill.update({
       where: { id },
       data: {
         name: body.name,
-        // Optionally update categories if provided
+        description: body.description,
+        categories: {
+          deleteMany: {},
+          create: categoryIds.map((categoryId: string) => ({ categoryId })),
+        },
+      },
+      include: {
+        categories: { include: { category: true } },
       },
     });
-    return NextResponse.json(updated);
+    // Return all category names and description for frontend compatibility
+    const result = {
+      id: updated.id,
+      name: updated.name,
+      description: updated.description,
+      categories: updated.categories.map(sc => sc.category.name),
+    };
+    return NextResponse.json(result);
   } catch (error) {
     console.error("Error updating skill:", error);
     return NextResponse.json({ error: "Failed to update skill" }, { status: 500 });

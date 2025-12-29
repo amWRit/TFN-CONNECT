@@ -3,28 +3,31 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import Select from 'react-select';
+import { MultiValue } from 'react-select';
 import { Pencil, Trash2 } from 'lucide-react';
 
 interface EditState {
-	id: string | null;
-	name: string;
-	category: string;
-	description: string;
+  id: string | null;
+  name: string;
+	categories: CategoryOption[];
+  description: string;
 }
 
 interface Skill {
-	id: string;
-	name: string;
-	category: string;
-	description?: string;
+  id: string;
+  name: string;
+  categories: string[];
+  description?: string;
 }
 
 export default function SkillsTab() {
 	const [skills, setSkills] = useState<Skill[]>([]);
-	const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+	type CategoryOption = { value: string; label: string };
+	const [categories, setCategories] = useState<CategoryOption[]>([]);
 	const [showSkillForm, setShowSkillForm] = useState(false);
-	const [skillForm, setSkillForm] = useState({ name: '', category: '', description: '' });
-	const [editState, setEditState] = useState<EditState>({ id: null, name: '', category: '', description: '' });
+	const [skillForm, setSkillForm] = useState<{ name: string; categories: CategoryOption[]; description: string }>({ name: '', categories: [], description: '' });
+	const [editState, setEditState] = useState<EditState>({ id: null, name: '', categories: [], description: '' });
 	const [loading, setLoading] = useState(false);
 
 	useEffect(() => {
@@ -34,7 +37,10 @@ export default function SkillsTab() {
 	const fetchCategories = async () => {
 		try {
 			const res = await fetch('/api/skillcategories');
-			if (res.ok) setCategories(await res.json());
+			if (res.ok) {
+				const cats = await res.json();
+				setCategories(cats.map((cat: { id: string; name: string }) => ({ value: cat.id, label: cat.name })));
+			}
 		} catch (error) {
 			console.error('Failed to fetch categories:', error);
 		}
@@ -58,7 +64,7 @@ export default function SkillsTab() {
 				body: JSON.stringify(skillForm),
 			});
 			if (res.ok) {
-				setSkillForm({ name: '', category: 'teaching' });
+				setSkillForm({ name: '', categories: [], description: '' });
 				setShowSkillForm(false);
 				fetchData();
 			}
@@ -69,35 +75,49 @@ export default function SkillsTab() {
 
 	// ...existing code...
 	const startEdit = (s: Skill) => {
-	  setEditState({ id: s.id, name: s.name, category: s.category, description: s.description || '' });
+		setEditState({
+			id: s.id,
+			name: s.name,
+			categories: Array.isArray(s.categories)
+				? s.categories.map((cat) => {
+						const found = categories.find((c) => c.label === cat);
+						return found ? found : { value: '', label: cat };
+					})
+				: [],
+			description: s.description || '',
+		});
 	};
 
 	const cancelEdit = () => {
-	  setEditState({ id: null, name: '', category: 'teaching', description: '' });
+		setEditState({ id: null, name: '', categories: [], description: '' });
 	};
 
 	const saveEdit = async (e: React.FormEvent) => {
-	  e.preventDefault();
-	  if (!editState.id) return;
-	  setLoading(true);
-	  try {
-	    const res = await fetch(`/api/skills/${editState.id}`, {
-	      method: 'PUT',
-	      headers: { 'Content-Type': 'application/json' },
-	      body: JSON.stringify({ name: editState.name, category: editState.category, description: editState.description }),
-	    });
-	    if (res.ok) {
-	      cancelEdit();
-	      fetchData();
-	    } else {
-	      const errorData = await res.json();
-	      alert(errorData.error || 'Failed to update skill');
-	    }
-	  } catch (error) {
-	    console.error('Failed to update skill:', error);
-	  } finally {
-	    setLoading(false);
-	  }
+		e.preventDefault();
+		if (!editState.id) return;
+		setLoading(true);
+		try {
+			const res = await fetch(`/api/skills/${editState.id}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					name: editState.name,
+					categories: editState.categories,
+					description: editState.description,
+				}),
+			});
+			if (res.ok) {
+				cancelEdit();
+				fetchData();
+			} else {
+				const errorData = await res.json();
+				alert(errorData.error || 'Failed to update skill');
+			}
+		} catch (error) {
+			console.error('Failed to update skill:', error);
+		} finally {
+			setLoading(false);
+		}
 	};
 
 	const handleDelete = async (id: string) => {
@@ -150,17 +170,14 @@ export default function SkillsTab() {
 								onChange={(e) => setSkillForm({ ...skillForm, description: e.target.value })}
 								className="w-full px-3 py-2 border rounded"
 							/>
-							<select
-								value={skillForm.category}
-								onChange={(e) => setSkillForm({ ...skillForm, category: e.target.value })}
-								className="w-full px-3 py-2 border rounded"
-								required
-							>
-								<option value="">Select Category</option>
-								{categories.map((cat) => (
-									<option key={cat.id} value={cat.name}>{cat.name}</option>
-								))}
-							</select>
+							<Select<CategoryOption, true>
+								isMulti
+								options={categories as readonly CategoryOption[]}
+								value={skillForm.categories}
+								onChange={(selected) => setSkillForm({ ...skillForm, categories: Array.isArray(selected) ? [...selected] : [] })}
+								classNamePrefix="react-select"
+								placeholder="Select categories..."
+							/>
 							<Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700">Create Skill</Button>
 						</form>
 					</Card>
@@ -187,18 +204,15 @@ export default function SkillsTab() {
 										placeholder="Description"
 										disabled={loading}
 									/>
-									<select
-										value={editState.category}
-										onChange={(e) => setEditState({ ...editState, category: e.target.value })}
-										className="px-3 py-2 border rounded"
-										disabled={loading}
-										required
-									>
-										<option value="">Select Category</option>
-										{categories.map((cat) => (
-											<option key={cat.id} value={cat.name}>{cat.name}</option>
-										))}
-									</select>
+									<Select<CategoryOption, true>
+										isMulti
+										options={categories as readonly CategoryOption[]}
+										value={editState.categories}
+										onChange={(selected) => setEditState({ ...editState, categories: Array.isArray(selected) ? [...selected] : [] })}
+										classNamePrefix="react-select"
+										placeholder="Select categories..."
+										isDisabled={loading}
+									/>
 									<div className="flex gap-2 mt-2">
 										<Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700" disabled={loading}>Save</Button>
 										<Button type="button" variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50" onClick={cancelEdit} disabled={loading}>Cancel</Button>
@@ -207,11 +221,21 @@ export default function SkillsTab() {
 							) : (
 								<>
 									<div>
-										<h3 className="font-bold">{s.name}</h3>
-										<p className="text-xs text-gray-500 capitalize">{s.category}</p>
-										{s.description && (
-											<p className="text-xs text-gray-700 mt-1">{s.description}</p>
-										)}
+										<h3 className="font-bold mb-1">{s.name}</h3>
+										<div className="mb-1 flex flex-wrap gap-1 items-center">
+											<span className="text-xs text-gray-600">Category:</span>
+											{Array.isArray(s.categories) && s.categories.length > 0
+												? s.categories.map((cat, idx) => (
+														<span key={idx} className="inline-block bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded">
+															{cat}
+														</span>
+													))
+												: <span className="text-xs text-gray-400">---</span>}
+										</div>
+										<div className="mt-1">
+											  <span className="text-xs text-gray-600">Description: </span>
+											<span className="text-xs text-gray-700">{s.description ? s.description : '---'}</span>
+										</div>
 									</div>
 									<div className="flex gap-2">
 										<Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => startEdit(s)} aria-label="Edit">
