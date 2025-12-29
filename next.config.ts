@@ -10,9 +10,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  experimental: {
-    serverComponentsExternalPackages: ['@prisma/client'],
-  },
+  serverExternalPackages: ['@prisma/client'],
   // Tailwind + Vercel optimization
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
