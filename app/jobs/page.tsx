@@ -102,17 +102,13 @@ export default function JobsPage() {
               <JobPostingCard
                 id={job.id}
                 title={job.title}
-                company={
-                  job.school
-                    ? job.school.name
-                    : job.createdBy
-                      ? `${job.createdBy.firstName} ${job.createdBy.lastName}`
-                      : "TFN Network"
-                }
+                company={job.school ? job.school.name : undefined}
                 location={job.location}
                 jobType={job.jobType}
                 description={job.description}
                 requiredSkills={requiredSkills}
+                createdBy={job.createdBy}
+                href={`/jobs/${job.id}`}
                 onApply={() =>
                   alert(
                     "Application feature coming soon! For now, contact the poster directly."
