@@ -28,11 +28,18 @@ type Person = {
   profileImage?: string;
 };
 
+interface JobDetail {
+  id: string;
+  title: string;
+  jobType: string;
+}
+
 export default function BookmarksPage() {
   const [bookmarks, setBookmarks] = useState<BookmarksResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [personDetails, setPersonDetails] = useState<Record<string, Person>>({});
+  const [jobDetails, setJobDetails] = useState<Record<string, JobDetail>>({});
 
   useEffect(() => {
     async function fetchBookmarks() {
@@ -54,6 +61,17 @@ export default function BookmarksPage() {
             setPersonDetails(map);
           }
         }
+        // Fetch job details for job bookmarks
+        if (data.jobs && data.jobs.length > 0) {
+          const jobIds = data.jobs.map((b: Bookmark) => b.targetId);
+          const jobsRes = await fetch(`/api/jobs/details?ids=${jobIds.join(",")}`);
+          if (jobsRes.ok) {
+            const jobs: JobDetail[] = await jobsRes.json();
+            const map: Record<string, JobDetail> = {};
+            jobs.forEach((j) => { map[j.id] = j; });
+            setJobDetails(map);
+          }
+        }
       } catch (err: any) {
         setError(err.message || "Unknown error");
       } finally {
@@ -70,9 +88,10 @@ export default function BookmarksPage() {
     if (type === "people") {
       url += "person";
       body = { targetPersonId: bm.targetId };
+    } else if (type === "jobs") {
+      url += "job";
+      body = { targetJobId: bm.targetId };
     } else {
-      // For other types, you would implement their respective API endpoints
-      // For now, just show an alert
       alert("Unbookmarking for this type is not implemented yet.");
       return;
     }
@@ -156,24 +175,38 @@ export default function BookmarksPage() {
                             </Card>
                           );
                         })
-                      : items.map((bm) => (
-                          <Card key={bm.id} className="p-4 bg-white border-l-4 border-blue-300 flex items-center">
-                            <CardHeader className="p-0 flex-1">
-                              <CardTitle className="text-lg font-semibold text-blue-700">
-                                {bm.type} - {bm.targetId}
-                              </CardTitle>
-                            </CardHeader>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-red-500 hover:bg-red-100 ml-2"
-                              title="Remove bookmark"
-                              onClick={() => handleDelete(bm, type)}
-                            >
-                              <Trash2 />
-                            </Button>
-                          </Card>
-                        ))}
+                      : items.map((bm) => {
+                          const job = jobDetails[bm.targetId];
+                          return (
+                            <Card key={bm.id} className="p-4 bg-white border-l-4 border-green-300 flex items-center">
+                              <CardHeader className="p-0 flex-1">
+                                <CardTitle className="text-lg font-semibold text-green-700 flex items-center gap-2">
+                                  {job ? (
+                                    <>
+                                      <Link href={`/jobs/${job.id}`} className="hover:underline">
+                                        {job.title}
+                                      </Link>
+                                      <span className="ml-2 px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold uppercase">
+                                        {job.jobType.replace(/_/g, ' ')}
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <span>Job ID: {bm.targetId}</span>
+                                  )}
+                                </CardTitle>
+                              </CardHeader>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-red-500 hover:bg-red-100 ml-2"
+                                title="Remove bookmark"
+                                onClick={() => handleDelete(bm, type)}
+                              >
+                                <Trash2 />
+                              </Button>
+                            </Card>
+                          );
+                        })}
                   </div>
                 ) : (
                   <p className="text-gray-500">No bookmarks in this category.</p>
