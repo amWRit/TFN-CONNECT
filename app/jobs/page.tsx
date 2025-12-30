@@ -109,11 +109,6 @@ export default function JobsPage() {
                 requiredSkills={requiredSkills}
                 createdBy={job.createdBy}
                 href={`/jobs/${job.id}`}
-                onApply={() =>
-                  alert(
-                    "Application feature coming soon! For now, contact the poster directly."
-                  )
-                }
               />
               {/* Bookmark Button (only for signed-in users) */}
               {showBookmark && (
