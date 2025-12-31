@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { PostCard } from "@/components/PostCard";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { ProfileImage } from "@/components/ProfileImage";
@@ -14,11 +15,27 @@ type Bookmark = {
   createdAt: string;
 };
 
+
 type BookmarksResponse = {
   people: Bookmark[];
   jobs: Bookmark[];
   jobApplications?: Bookmark[];
   posts: Bookmark[];
+};
+
+type PostDetail = {
+  id: string;
+  content: string;
+  postType: string;
+  likes: number;
+  createdAt: string;
+  person: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    profileImage?: string;
+  };
+  comments: Array<{ id: string }>;
 };
 
 type Person = {
@@ -40,6 +57,7 @@ export default function BookmarksPage() {
   const [error, setError] = useState<string | null>(null);
   const [personDetails, setPersonDetails] = useState<Record<string, Person>>({});
   const [jobDetails, setJobDetails] = useState<Record<string, JobDetail>>({});
+  const [postDetails, setPostDetails] = useState<Record<string, PostDetail>>({});
 
   useEffect(() => {
     async function fetchBookmarks() {
@@ -70,6 +88,17 @@ export default function BookmarksPage() {
             const map: Record<string, JobDetail> = {};
             jobs.forEach((j) => { map[j.id] = j; });
             setJobDetails(map);
+          }
+        }
+        // Fetch post details for post bookmarks
+        if (data.posts && data.posts.length > 0) {
+          const postIds = data.posts.map((b: Bookmark) => b.targetId);
+          const postsRes = await fetch(`/api/feed`);
+          if (postsRes.ok) {
+            const posts: PostDetail[] = await postsRes.json();
+            const map: Record<string, PostDetail> = {};
+            posts.forEach((p) => { if (postIds.includes(p.id)) map[p.id] = p; });
+            setPostDetails(map);
           }
         }
       } catch (err: any) {
@@ -175,38 +204,86 @@ export default function BookmarksPage() {
                             </Card>
                           );
                         })
-                      : items.map((bm) => {
-                          const job = jobDetails[bm.targetId];
-                          return (
-                            <Card key={bm.id} className="p-4 bg-white border-l-4 border-green-300 flex items-center">
-                              <CardHeader className="p-0 flex-1">
-                                <CardTitle className="text-lg font-semibold text-green-700 flex items-center gap-2">
-                                  {job ? (
-                                    <>
-                                      <Link href={`/jobs/${job.id}`} className="hover:underline">
-                                        {job.title}
-                                      </Link>
-                                      <span className="ml-2 px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold uppercase">
-                                        {job.jobType.replace(/_/g, ' ')}
-                                      </span>
-                                    </>
-                                  ) : (
-                                    <span>Job ID: {bm.targetId}</span>
-                                  )}
-                                </CardTitle>
-                              </CardHeader>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-red-500 hover:bg-red-100 ml-2"
-                                title="Remove bookmark"
-                                onClick={() => handleDelete(bm, type)}
-                              >
-                                <Trash2 />
-                              </Button>
-                            </Card>
-                          );
-                        })}
+                      : type === "posts"
+                        ? items.map((bm) => {
+                            const post = postDetails[bm.targetId];
+                            return post ? (
+                              <div key={bm.id} className="relative">
+                                <PostCard
+                                  postId={post.id}
+                                  author={post.person}
+                                  content={post.content}
+                                  postType={post.postType}
+                                  likes={post.likes}
+                                  comments={post.comments.length}
+                                  createdAt={new Date(post.createdAt)}
+                                  showEmojiBadge
+                                  hideDate
+                                  hideBookmark
+                                  hideStats
+                                  leftBorder
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-red-500 hover:bg-red-100 absolute top-2 right-2 z-20"
+                                  title="Remove bookmark"
+                                  onClick={() => handleDelete(bm, type)}
+                                >
+                                  <Trash2 />
+                                </Button>
+                              </div>
+                            ) : (
+                              <Card key={bm.id} className="p-4 bg-white border-l-4 border-purple-300 flex items-center">
+                                <CardHeader className="p-0 flex-1">
+                                  <CardTitle className="text-lg font-semibold text-purple-700">
+                                    <span>Post ID: {bm.targetId}</span>
+                                  </CardTitle>
+                                </CardHeader>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-red-500 hover:bg-red-100 ml-2"
+                                  title="Remove bookmark"
+                                  onClick={() => handleDelete(bm, type)}
+                                >
+                                  <Trash2 />
+                                </Button>
+                              </Card>
+                            );
+                          })
+                        : items.map((bm) => {
+                            const job = jobDetails[bm.targetId];
+                            return (
+                              <Card key={bm.id} className="p-4 bg-white border-l-4 border-green-300 flex items-center">
+                                <CardHeader className="p-0 flex-1">
+                                  <CardTitle className="text-lg font-semibold text-green-700 flex items-center gap-2">
+                                    {job ? (
+                                      <>
+                                        <Link href={`/jobs/${job.id}`} className="hover:underline">
+                                          {job.title}
+                                        </Link>
+                                        <span className="ml-2 px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold uppercase">
+                                          {job.jobType.replace(/_/g, ' ')}
+                                        </span>
+                                      </>
+                                    ) : (
+                                      <span>Job ID: {bm.targetId}</span>
+                                    )}
+                                  </CardTitle>
+                                </CardHeader>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="text-red-500 hover:bg-red-100 ml-2"
+                                  title="Remove bookmark"
+                                  onClick={() => handleDelete(bm, type)}
+                                >
+                                  <Trash2 />
+                                </Button>
+                              </Card>
+                            );
+                          })}
                   </div>
                 ) : (
                   <p className="text-gray-500">No bookmarks in this category.</p>

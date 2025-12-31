@@ -4,7 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Heart, MessageCircle, Bookmark, BookmarkCheck } from "lucide-react";
 import Link from "next/link";
 
+import { useSession } from "next-auth/react";
+import { useEffect } from "react";
+
 interface PostProps {
+  postId: string;
   author: {
     id: string;
     firstName: string;
@@ -16,6 +20,10 @@ interface PostProps {
   likes: number;
   comments: number;
   createdAt: Date;
+  hideDate?: boolean;
+  hideBookmark?: boolean;
+  hideStats?: boolean;
+  leftBorder?: boolean;
 }
 
 const getPostTypeColor = (type: string) => {
@@ -64,6 +72,7 @@ const getPostTypeEmoji = (type: string) => {
 };
 
 export function PostCard({
+  postId,
   author,
   content,
   postType,
@@ -71,9 +80,23 @@ export function PostCard({
   comments,
   createdAt,
   showEmojiBadge = false,
+  hideDate = false,
+  hideBookmark = false,
+  hideStats = false,
+  leftBorder = false,
 }: PostProps) {
-  // Placeholder for bookmark state (UI only for now)
+  const { status } = useSession();
   const [bookmarked, setBookmarked] = useState(false);
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
+
+  // Fetch initial bookmark state
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    fetch(`/api/bookmarks/post?targetPostId=${postId}`)
+      .then((res) => res.json())
+      .then((data) => setBookmarked(!!data.bookmarked))
+      .catch(() => setBookmarked(false));
+  }, [postId, status]);
   function formatDate(date: Date) {
     const d = new Date(date);
     const now = new Date();
@@ -87,20 +110,37 @@ export function PostCard({
   }
 
   return (
-    <Card className={`border-2 bg-white hover:shadow-2xl transition-all duration-300 rounded-2xl overflow-hidden ${getPostTypeBorder(postType)}`}>
+    <Card
+      className={`border-2 bg-white hover:shadow-2xl transition-all duration-300 rounded-2xl overflow-hidden ${getPostTypeBorder(postType)} ${leftBorder ? 'border-l-4 border-purple-400' : ''}`}
+    >
       <CardHeader className="relative">
         {/* Bookmark Button (UI only) - top right */}
-        <button
-          aria-label={bookmarked ? "Remove Bookmark" : "Add Bookmark"}
-          onClick={(e) => {
-            e.preventDefault();
-            setBookmarked((prev) => !prev);
-          }}
-          className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${bookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110 disabled:opacity-60`}
-          style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}
-        >
-          {bookmarked ? <BookmarkCheck size={22} /> : <Bookmark size={22} />}
-        </button>
+        {!hideBookmark && (
+          <button
+            aria-label={bookmarked ? "Remove Bookmark" : "Add Bookmark"}
+            disabled={bookmarkLoading || status !== "authenticated"}
+            onClick={async (e) => {
+              e.preventDefault();
+              setBookmarkLoading(true);
+              try {
+                const res = await fetch("/api/bookmarks/post", {
+                  method: bookmarked ? "DELETE" : "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ targetPostId: postId }),
+                });
+                if (res.ok) {
+                  setBookmarked((prev) => !prev);
+                }
+              } finally {
+                setBookmarkLoading(false);
+              }
+            }}
+            className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${bookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110 disabled:opacity-60`}
+            style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}
+          >
+            {bookmarked ? <BookmarkCheck size={22} /> : <Bookmark size={22} />}
+          </button>
+        )}
         <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
           <div className="flex items-start gap-3 flex-1">
             {author.profileImage && (
@@ -122,23 +162,27 @@ export function PostCard({
                   <span>{postType.replace(/_/g, " ")}</span>
                 </Badge>
               </div>
-              <CardDescription className="text-xs text-gray-500">
-                {formatDate(createdAt)}
-              </CardDescription>
+              {!hideDate && (
+                <CardDescription className="text-xs text-gray-500">
+                  {formatDate(createdAt)}
+                </CardDescription>
+              )}
             </div>
           </div>
         </div>
       </CardHeader>
       <CardContent>
         <p className="text-sm text-gray-700 mb-4 leading-relaxed">{content}</p>
-        <div className="flex gap-6 text-xs sm:text-sm text-gray-600">
-          <button className="flex items-center gap-1.5 hover:text-red-500 transition">
-            <Heart className="h-4 w-4" /> <span className="hidden sm:inline">{likes}</span>
-          </button>
-          <button className="flex items-center gap-1.5 hover:text-blue-500 transition">
-            <MessageCircle className="h-4 w-4" /> <span className="hidden sm:inline">{comments}</span>
-          </button>
-        </div>
+        {!hideStats && (
+          <div className="flex gap-6 text-xs sm:text-sm text-gray-600">
+            <button className="flex items-center gap-1.5 hover:text-red-500 transition">
+              <Heart className="h-4 w-4" /> <span className="hidden sm:inline">{likes}</span>
+            </button>
+            <button className="flex items-center gap-1.5 hover:text-blue-500 transition">
+              <MessageCircle className="h-4 w-4" /> <span className="hidden sm:inline">{comments}</span>
+            </button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

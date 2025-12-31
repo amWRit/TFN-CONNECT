@@ -81,6 +81,7 @@ export default function FeedPage() {
           {posts.map((post) => (
             <PostCard
               key={post.id}
+              postId={post.id}
               author={{
                 id: post.person.id,
                 firstName: post.person.firstName,
