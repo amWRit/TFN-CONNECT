@@ -1,9 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Heart, MessageCircle } from "lucide-react";
+import Link from "next/link";
 
 interface PostProps {
   author: {
+    id: string;
     firstName: string;
     lastName: string;
     profileImage?: string;
@@ -95,7 +97,9 @@ export function PostCard({
             )}
             <div className="min-w-0 flex-1">
               <CardTitle className="text-base font-semibold text-blue-700 group-hover:text-blue-800 transition">
-                {author.firstName} {author.lastName}
+                <Link href={`/profile?id=${encodeURIComponent(author.id)}`} className="hover:underline focus:underline">
+                  {author.firstName} {author.lastName}
+                </Link>
               </CardTitle>
               <CardDescription className="text-xs text-gray-500">
                 {formatDate(createdAt)}

@@ -1,7 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSession, signIn } from "next-auth/react"
 import { PostCard } from "@/components/PostCard"
+import NotFound from "@/components/NotFound"
 
 interface Post {
   id: string
@@ -10,6 +12,7 @@ interface Post {
   likes: number
   createdAt: string
   person: {
+    id: string
     firstName: string
     lastName: string
     profileImage?: string
@@ -20,29 +23,36 @@ interface Post {
 }
 
 export default function FeedPage() {
-  const [posts, setPosts] = useState<Post[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: session, status } = useSession();
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (status !== "authenticated") return;
     fetch("/api/feed")
       .then((res) => res.json())
       .then((data) => {
-        setPosts(Array.isArray(data) ? data : [])
-        setLoading(false)
+        setPosts(Array.isArray(data) ? data : []);
+        setLoading(false);
       })
       .catch((err) => {
-        console.error("Failed to fetch posts:", err)
-        setPosts([])
-        setLoading(false)
-      })
-  }, [])
+        console.error("Failed to fetch posts:", err);
+        setPosts([]);
+        setLoading(false);
+      });
+  }, [status]);
 
-  if (loading) {
+
+  if (status === "unauthenticated") {
+    return <NotFound />;
+  }
+
+  if (status === "loading" || loading) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-12">
         <div className="text-center">Loading feed...</div>
       </div>
-    )
+    );
   }
 
   return (
@@ -71,7 +81,12 @@ export default function FeedPage() {
           {posts.map((post) => (
             <PostCard
               key={post.id}
-              author={post.person}
+              author={{
+                id: post.person.id,
+                firstName: post.person.firstName,
+                lastName: post.person.lastName,
+                profileImage: post.person.profileImage,
+              }}
               content={post.content}
               postType={post.postType}
               likes={post.likes}
