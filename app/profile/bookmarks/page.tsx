@@ -228,7 +228,27 @@ export default function BookmarksPage() {
                                   size="icon"
                                   className="text-red-500 hover:bg-red-100 absolute top-2 right-2 z-20"
                                   title="Remove bookmark"
-                                  onClick={() => handleDelete(bm, type)}
+                                  onClick={async () => {
+                                    // Unbookmark post
+                                    const res = await fetch('/api/bookmarks/post', {
+                                      method: 'DELETE',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ targetPostId: post.id }),
+                                    });
+                                    if (res.ok) {
+                                      setBookmarks((prev) => {
+                                        if (!prev) return prev;
+                                        const items = prev['posts'];
+                                        if (!Array.isArray(items)) return prev;
+                                        return {
+                                          ...prev,
+                                          posts: items.filter((b) => b.id !== bm.id),
+                                        };
+                                      });
+                                    } else {
+                                      alert('Failed to remove bookmark.');
+                                    }
+                                  }}
                                 >
                                   <Trash2 />
                                 </Button>
