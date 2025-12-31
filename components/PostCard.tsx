@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, MessageCircle } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, BookmarkCheck } from "lucide-react";
 import Link from "next/link";
 
 interface PostProps {
@@ -71,6 +72,8 @@ export function PostCard({
   createdAt,
   showEmojiBadge = false,
 }: PostProps) {
+  // Placeholder for bookmark state (UI only for now)
+  const [bookmarked, setBookmarked] = useState(false);
   function formatDate(date: Date) {
     const d = new Date(date);
     const now = new Date();
@@ -85,7 +88,19 @@ export function PostCard({
 
   return (
     <Card className={`border-2 bg-white hover:shadow-2xl transition-all duration-300 rounded-2xl overflow-hidden ${getPostTypeBorder(postType)}`}>
-      <CardHeader>
+      <CardHeader className="relative">
+        {/* Bookmark Button (UI only) - top right */}
+        <button
+          aria-label={bookmarked ? "Remove Bookmark" : "Add Bookmark"}
+          onClick={(e) => {
+            e.preventDefault();
+            setBookmarked((prev) => !prev);
+          }}
+          className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${bookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110 disabled:opacity-60`}
+          style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}
+        >
+          {bookmarked ? <BookmarkCheck size={22} /> : <Bookmark size={22} />}
+        </button>
         <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
           <div className="flex items-start gap-3 flex-1">
             {author.profileImage && (
@@ -96,20 +111,22 @@ export function PostCard({
               />
             )}
             <div className="min-w-0 flex-1">
-              <CardTitle className="text-base font-semibold text-blue-700 group-hover:text-blue-800 transition">
-                <Link href={`/profile?id=${encodeURIComponent(author.id)}`} className="hover:underline focus:underline">
-                  {author.firstName} {author.lastName}
-                </Link>
-              </CardTitle>
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-base font-semibold text-blue-700 group-hover:text-blue-800 transition m-0 p-0">
+                  <Link href={`/profile?id=${encodeURIComponent(author.id)}`} className="hover:underline focus:underline">
+                    {author.firstName} {author.lastName}
+                  </Link>
+                </CardTitle>
+                <Badge className={`${getPostTypeColor(postType)} flex-shrink-0 text-xs px-3 py-1 rounded-full font-semibold flex items-center gap-1 transition-none`} style={{ background: undefined, color: undefined }}>
+                  {showEmojiBadge && <span>{getPostTypeEmoji(postType)}</span>}
+                  <span>{postType.replace(/_/g, " ")}</span>
+                </Badge>
+              </div>
               <CardDescription className="text-xs text-gray-500">
                 {formatDate(createdAt)}
               </CardDescription>
             </div>
           </div>
-          <Badge className={`${getPostTypeColor(postType)} flex-shrink-0 text-xs px-3 py-1 rounded-full font-semibold flex items-center gap-1 transition-none`} style={{ background: undefined, color: undefined }}>
-            {showEmojiBadge && <span>{getPostTypeEmoji(postType)}</span>}
-            <span>{postType.replace(/_/g, " ")}</span>
-          </Badge>
         </div>
       </CardHeader>
       <CardContent>
