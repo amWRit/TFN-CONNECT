@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MapPin, Briefcase, Users } from "lucide-react";
 
+import Link from "next/link";
+
 interface JobPostingProps {
   id: string;
   title: string;
@@ -12,7 +14,13 @@ interface JobPostingProps {
   description: string;
   requiredSkills?: string[];
   applicants?: number;
-  onApply?: () => void;
+  href?: string;
+  onView?: () => void;
+  createdBy?: {
+    firstName: string;
+    lastName: string;
+  };
+  hideViewButton?: boolean;
 }
 
 export function JobPostingCard({
@@ -24,7 +32,10 @@ export function JobPostingCard({
   description,
   requiredSkills = [],
   applicants = 0,
-  onApply,
+  href,
+  onView,
+  createdBy,
+  hideViewButton = false,
 }: JobPostingProps) {
   const jobTypeColors: { [key: string]: string } = {
     full_time: "bg-red-100 text-red-700",
@@ -56,12 +67,24 @@ export function JobPostingCard({
               )}
             </div>
             <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-blue-600 transition line-clamp-2">
-              {title}
+              {href ? (
+                <Link href={href} className="hover:underline focus:underline">
+                  {title}
+                </Link>
+              ) : (
+                title
+              )}
             </CardTitle>
             {company && (
               <CardDescription className="text-sm font-semibold text-gray-700 mt-1">
                 {company}
               </CardDescription>
+            )}
+            {createdBy && (
+              <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                <Users className="h-4 w-4 mr-1 text-blue-400" />
+                <span>Posted by {createdBy.firstName} {createdBy.lastName}</span>
+              </div>
             )}
           </div>
         </div>
@@ -96,13 +119,27 @@ export function JobPostingCard({
           <span className="text-xs text-gray-500 font-medium">
             {applicants} {applicants === 1 ? "applicant" : "applicants"}
           </span>
-          <Button 
-            onClick={onApply} 
-            size="sm" 
-            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 font-semibold"
-          >
-            Apply Now →
-          </Button>
+          {!hideViewButton && (
+            href ? (
+              <Link href={href} passHref>
+                <Button
+                  size="sm"
+                  className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 font-semibold"
+                  asChild
+                >
+                  <span>View</span>
+                </Button>
+              </Link>
+            ) : (
+              <Button
+                onClick={onView}
+                size="sm"
+                className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 font-semibold"
+              >
+                View
+              </Button>
+            )
+          )}
         </div>
       </CardContent>
     </Card>

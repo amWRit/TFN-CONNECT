@@ -85,16 +85,16 @@ async function main() {
   // ===== 5. SKILLS (10) =====
   const skills = await prisma.skill.createMany({
     data: [
-      { id: 'sk1', name: 'Mathematics', category: 'teaching' },
-      { id: 'sk2', name: 'Science', category: 'teaching' },
-      { id: 'sk3', name: 'English', category: 'teaching' },
-      { id: 'sk4', name: 'Nepali', category: 'teaching' },
-      { id: 'sk5', name: 'Social Studies', category: 'teaching' },
-      { id: 'sk6', name: 'Leadership', category: 'leadership' },
-      { id: 'sk7', name: 'Communication', category: 'personal' },
-      { id: 'sk8', name: 'Problem Solving', category: 'personal' },
-      { id: 'sk9', name: 'Teamwork', category: 'interpersonal' },
-      { id: 'sk10', name: 'Public Speaking', category: 'leadership' }
+      { id: 'sk1', name: 'Mathematics' },
+      { id: 'sk2', name: 'Science' },
+      { id: 'sk3', name: 'English' },
+      { id: 'sk4', name: 'Nepali' },
+      { id: 'sk5', name: 'Social Studies' },
+      { id: 'sk6', name: 'Leadership' },
+      { id: 'sk7', name: 'Communication' },
+      { id: 'sk8', name: 'Problem Solving' },
+      { id: 'sk9', name: 'Teamwork' },
+      { id: 'sk10', name: 'Public Speaking' }
     ]
   });
   console.log('✅ Created 10 Skills');

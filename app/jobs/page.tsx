@@ -1,6 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useSession } from "next-auth/react"
+import { Bookmark, BookmarkCheck } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { JobPostingCard } from "@/components/JobPostingCard"
 
@@ -26,6 +28,8 @@ interface JobPosting {
 export default function JobsPage() {
   const [jobs, setJobs] = useState<JobPosting[]>([])
   const [loading, setLoading] = useState(true)
+  const { data: session, status } = useSession();
+  const [bookmarkStates, setBookmarkStates] = useState<Record<string, { bookmarked: boolean; loading: boolean }>>({});
 
   useEffect(() => {
     fetch("/api/jobs")
@@ -35,6 +39,27 @@ export default function JobsPage() {
         setLoading(false)
       })
   }, [])
+
+  // Fetch bookmark state for each job when session is ready
+  useEffect(() => {
+    if (!session || !session.user) return;
+    const fetchBookmarks = async () => {
+      const states: Record<string, { bookmarked: boolean; loading: boolean }> = {};
+      await Promise.all(
+        jobs.map(async (job) => {
+          try {
+            const res = await fetch(`/api/bookmarks/job?targetJobId=${job.id}`);
+            const data = await res.json();
+            states[job.id] = { bookmarked: !!data.bookmarked, loading: false };
+          } catch {
+            states[job.id] = { bookmarked: false, loading: false };
+          }
+        })
+      );
+      setBookmarkStates(states);
+    };
+    if (jobs.length > 0) fetchBookmarks();
+  }, [session, jobs]);
 
   if (loading) {
     return (
@@ -69,28 +94,63 @@ export default function JobsPage() {
             }
           }
 
+          const showBookmark = session && session.user;
+          const bookmarkState = bookmarkStates[job.id] || { bookmarked: false, loading: false };
+
           return (
-            <div key={job.id}>
+            <div key={job.id} className="relative group">
               <JobPostingCard
                 id={job.id}
                 title={job.title}
-                company={
-                  job.school
-                    ? job.school.name
-                    : job.createdBy
-                      ? `${job.createdBy.firstName} ${job.createdBy.lastName}`
-                      : "TFN Network"
-                }
+                company={job.school ? job.school.name : undefined}
                 location={job.location}
                 jobType={job.jobType}
                 description={job.description}
                 requiredSkills={requiredSkills}
-                onApply={() =>
-                  alert(
-                    "Application feature coming soon! For now, contact the poster directly."
-                  )
-                }
+                createdBy={job.createdBy}
+                href={`/jobs/${job.id}`}
               />
+              {/* Bookmark Button (only for signed-in users) */}
+              {showBookmark && (
+                <button
+                  aria-label={bookmarkState.bookmarked ? "Remove Bookmark" : "Add Bookmark"}
+                  disabled={bookmarkState.loading}
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    setBookmarkStates((prev) => ({
+                      ...prev,
+                      [job.id]: { ...prev[job.id], loading: true },
+                    }));
+                    try {
+                      const res = await fetch("/api/bookmarks/job", {
+                        method: bookmarkState.bookmarked ? "DELETE" : "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ targetJobId: job.id }),
+                      });
+                      if (res.ok) {
+                        setBookmarkStates((prev) => ({
+                          ...prev,
+                          [job.id]: { bookmarked: !bookmarkState.bookmarked, loading: false },
+                        }));
+                      } else {
+                        setBookmarkStates((prev) => ({
+                          ...prev,
+                          [job.id]: { ...prev[job.id], loading: false },
+                        }));
+                      }
+                    } catch {
+                      setBookmarkStates((prev) => ({
+                        ...prev,
+                        [job.id]: { ...prev[job.id], loading: false },
+                      }));
+                    }
+                  }}
+                  className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${bookmarkState.bookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110 disabled:opacity-60 ml-2`}
+                  style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}
+                >
+                  {bookmarkState.bookmarked ? <BookmarkCheck size={24} /> : <Bookmark size={24} />}
+                </button>
+              )}
             </div>
           )
         })}
