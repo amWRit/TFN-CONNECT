@@ -24,6 +24,7 @@ interface PostProps {
   hideBookmark?: boolean;
   hideStats?: boolean;
   leftBorder?: boolean;
+  showEmojiBadge?: boolean;
 }
 
 const getPostTypeColor = (type: string) => {
