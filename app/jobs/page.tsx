@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Select from "react-select"
 import { useSession } from "next-auth/react"
 import { Bookmark, BookmarkCheck } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -17,6 +18,7 @@ interface JobPosting {
     name: string
   }
   createdBy?: {
+    id: string
     firstName: string
     lastName: string
   }
@@ -32,6 +34,11 @@ export default function JobsPage() {
   const { data: session, status } = useSession();
   const [bookmarkStates, setBookmarkStates] = useState<Record<string, { bookmarked: boolean; loading: boolean }>>({});
   const [skillMap, setSkillMap] = useState<Record<string, string>>({});
+  const [showOnlyMine, setShowOnlyMine] = useState(false);
+  const [typeFilter, setTypeFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [skillsFilter, setSkillsFilter] = useState<{ value: string; label: string }[]>([]);
+  const [allSkills, setAllSkills] = useState<{ value: string; label: string }[]>([]);
 
   useEffect(() => {
     async function fetchData() {
@@ -47,6 +54,7 @@ export default function JobsPage() {
       }
       setSkillMap(map);
       setJobs(jobsData);
+      setAllSkills(skillsData.map((s: any) => ({ value: s.id, label: s.name })));
       setLoading(false);
     }
     fetchData();
@@ -87,16 +95,93 @@ export default function JobsPage() {
 
   return (
     <div className="w-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:py-16">
+      <div className="max-w-7xl mx-auto px-4 pt-4 pb-8 sm:pt-6 sm:pb-12">
         {/* Header Section */}
-        <div>
-          <div className="inline-block">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <div className="inline-block mb-2 sm:mb-0">
             <Badge className="bg-blue-100 text-blue-800 pointer-events-none text-lg px-6 py-2">Jobs</Badge>
+          </div>
+          <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="w-full flex justify-center">
+              <div className="bg-white/80 border border-blue-100 rounded-xl shadow-sm px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
+                <div>
+                  <label className="mr-2 font-semibold text-blue-700">Type</label>
+                  <select
+                    className="border border-blue-200 rounded px-2 py-1 focus:ring-2 focus:ring-blue-300 outline-none transition"
+                    value={typeFilter}
+                    onChange={e => setTypeFilter(e.target.value)}
+                  >
+                    <option value="">All</option>
+                    <option value="FULL_TIME">Full-time</option>
+                    <option value="PART_TIME">Part-time</option>
+                    <option value="CONTRACT">Contract</option>
+                    <option value="INTERNSHIP">Internship</option>
+                    <option value="VOLUNTEER">Volunteer</option>
+                    <option value="FREELANCE">Freelance</option>
+                    <option value="TEMPORARY">Temporary</option>
+                    <option value="REMOTE">Remote</option>
+                    <option value="HYBRID">Hybrid</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mr-2 font-semibold text-blue-700">Status</label>
+                  <select
+                    className="border border-blue-200 rounded px-2 py-1 focus:ring-2 focus:ring-blue-300 outline-none transition"
+                    value={statusFilter}
+                    onChange={e => setStatusFilter(e.target.value)}
+                  >
+                    <option value="">All</option>
+                    <option value="OPEN">Open</option>
+                    <option value="FILLED">Filled</option>
+                    <option value="CLOSED">Closed</option>
+                    <option value="PAUSED">Paused</option>
+                    <option value="DRAFT">Draft</option>
+                  </select>
+                </div>
+                <div className="min-w-[180px] flex items-center gap-2">
+                  <label className="font-semibold text-blue-700 whitespace-nowrap">Skills</label>
+                  <div className="flex-1 min-w-[120px]">
+                    <Select
+                      isMulti
+                      options={allSkills}
+                      value={skillsFilter}
+                      onChange={setSkillsFilter}
+                      classNamePrefix="react-select"
+                      placeholder="All"
+                      styles={{ menu: base => ({ ...base, zIndex: 9999 }), control: base => ({ ...base, minHeight: '32px', borderColor: '#bfdbfe', boxShadow: 'none' }) }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            {session?.user && (
+              <div className="flex-1 flex justify-end">
+                <label className="flex items-center gap-2 select-none text-sm font-medium text-gray-700 whitespace-nowrap">
+                  <input
+                    type="checkbox"
+                    className="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    checked={showOnlyMine}
+                    onChange={e => setShowOnlyMine(e.target.checked)}
+                  />
+                  Show Only Mine
+                </label>
+              </div>
+            )}
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-7">
-        {jobs.map((job) => {
+        {(showOnlyMine && session?.user
+          ? jobs.filter(job => job.createdBy && job.createdBy.id === session.user.id)
+          : jobs
+        )
+        .filter(job => !typeFilter || job.jobType === typeFilter)
+        .filter(job => !statusFilter || job.status === statusFilter)
+        .filter(job =>
+          skillsFilter.length === 0 ||
+          (Array.isArray(job.requiredSkills) && skillsFilter.every(sf => job.requiredSkills?.includes(sf.value)))
+        )
+        .map((job) => {
           let requiredSkillIds: string[] = [];
           if (Array.isArray(job.requiredSkills)) {
             requiredSkillIds = job.requiredSkills;
