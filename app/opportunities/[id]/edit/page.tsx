@@ -82,10 +82,10 @@ export default function EditOpportunityPage({ params }: { params: Promise<{ id: 
       <h1 className="text-2xl font-bold mb-6 text-purple-700">Edit Opportunity</h1>
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow p-6 flex flex-col gap-4 border-2 border-purple-400">
         <label className="font-semibold">Title
-          <input name="title" value={form.title} onChange={handleChange} className="block w-full border rounded px-3 py-2 mt-1 font-normal" required />
+          <input name="title" value={form.title} onChange={handleChange} className="block w-full border-2 border-purple-400 rounded px-3 py-2 mt-1 font-normal focus:border-purple-600 focus:ring-purple-500" required />
         </label>
         <label className="font-semibold">Description
-          <textarea name="description" value={form.description} onChange={handleChange} className="block w-full border rounded px-3 py-2 mt-1 font-normal" rows={4} required />
+          <textarea name="description" value={form.description} onChange={handleChange} className="block w-full border-2 border-purple-400 rounded px-3 py-2 mt-1 font-normal focus:border-purple-600 focus:ring-purple-500" rows={4} required />
         </label>
         <label className="font-semibold">Types
           <div className="flex flex-wrap gap-2 mt-1">
@@ -110,10 +110,10 @@ export default function EditOpportunityPage({ params }: { params: Promise<{ id: 
           </div>
         </label>
         <label className="font-semibold">Location
-          <input name="location" value={form.location} onChange={handleChange} className="block w-full border rounded px-3 py-2 mt-1 font-normal" />
+          <input name="location" value={form.location} onChange={handleChange} className="block w-full border-2 border-purple-400 rounded px-3 py-2 mt-1 font-normal focus:border-purple-600 focus:ring-purple-500" />
         </label>
         <label className="font-semibold">Status
-          <select name="status" value={form.status} onChange={handleChange} className="block w-full border rounded px-3 py-2 mt-1 font-normal">
+          <select name="status" value={form.status} onChange={handleChange} className="block w-full border-2 border-purple-400 rounded px-3 py-2 mt-1 font-normal focus:border-purple-600 focus:ring-purple-500">
             {statusOptions.map(status => (
               <option key={status} value={status} className="font-normal">{status.charAt(0) + status.slice(1).toLowerCase()}</option>
             ))}

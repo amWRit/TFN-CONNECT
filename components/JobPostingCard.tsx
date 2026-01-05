@@ -1,7 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Briefcase, Users } from "lucide-react";
+import { MapPin, Info, Users } from "lucide-react";
 
 import Link from "next/link";
 
@@ -81,9 +81,8 @@ export function JobPostingCard({
     <Card className="border-2 border-green-400 bg-white hover:shadow-xl hover:border-green-500 transition-all duration-300 rounded-2xl overflow-hidden group">
       {/* Top Status Bar */}
       <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-cyan-500 group-hover:from-blue-600 group-hover:to-cyan-600 transition" />
-      
       <CardHeader>
-        <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-3 mb-3">
+        <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-3 mb-2">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
               {jobType && (
@@ -129,9 +128,12 @@ export function JobPostingCard({
           </div>
         )}
 
-        <p className="text-sm text-gray-700 mb-4 leading-relaxed line-clamp-2 bg-gray-50 p-3 rounded-lg">
-          {description}
-        </p>
+        <div className="flex items-center gap-2 mb-4">
+          <Info className="h-5 w-5 text-blue-400 flex-shrink-0" />
+          <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 p-3 rounded-lg w-full mb-0">
+            {description}
+          </p>
+        </div>
 
         {requiredSkills.length > 0 && (
           <div className="mb-5">
@@ -146,7 +148,7 @@ export function JobPostingCard({
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-3 border-t border-gray-100">
+        <div className="flex flex-col sm:flex-row items-end sm:items-center justify-end gap-3 pt-3 border-t border-gray-100">
           {!hideViewButton && (
             href ? (
               <Link href={href} passHref>

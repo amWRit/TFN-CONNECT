@@ -23,6 +23,7 @@ interface JobPosting {
   applications: Array<{
     id: string
   }>
+  status?: string
 }
 
 export default function JobsPage() {

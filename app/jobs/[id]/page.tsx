@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useSession } from "next-auth/react"
-import { HeartIcon } from "@heroicons/react/24/outline"
+import { HeartIcon, PencilSquareIcon } from "@heroicons/react/24/outline"
 import { useRouter } from "next/navigation"
 import { JobPostingCard } from "@/components/JobPostingCard"
 import { ProfileImage } from "@/components/ProfileImage";
@@ -25,6 +25,7 @@ interface JobPosting {
   applications: Array<{
     id: string
   }>
+  status?: string
 }
 
 
@@ -96,6 +97,18 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
   return (
     <div className="w-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 min-h-screen py-8 sm:py-12">
       <div className="max-w-3xl mx-auto px-4">
+        {/* Edit button for job owner */}
+        {session?.user?.id && job?.createdBy?.id === session.user.id && (
+          <div className="flex justify-end mb-4">
+            <button
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow transition"
+              onClick={() => router.push(`/jobs/${job.id}/edit`)}
+            >
+              <PencilSquareIcon className="h-5 w-5" />
+              Edit
+            </button>
+          </div>
+        )}
         <JobPostingCard
           id={job.id}
           title={job.title}

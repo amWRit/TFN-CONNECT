@@ -1,6 +1,7 @@
 // prisma/seed.ts - Comprehensive seed script
 import { PrismaClient, PersonType, EduStatus, EmpStatus, SchoolType } from '@prisma/client';
 
+import { JobType, JobStatus } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
@@ -220,8 +221,8 @@ async function main() {
         skillNameToId['Communication'] || 'sk7'
       ].filter(Boolean),
       location: 'Tanahun',
-      jobType: 'FULL_TIME', // enum value
-      status: 'OPEN' // enum value
+      jobType: JobType.FULL_TIME, // enum value
+      status: JobStatus.OPEN // enum value
     },
     {
       id: 'j2',
@@ -235,8 +236,8 @@ async function main() {
         skillNameToId['Teamwork'] || 'sk9'
       ].filter(Boolean),
       location: 'Tanahun',
-      jobType: 'FULL_TIME',
-      status: 'OPEN'
+      jobType: JobType.FULL_TIME,
+      status: JobStatus.OPEN
     },
     {
       id: 'j3',
@@ -250,8 +251,8 @@ async function main() {
         skillNameToId['Public Speaking'] || 'sk10'
       ].filter(Boolean),
       location: 'Dang',
-      jobType: 'PART_TIME',
-      status: 'OPEN'
+      jobType: JobType.PART_TIME,
+      status: JobStatus.OPEN
     },
     {
       id: 'j4',
@@ -265,8 +266,8 @@ async function main() {
         skillNameToId['Teamwork'] || 'sk9'
       ].filter(Boolean),
       location: 'Dang',
-      jobType: 'FULL_TIME',
-      status: 'OPEN'
+      jobType: JobType.FULL_TIME,
+      status: JobStatus.OPEN
     },
     {
       id: 'j5',
@@ -280,8 +281,8 @@ async function main() {
         skillNameToId['Problem Solving'] || 'sk8'
       ].filter(Boolean),
       location: 'Dang',
-      jobType: 'CONTRACT',
-      status: 'OPEN'
+      jobType: JobType.CONTRACT,
+      status: JobStatus.OPEN
     }
   ];
 

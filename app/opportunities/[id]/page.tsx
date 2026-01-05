@@ -20,6 +20,7 @@ interface Opportunity {
     id: string;
     firstName: string;
     lastName: string;
+    email1?: string;
   };
   interests: Array<{
     id: string;
@@ -27,6 +28,8 @@ interface Opportunity {
       id: string;
       firstName: string;
       lastName: string;
+      email1?: string;
+      profileImage?: string;
     };
   }>;
 }
@@ -130,33 +133,31 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
       </div>
       {session?.user?.id && opportunity?.createdBy?.id === session.user.id && (
         <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">People Interested</h2>
+          <h2 className="text-lg font-semibold mb-4 bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">People Interested</h2>
           {opportunity.interests && opportunity.interests.length > 0 ? (
             (() => {
-              const validInterests = opportunity.interests.filter(interest => interest.person && interest.person.id);
+              const validInterests = opportunity.interests.filter(interest => interest.user && interest.user.id);
               if (validInterests.length > 0) {
                 return (
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {validInterests.map((interest) => (
                       <Link
                         key={interest.id}
-                        href={`/profile/${interest.person.id}`}
+                        href={`/profile/${interest.user.id}`}
                         className="block"
                       >
-                        <div className="flex items-center gap-4 p-4 bg-white rounded-xl shadow border-2 border-blue-400 hover:shadow-lg transition-all duration-150">
+                        <div className="flex items-center gap-4 p-4 bg-white rounded-xl shadow border-2 border-purple-400 hover:shadow-lg transition-all duration-150">
                           <ProfileImage
-                            src={interest.person.profileImage}
-                            name={`${interest.person.firstName} ${interest.person.lastName}`}
+                            src={interest.user.profileImage}
+                            name={`${interest.user.firstName} ${interest.user.lastName}`}
                             className="h-12 w-12 rounded-full border-2 border-blue-200 object-cover"
-                            alt={`${interest.person.firstName} ${interest.person.lastName}`}
+                            alt={`${interest.user.firstName} ${interest.user.lastName}`}
                           />
                           <div className="flex flex-col">
-                            <span className="font-semibold text-blue-700 text-base">{interest.person.firstName} {interest.person.lastName}</span>
-                            {interest.person.type && (
-                              <span className="inline-block mt-1 text-xs font-bold px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 border border-yellow-300">{interest.person.type}</span>
-                            )}
-                            {interest.person.email1 && (
-                              <span className="text-xs text-gray-500">{interest.person.email1}</span>
+                            <span className="font-semibold text-blue-700 text-base">{interest.user.firstName} {interest.user.lastName}</span>
+                            {/* If you want to display a user type, add it to the user object in the Opportunity interface and API response */}
+                            {interest.user.email1 && (
+                              <span className="text-xs text-gray-500">{interest.user.email1}</span>
                             )}
                           </div>
                         </div>
