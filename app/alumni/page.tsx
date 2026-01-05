@@ -27,6 +27,10 @@ interface Person {
 export default function AlumniPage() {
   const [alumni, setAlumni] = useState<Person[]>([])
   const [loading, setLoading] = useState(true)
+  const [cohortFilter, setCohortFilter] = useState("");
+  const [empStatusFilter, setEmpStatusFilter] = useState("");
+  const [nameFilter, setNameFilter] = useState("");
+  const [allCohorts, setAllCohorts] = useState<string[]>([]);
   const { data: session, status } = useSession();
   const [bookmarkStates, setBookmarkStates] = useState<Record<string, { bookmarked: boolean; loading: boolean }>>({});
 
@@ -35,11 +39,21 @@ export default function AlumniPage() {
       .then((res) => res.json())
       .then((data) => {
         // Filter to show alumni only
-        const filtered = data.filter((p: Person) => p.type === "ALUMNI")
-        setAlumni(filtered)
-        setLoading(false)
-      })
-  }, [])
+        const filtered = data.filter((p: Person) => p.type === "ALUMNI");
+        setAlumni(filtered);
+        // Extract all unique cohorts from fellowships
+        const cohortSet = new Set<string>();
+        filtered.forEach((p: any) => {
+          if (p.fellowships && Array.isArray(p.fellowships)) {
+            p.fellowships.forEach((f: any) => {
+              if (f.cohort && f.cohort.name) cohortSet.add(f.cohort.name);
+            });
+          }
+        });
+        setAllCohorts(Array.from(cohortSet));
+        setLoading(false);
+      });
+  }, []);
 
   // Fetch bookmark state for each alumni when session is ready
   useEffect(() => {
@@ -75,21 +89,74 @@ export default function AlumniPage() {
     )
   }
 
+  // Filtered alumni
+  const filteredAlumni = alumni.filter((person: any) => {
+    // Cohort filter
+    if (cohortFilter) {
+      const hasCohort = person.fellowships && person.fellowships.some((f: any) => f.cohort && f.cohort.name === cohortFilter);
+      if (!hasCohort) return false;
+    }
+    // Employment status filter
+    if (empStatusFilter && person.empStatus !== empStatusFilter) return false;
+    // Name filter
+    if (nameFilter && !(person.firstName + ' ' + person.lastName).toLowerCase().includes(nameFilter.toLowerCase())) return false;
+    return true;
+  });
+
   return (
     <div className="w-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:py-16">
-        <div className="mb-12 sm:mb-16">
-          <div className="inline-block mb-4">
-            <Badge className="bg-red-100 text-red-700 pointer-events-none">COMMUNITY</Badge>
+      <div className="max-w-7xl mx-auto px-4 py-4 sm:py-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          {/* Left: Label */}
+          <div className="flex-1 flex items-center sm:justify-start justify-center">
+            <div className="flex items-center">
+              <span>
+                <span className="sr-only">Community</span>
+                <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 px-4 py-2 text-base font-bold tracking-wide uppercase pointer-events-none">Community</Badge>
+              </span>
+            </div>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4 text-gray-900 tracking-tight">TFN Alumni & Network</h1>
-          <p className="text-gray-600 text-base sm:text-lg max-w-2xl">
-            Connect with {alumni.length} inspiring education leaders and changemakers across Nepal
-          </p>
+          {/* Center: Filters */}
+          <div className="flex-1 flex justify-center">
+            <div className="bg-white/80 border border-purple-100 rounded-xl shadow-sm px-4 py-3 flex flex-row items-center gap-3">
+              <label className="mr-2 font-semibold text-purple-700">Cohort</label>
+              <select
+                className="border border-purple-200 rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition"
+                value={cohortFilter}
+                onChange={e => setCohortFilter(e.target.value)}
+              >
+                <option value="">All</option>
+                {allCohorts.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+              <label className="ml-4 mr-2 font-semibold text-purple-700">Employment</label>
+              <select
+                className="border border-purple-200 rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition"
+                value={empStatusFilter}
+                onChange={e => setEmpStatusFilter(e.target.value)}
+              >
+                <option value="">All</option>
+                <option value="EMPLOYED">Employed</option>
+                <option value="SEEKING">Seeking</option>
+                <option value="UNEMPLOYED">Unemployed</option>
+              </select>
+              <label className="ml-4 mr-2 font-semibold text-purple-700">Name</label>
+              <input
+                type="text"
+                className="border border-purple-200 rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition"
+                placeholder="Search by name"
+                value={nameFilter}
+                onChange={e => setNameFilter(e.target.value)}
+              />
+            </div>
+          </div>
+          {/* Right: (empty for now, for symmetry) */}
+          <div className="flex-1 flex items-center sm:justify-end justify-center"></div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
-          {alumni.map((person) => {
+          {filteredAlumni.map((person) => {
             // Determine if current user is profile owner
             const isProfileOwner = session && session.user && session.user.id === person.id;
             const showBookmark = session && session.user && !isProfileOwner;

@@ -69,10 +69,10 @@ export default function OpportunitiesPage() {
             </div>
             {/* Center: Filters */}
             <div className="flex-1 flex justify-center">
-              <div className="bg-white/80 border border-purple-100 rounded-xl shadow-sm px-4 py-3 flex flex-row items-center gap-3">
+              <div className="bg-white/80 border border-purple-200 rounded-xl shadow px-4 py-3 flex flex-row items-center gap-3">
                 <label className="mr-2 font-semibold text-purple-700">Type</label>
                 <select
-                  className="border border-purple-200 rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition"
+                  className="border border-purple-300 bg-white rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition"
                   value={typeFilter}
                   onChange={e => setTypeFilter(e.target.value)}
                 >
@@ -83,7 +83,7 @@ export default function OpportunitiesPage() {
                 </select>
                 <label className="ml-4 mr-2 font-semibold text-purple-700">Status</label>
                 <select
-                  className="border border-purple-200 rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition"
+                  className="border border-purple-300 bg-white rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition"
                   value={statusFilter}
                   onChange={e => setStatusFilter(e.target.value)}
                 >
