@@ -35,3 +35,40 @@ export async function GET() {
     );
   }
 }
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    // Accept requiredSkills as array or string, always pass as string[]
+    let requiredSkills: string[] = [];
+    if (Array.isArray(body.requiredSkills)) {
+      requiredSkills = body.requiredSkills;
+    } else if (typeof body.requiredSkills === 'string') {
+      try {
+        requiredSkills = JSON.parse(body.requiredSkills);
+      } catch {
+        requiredSkills = [];
+      }
+    }
+    const job = await prisma.jobPosting.create({
+      data: {
+        title: body.title,
+        description: body.description,
+        location: body.location,
+        jobType: body.jobType,
+        sector: body.sector,
+        requiredSkills,
+        status: body.status,
+        createdById: body.createdById,
+      },
+    });
+    return NextResponse.json(job, { status: 201 });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Error creating job posting:", errorMessage);
+    return NextResponse.json(
+      { error: "Failed to create job posting", details: errorMessage },
+      { status: 500 }
+    );
+  }
+}

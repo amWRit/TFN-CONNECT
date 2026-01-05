@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 import React from "react";
 import { useSession } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Plus, Edit2, Trash2, Save, X, Upload, Image as ImageIcon, Mail, Phone, Calendar, Linkedin, Info, Star, GraduationCap, Briefcase, Globe, User } from "lucide-react";
@@ -71,6 +71,7 @@ export default function ProfilePage() {
     // ...existing code...
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
+  const params = useParams();
   const [clientReady, setClientReady] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [person, setPerson] = useState<Person | null>(null);
@@ -234,10 +235,15 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!clientReady) return;
-    const params = searchParams ?? new URLSearchParams();
-    const id = params.get("id");
+    // Prefer route param id, then search param id
+    let id: string | undefined = undefined;
+    if (params && typeof params === 'object' && 'id' in params && params.id) {
+      id = Array.isArray(params.id) ? params.id[0] : params.id;
+    } else if (searchParams) {
+      id = searchParams.get("id") || undefined;
+    }
     if (id && session && session.user && session.user.id === id) {
-      // If the signed-in user is viewing their own profile via ?id, treat as owner
+      // If the signed-in user is viewing their own profile via id, treat as owner
       setReadOnly(false);
       fetchProfileById(id);
       fetchCohorts();
@@ -253,7 +259,7 @@ export default function ProfilePage() {
       fetchCohorts();
       fetchPlacements();
     }
-  }, [clientReady, isAdmin, status, session, searchParams]);
+  }, [clientReady, isAdmin, status, session, searchParams, params]);
 
   if (loading) {
     return <div className="text-center py-12">Loading...</div>;
@@ -261,8 +267,13 @@ export default function ProfilePage() {
 
   // Only require session for non-admin view
 
-  const params = searchParams ?? new URLSearchParams();
-  const id = params.get("id");
+  // Prefer route param id, then search param id
+  let id: string | undefined = undefined;
+  if (params && typeof params === 'object' && 'id' in params && params.id) {
+    id = Array.isArray(params.id) ? params.id[0] : params.id;
+  } else if (searchParams) {
+    id = searchParams.get("id") || undefined;
+  }
 
   if (!clientReady) {
     return <div className="text-center py-12">Loading...</div>;

@@ -1,0 +1,198 @@
+"use client";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Select from "react-select";
+import { useSession } from "next-auth/react";
+
+const JOB_TYPES = [
+	{ value: "FULL_TIME", label: "Full Time" },
+	{ value: "PART_TIME", label: "Part Time" },
+	{ value: "CONTRACT", label: "Contract" },
+	{ value: "INTERNSHIP", label: "Internship" },
+	{ value: "VOLUNTEER", label: "Volunteer" },
+	{ value: "FREELANCE", label: "Freelance" },
+	{ value: "TEMPORARY", label: "Temporary" },
+	{ value: "REMOTE", label: "Remote" },
+	{ value: "HYBRID", label: "Hybrid" },
+];
+
+export default function NewJobPage() {
+	const router = useRouter();
+	const { data: session } = useSession();
+	const [title, setTitle] = useState("");
+	const [description, setDescription] = useState("");
+	const [location, setLocation] = useState("");
+	const [jobType, setJobType] = useState("FULL_TIME");
+	const [sector, setSector] = useState("");
+	const [loading, setLoading] = useState(false);
+	const [error, setError] = useState("");
+	const [skills, setSkills] = useState<{ id: string; name: string }[]>([]);
+	const [selectedSkills, setSelectedSkills] = useState<{ value: string; label: string }[]>([]);
+
+	useEffect(() => {
+		fetch("/api/skills")
+			.then((res) => res.json())
+			.then((data) => setSkills(data));
+	}, []);
+
+	const handleSkillsChange = (selected: any) => {
+		setSelectedSkills(selected || []);
+	};
+
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		setLoading(true);
+		setError("");
+		try {
+			const res = await fetch("/api/jobs", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					title,
+					description,
+					location,
+					jobType,
+					sector,
+					requiredSkills: selectedSkills.map(s => s.value),
+					status: "OPEN",
+					createdById: session?.user?.id,
+				}),
+			});
+			if (res.ok) {
+				router.push("/jobs");
+			} else {
+				const data = await res.json();
+				setError(data.error || "Failed to create job posting");
+			}
+		} catch {
+			setError("Failed to create job posting");
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	return (
+		<div className="max-w-xl mx-auto p-8 bg-white rounded-2xl shadow-xl mt-12 border-4 border-blue-400/70 bg-gradient-to-br from-blue-50 via-white to-blue-100">
+			<h1 className="text-3xl font-extrabold mb-8 text-blue-700 text-center tracking-tight">
+				Add New Job Posting
+			</h1>
+			<form onSubmit={handleSubmit} className="space-y-6">
+				<div>
+					<label className="block font-semibold mb-2 text-blue-700">Title</label>
+					<input
+						type="text"
+						className="w-full border-2 border-blue-300 focus:border-blue-500 rounded-lg px-4 py-2 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none"
+						value={title}
+						onChange={(e) => setTitle(e.target.value)}
+						required
+					/>
+				</div>
+				<div>
+					<label className="block font-semibold mb-2 text-blue-700">
+						Description
+					</label>
+					<textarea
+						className="w-full border-2 border-blue-300 focus:border-blue-500 rounded-lg px-4 py-2 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none"
+						value={description}
+						onChange={(e) => setDescription(e.target.value)}
+						required
+					/>
+				</div>
+				<div>
+					<label className="block font-semibold mb-2 text-blue-700">Location</label>
+					<input
+						type="text"
+						className="w-full border-2 border-blue-300 focus:border-blue-500 rounded-lg px-4 py-2 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none"
+						value={location}
+						onChange={(e) => setLocation(e.target.value)}
+					/>
+				</div>
+				<div>
+					<label className="block font-semibold mb-2 text-blue-700">Job Type</label>
+					<select
+						className="w-full border-2 border-blue-400 focus:border-blue-600 rounded-lg px-4 py-2 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none font-semibold text-blue-700"
+						value={jobType}
+						onChange={(e) => setJobType(e.target.value)}
+						required
+					>
+						{JOB_TYPES.map((jt) => (
+							<option key={jt.value} value={jt.value}>
+								{jt.label}
+							</option>
+						))}
+					</select>
+				</div>
+				<div>
+					<label className="block font-semibold mb-2 text-blue-700">Sector</label>
+					<input
+						type="text"
+						className="w-full border-2 border-blue-300 focus:border-blue-500 rounded-lg px-4 py-2 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none"
+						value={sector}
+						onChange={(e) => setSector(e.target.value)}
+						placeholder="e.g. Education, Health, Technology"
+					/>
+				</div>
+				<div>
+					<label className="block font-semibold mb-2 text-blue-700">Required Skills</label>
+					<Select
+						instanceId="job-required-skills"
+						isMulti
+						isSearchable
+						options={skills.map(skill => ({ value: skill.id, label: skill.name }))}
+						value={selectedSkills}
+						onChange={handleSkillsChange}
+						classNamePrefix="react-select"
+						placeholder="Select required skills..."
+						styles={{
+							control: (base) => ({
+								...base,
+								borderColor: "#60a5fa",
+								boxShadow: "0 0 0 2px #bae6fd",
+								borderRadius: "0.75rem",
+								minHeight: "44px",
+							}),
+							multiValue: (base) => ({
+								...base,
+								backgroundColor: "#3b82f6",
+								color: "white",
+								borderRadius: "0.5rem",
+							}),
+							multiValueLabel: (base) => ({
+								...base,
+								color: "white",
+								fontWeight: 600,
+							}),
+							multiValueRemove: (base) => ({
+								...base,
+								color: "#fff",
+								':hover': { backgroundColor: '#2563eb', color: 'white' },
+							}),
+						}}
+					/>
+				</div>
+				{error && (
+					<div className="text-red-500 text-sm text-center font-semibold">
+						{error}
+					</div>
+				)}
+				<div className="flex gap-4 mt-8">
+					<button
+						type="submit"
+						className="flex-1 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
+						disabled={loading}
+					>
+						{loading ? "Posting..." : "Add Job"}
+					</button>
+					<button
+						type="button"
+						className="flex-1 bg-white border-2 border-red-400 text-red-600 font-bold px-8 py-3 rounded-xl shadow transition-all duration-200 text-lg tracking-wide hover:bg-red-50 hover:border-red-600"
+						onClick={() => router.push("/jobs")}
+						disabled={loading}
+					>
+						Cancel
+					</button>
+				</div>
+			</form>
+		</div>
+	);
+}
