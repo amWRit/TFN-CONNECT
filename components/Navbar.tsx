@@ -17,6 +17,7 @@ export default function Navbar() {
         <div className="flex gap-3 sm:gap-6 text-xs sm:text-sm items-center">
           <a href="/alumni" className="text-gray-700 hover:text-blue-600 font-semibold transition">Alumni</a>
           <a href="/jobs" className="text-gray-700 hover:text-blue-600 font-semibold transition">Jobs</a>
+          <a href="/opportunities" className="text-gray-700 hover:text-purple-600 font-semibold transition">Opportunities</a>
           <a href="/feed" className="text-gray-700 hover:text-blue-600 font-semibold transition">Feed</a>
           <UserMenu />
         </div>

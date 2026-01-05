@@ -151,6 +151,8 @@ model Person {
   posts          Post[]           @relation("Posts")
   comments       Comment[]        @relation("Comments")
   bookmarks      Bookmark[]
+  interests      Interest[]
+  opportunities  Opportunity[] @relation("CreatedOpportunities")
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 }
@@ -325,4 +327,63 @@ model Bookmark {
   @@index([type])
   @@index([targetId])
   @@unique([personId, type, targetId])
+}
+
+// ===== OPPORTUNITIES & INTERESTS =====
+enum OpportunityType {
+  EDUCATION
+  COLLABORATION
+  TRAINING
+  NETWORKING
+  FUNDING
+  GRANTS
+  MENTORSHIP
+  VOLUNTEERING
+  INTERNSHIPS
+  FELLOWSHIPS
+  EVENTS
+  JOBS
+  COMPETITIONS
+  ACCELERATORS
+}
+
+enum OpportunityStatus {
+  OPEN
+  CLOSED
+}
+
+enum InterestTargetType {
+  JOB
+  OPPORTUNITY
+  EVENT // Future
+}
+
+model Opportunity {
+  id            String   @id @default(cuid())
+  createdById   String
+  title         String
+  description   String
+  types         OpportunityType[] // Multiple: ['JOB', 'MENTORSHIP', 'TRAINING']
+  location      String?
+  status        OpportunityStatus @default(OPEN)
+
+  createdBy     Person   @relation("CreatedOpportunities", fields: [createdById], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Interest {
+  id          String   @id @default(cuid())
+  personId    String
+  targetType  InterestTargetType // JOB, OPPORTUNITY...
+  targetId    String
+  message     String?
+  createdAt   DateTime @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  person      Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([personId, targetType, targetId])
+  @@index([targetType, targetId])
 }
