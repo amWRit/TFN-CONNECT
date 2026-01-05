@@ -1,7 +1,7 @@
 import React from "react";
-
-
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { TagIcon } from "@heroicons/react/24/outline";
 
 interface OpportunityCardProps {
   id: string;
@@ -21,11 +21,21 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ id, title, descriptio
         </h2>
         <span className={`px-2 py-1 rounded text-xs font-bold ${status === 'OPEN' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}`}>{status}</span>
       </div>
-      <div className="mb-2 text-sm text-gray-600">{description}</div>
-      <div className="flex gap-2 flex-wrap">
+      {/* Type badges directly below title */}
+      <div className="flex gap-2 flex-wrap mb-2 ml-1">
         {types.map((type) => (
-          <span key={type} className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-xs font-medium uppercase">{type}</span>
+          <Badge key={type} variant="secondary" className="bg-purple-100 text-purple-700 border-purple-200 uppercase flex items-center">
+            <TagIcon className="h-4 w-4 text-purple-400 mr-1" /> {type}
+          </Badge>
         ))}
+      </div>
+      <div className="mb-2 text-sm text-gray-600">{description}</div>
+      <div className="flex justify-end mt-3">
+        <Link href={`/opportunities/${id}`}>
+          <button className="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold shadow transition">
+            View
+          </button>
+        </Link>
       </div>
     </div>
   );

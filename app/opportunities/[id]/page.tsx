@@ -4,6 +4,7 @@
 import { useEffect, useState, use } from "react";
 import { useSession } from "next-auth/react";
 import { BriefcaseIcon, MapPinIcon, TagIcon, InformationCircleIcon, PencilSquareIcon, HeartIcon, UserIcon } from "@heroicons/react/24/outline";
+import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -113,7 +114,7 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
                                 .then((data) => {
                                   setOpportunity(data);
                                   setLoading(false);
-                                  if (data.interests && Array.isArray(data.interests) && data.interests.some(i => i.user && i.user.id === session.user.id)) {
+                                  if (data.interests && Array.isArray(data.interests) && data.interests.some((i: { user?: { id: string } }) => i.user && i.user.id === session.user.id)) {
                                     setOptimisticInterested(false);
                                   }
                                 });
@@ -134,8 +135,8 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
                       return (
                         <div className="fixed md:absolute bottom-8 right-8 z-20 group">
                           <button
-                            className="flex items-center gap-2 px-5 py-3 bg-pink-700 hover:bg-pink-800 text-white rounded-full shadow-lg font-semibold text-base transition-all duration-200"
-                            style={{ boxShadow: "0 4px 24px 0 rgba(236, 72, 153, 0.15)" }}
+                            className="flex items-center gap-2 px-5 py-3 border border-red-400 text-red-600 bg-white hover:bg-red-50 rounded-full shadow-lg font-semibold text-base transition-all duration-200"
+                            style={{ boxShadow: "0 4px 24px 0 rgba(236, 72, 153, 0.10)" }}
                             disabled={interestLoading}
                             onClick={async () => {
                               setInterestLoading(true);
@@ -155,7 +156,7 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
                                 });
                             }}
                           >
-                            <HeartIcon className="h-6 w-6 text-white" />
+                            <HeartIcon className="h-6 w-6 text-red-400" />
                             {interestLoading ? "Removing..." : "Remove Interest"}
                           </button>
                           <div className="absolute bottom-16 right-0 z-30 hidden group-hover:block bg-gray-800 text-white text-xs px-4 py-2 rounded shadow-lg whitespace-nowrap">
@@ -173,9 +174,9 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
         {/* Type badges directly below title */}
         <div className="flex flex-wrap gap-2 mb-4 ml-1">
           {opportunity.types?.map((type) => (
-            <span key={type} className="inline-flex items-center gap-1 bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-semibold uppercase">
-              <TagIcon className="h-4 w-4 text-purple-400" /> {type}
-            </span>
+            <Badge key={type} variant="secondary" className="bg-purple-100 text-purple-700 border-purple-200">
+              <TagIcon className="h-4 w-4 text-purple-400 mr-1" /> {type}
+            </Badge>
           ))}
         </div>
         {/* Author info directly below badges */}
@@ -204,24 +205,26 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
           {opportunity.description}
         </div>
       </div>
-      <div className="mt-8">
-        <h2 className="text-lg font-semibold mb-2">People Interested</h2>
-        {opportunity.interests && opportunity.interests.length > 0 ? (
-          <ul className="space-y-2">
-            {opportunity.interests.map((interest) => (
-              interest.user ? (
-                <li key={interest.id}>
-                  <Link href={`/profile/${interest.user.id}`} className="text-blue-600 hover:underline">
-                    {interest.user.firstName} {interest.user.lastName}
-                  </Link>
-                </li>
-              ) : null
-            ))}
-          </ul>
-        ) : (
-          <div className="text-gray-500">No interested people yet.</div>
-        )}
-      </div>
+      {session?.user?.id === opportunity?.createdBy?.id && (
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold mb-2">People Interested</h2>
+          {opportunity.interests && opportunity.interests.length > 0 ? (
+            <ul className="space-y-2">
+              {opportunity.interests.map((interest) => (
+                interest.user ? (
+                  <li key={interest.id}>
+                    <Link href={`/profile/${interest.user.id}`} className="text-blue-600 hover:underline">
+                      {interest.user.firstName} {interest.user.lastName}
+                    </Link>
+                  </li>
+                ) : null
+              ))}
+            </ul>
+          ) : (
+            <div className="text-gray-500">No interested people yet.</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
