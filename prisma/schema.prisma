@@ -273,7 +273,7 @@ model JobPosting {
   title         String
   description   String
   sector        String   // 'Education'
-  requiredSkills String? // JSON array stored as string
+  requiredSkills String[] // Array of skill IDs
   location      String?
   jobType       JobType   @default(FULL_TIME)
   status        JobStatus   @default(OPEN)

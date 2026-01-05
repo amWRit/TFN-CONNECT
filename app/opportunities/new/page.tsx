@@ -48,35 +48,35 @@ export default function NewOpportunityPage() {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6 text-purple-700">Add New Opportunity</h1>
-      <form onSubmit={handleSubmit} className="space-y-5 bg-white p-6 rounded-xl shadow">
+    <div className="max-w-xl mx-auto p-8 bg-white rounded-2xl shadow-xl mt-12 border-4 border-purple-400/70 bg-gradient-to-br from-purple-50 via-white to-purple-100">
+      <h1 className="text-3xl font-extrabold mb-8 text-purple-700 text-center tracking-tight">Add New Opportunity</h1>
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block font-medium mb-1">Title</label>
+          <label className="block font-semibold mb-2 text-purple-700">Title</label>
           <input
-            className="w-full border rounded px-3 py-2"
+            className="w-full border-2 border-purple-300 focus:border-purple-500 rounded-lg px-4 py-2 bg-white/80 focus:bg-purple-50 transition-all duration-200 outline-none"
             value={title}
             onChange={e => setTitle(e.target.value)}
             required
           />
         </div>
         <div>
-          <label className="block font-medium mb-1">Description</label>
+          <label className="block font-semibold mb-2 text-purple-700">Description</label>
           <textarea
-            className="w-full border rounded px-3 py-2"
+            className="w-full border-2 border-purple-300 focus:border-purple-500 rounded-lg px-4 py-2 bg-white/80 focus:bg-purple-50 transition-all duration-200 outline-none"
             value={description}
             onChange={e => setDescription(e.target.value)}
             required
           />
         </div>
         <div>
-          <label className="block font-medium mb-1">Types</label>
+          <label className="block font-semibold mb-2 text-purple-700">Types</label>
           <div className="flex flex-wrap gap-2">
             {opportunityTypes.map((type) => (
-              <label key={type} className={`px-2 py-1 rounded cursor-pointer border ${types.includes(type) ? 'bg-purple-600 text-white border-purple-600' : 'bg-gray-100 text-gray-700 border-gray-300'}`}>
+              <label key={type} className={`px-3 py-1 rounded-lg cursor-pointer border-2 font-semibold transition-all duration-150 text-sm ${types.includes(type) ? 'bg-purple-600 text-white border-purple-600 shadow' : 'bg-gray-100 text-gray-700 border-gray-300 hover:border-purple-400'}`}>
                 <input
                   type="checkbox"
-                  className="mr-1"
+                  className="mr-1 accent-purple-600"
                   checked={types.includes(type)}
                   onChange={() => handleTypeChange(type)}
                 />
@@ -86,17 +86,17 @@ export default function NewOpportunityPage() {
           </div>
         </div>
         <div>
-          <label className="block font-medium mb-1">Location</label>
+          <label className="block font-semibold mb-2 text-purple-700">Location</label>
           <input
-            className="w-full border rounded px-3 py-2"
+            className="w-full border-2 border-purple-300 focus:border-purple-500 rounded-lg px-4 py-2 bg-white/80 focus:bg-purple-50 transition-all duration-200 outline-none"
             value={location}
             onChange={e => setLocation(e.target.value)}
           />
         </div>
         <div>
-          <label className="block font-medium mb-1">Status</label>
+          <label className="block font-semibold mb-2 text-purple-700">Status</label>
           <select
-            className="w-full border rounded px-3 py-2"
+            className="w-full border-2 border-purple-400 focus:border-purple-600 rounded-lg px-4 py-2 bg-white/80 focus:bg-purple-50 transition-all duration-200 outline-none font-semibold text-purple-700"
             value={status}
             onChange={e => setStatus(e.target.value)}
           >
@@ -104,15 +104,25 @@ export default function NewOpportunityPage() {
             <option value="CLOSED">Closed</option>
           </select>
         </div>
-        {error && <div className="text-red-500 text-sm">{error}</div>}
-        {success && <div className="text-green-600 text-sm">Opportunity created!</div>}
-        <button
-          type="submit"
-          className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded font-semibold disabled:opacity-60"
-          disabled={loading}
-        >
-          {loading ? "Creating..." : "Create Opportunity"}
-        </button>
+        {error && <div className="text-red-500 text-sm text-center font-semibold">{error}</div>}
+        {success && <div className="text-green-600 text-sm text-center font-semibold">Opportunity created!</div>}
+        <div className="flex gap-4 mt-8">
+          <button
+            type="submit"
+            className="flex-1 bg-gradient-to-r from-purple-500 via-purple-600 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
+            disabled={loading}
+          >
+            {loading ? "Creating..." : "Create Opportunity"}
+          </button>
+          <button
+            type="button"
+            className="flex-1 bg-white border-2 border-red-400 text-red-600 font-bold px-8 py-3 rounded-xl shadow transition-all duration-200 text-lg tracking-wide hover:bg-red-50 hover:border-red-600"
+            onClick={() => router.push("/opportunities")}
+            disabled={loading}
+          >
+            Cancel
+          </button>
+        </div>
       </form>
     </div>
   );

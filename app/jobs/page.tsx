@@ -12,7 +12,7 @@ interface JobPosting {
   description: string
   location?: string
   jobType: string
-  requiredSkills?: string
+  requiredSkills?: string[]
   school?: {
     name: string
   }
@@ -30,15 +30,26 @@ export default function JobsPage() {
   const [loading, setLoading] = useState(true)
   const { data: session, status } = useSession();
   const [bookmarkStates, setBookmarkStates] = useState<Record<string, { bookmarked: boolean; loading: boolean }>>({});
+  const [skillMap, setSkillMap] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    fetch("/api/jobs")
-      .then((res) => res.json())
-      .then((data) => {
-        setJobs(data)
-        setLoading(false)
-      })
-  }, [])
+    async function fetchData() {
+      const [jobsRes, skillsRes] = await Promise.all([
+        fetch("/api/jobs"),
+        fetch("/api/skills")
+      ]);
+      const jobsData = await jobsRes.json();
+      const skillsData = await skillsRes.json();
+      const map: Record<string, string> = {};
+      for (const skill of skillsData) {
+        map[skill.id] = skill.name;
+      }
+      setSkillMap(map);
+      setJobs(jobsData);
+      setLoading(false);
+    }
+    fetchData();
+  }, []);
 
   // Fetch bookmark state for each job when session is ready
   useEffect(() => {
@@ -85,14 +96,17 @@ export default function JobsPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-7">
         {jobs.map((job) => {
-          let requiredSkills: string[] = []
-          if (job.requiredSkills) {
+          let requiredSkillIds: string[] = [];
+          if (Array.isArray(job.requiredSkills)) {
+            requiredSkillIds = job.requiredSkills;
+          } else if (typeof job.requiredSkills === 'string') {
             try {
-              requiredSkills = JSON.parse(job.requiredSkills)
+              requiredSkillIds = JSON.parse(job.requiredSkills);
             } catch {
-              requiredSkills = []
+              requiredSkillIds = [];
             }
           }
+          const requiredSkills = requiredSkillIds.map((id) => skillMap[id] || id);
 
           const showBookmark = session && session.user;
           const bookmarkState = bookmarkStates[job.id] || { bookmarked: false, loading: false };
@@ -105,6 +119,7 @@ export default function JobsPage() {
                 company={job.school ? job.school.name : undefined}
                 location={job.location}
                 jobType={job.jobType}
+                status={job.status}
                 description={job.description}
                 requiredSkills={requiredSkills}
                 createdBy={job.createdBy}

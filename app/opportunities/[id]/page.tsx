@@ -5,6 +5,7 @@ import { useEffect, useState, use } from "react";
 import { useSession } from "next-auth/react";
 import { BriefcaseIcon, MapPinIcon, TagIcon, InformationCircleIcon, PencilSquareIcon, HeartIcon, UserIcon } from "@heroicons/react/24/outline";
 import { Badge } from "@/components/ui/badge";
+import { ProfileImage } from "@/components/ProfileImage";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -88,85 +89,7 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
         )}
       </div>
       <div className="relative bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 border-2 border-purple-400 hover:shadow-xl hover:border-purple-600 transition-all duration-300 rounded-2xl shadow-lg p-8 mb-8 overflow-hidden group">
-                {session?.user?.id && opportunity?.createdBy?.id !== session.user.id && Array.isArray(opportunity?.interests) && (
-                  (() => {
-                    const alreadyInterested = optimisticInterested || opportunity.interests.some((i: { user?: { id: string } }) => i.user && i.user.id === session.user.id);
-                    if (!alreadyInterested) {
-                      return (
-                        <>
-                          <button
-                            className="fixed md:absolute bottom-8 right-8 z-20 flex items-center gap-2 px-5 py-3 bg-pink-600 hover:bg-pink-700 text-white rounded-full shadow-lg font-semibold text-base transition-all duration-200"
-                            style={{ boxShadow: "0 4px 24px 0 rgba(236, 72, 153, 0.15)" }}
-                            disabled={interestLoading}
-                            onClick={async () => {
-                              setInterestLoading(true);
-                              await fetch("/api/interests", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ targetType: "OPPORTUNITY", targetId: id })
-                              });
-                              setInterestLoading(false);
-                              setInterestSuccess(true);
-                              setOptimisticInterested(true);
-                              setLoading(true);
-                              fetch(`/api/opportunities/${id}`)
-                                .then((res) => res.json())
-                                .then((data) => {
-                                  setOpportunity(data);
-                                  setLoading(false);
-                                  if (data.interests && Array.isArray(data.interests) && data.interests.some((i: { user?: { id: string } }) => i.user && i.user.id === session.user.id)) {
-                                    setOptimisticInterested(false);
-                                  }
-                                });
-                              setTimeout(() => setInterestSuccess(false), 4000);
-                            }}
-                          >
-                            <HeartIcon className="h-6 w-6 text-white" />
-                            {interestLoading ? "Submitting..." : "I'm Interested"}
-                          </button>
-                          {interestSuccess && (
-                            <div className="fixed md:absolute bottom-24 right-8 z-30 bg-green-100 text-green-800 px-4 py-2 rounded shadow-lg border border-green-300 animate-fade-in">
-                              Notified to the author that you are interested
-                            </div>
-                          )}
-                        </>
-                      );
-                    } else {
-                      return (
-                        <div className="fixed md:absolute bottom-8 right-8 z-20 group">
-                          <button
-                            className="flex items-center gap-2 px-5 py-3 border border-red-400 text-red-600 bg-white hover:bg-red-50 rounded-full shadow-lg font-semibold text-base transition-all duration-200"
-                            style={{ boxShadow: "0 4px 24px 0 rgba(236, 72, 153, 0.10)" }}
-                            disabled={interestLoading}
-                            onClick={async () => {
-                              setInterestLoading(true);
-                              await fetch("/api/interests", {
-                                method: "DELETE",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ targetType: "OPPORTUNITY", targetId: id })
-                              });
-                              setInterestLoading(false);
-                              setOptimisticInterested(false);
-                              setLoading(true);
-                              fetch(`/api/opportunities/${id}`)
-                                .then((res) => res.json())
-                                .then((data) => {
-                                  setOpportunity(data);
-                                  setLoading(false);
-                                });
-                            }}
-                          >
-                            <HeartIcon className="h-6 w-6 text-red-400" />
-                            {interestLoading ? "Removing..." : "Remove Interest"}
-                          </button>
-                          <div className="absolute bottom-16 right-0 z-30 hidden group-hover:block bg-gray-800 text-white text-xs px-4 py-2 rounded shadow-lg whitespace-nowrap">
-                            Click to remove your interest in this opportunity
-                          </div>
-                        </div>
-                      );
-                    }
-                  })()
-                )}
+                {/* Floating interest button is now handled below; old button removed for clarity and consistency */}
         <div className="flex items-center gap-3 mb-4">
           <BriefcaseIcon className="h-8 w-8 text-purple-500" />
           <h1 className="text-3xl font-extrabold text-purple-700 tracking-tight">{opportunity.title}</h1>
@@ -205,25 +128,133 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
           {opportunity.description}
         </div>
       </div>
-      {session?.user?.id === opportunity?.createdBy?.id && (
+      {session?.user?.id && opportunity?.createdBy?.id === session.user.id && (
         <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-2">People Interested</h2>
+          <h2 className="text-lg font-semibold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">People Interested</h2>
           {opportunity.interests && opportunity.interests.length > 0 ? (
-            <ul className="space-y-2">
-              {opportunity.interests.map((interest) => (
-                interest.user ? (
-                  <li key={interest.id}>
-                    <Link href={`/profile/${interest.user.id}`} className="text-blue-600 hover:underline">
-                      {interest.user.firstName} {interest.user.lastName}
-                    </Link>
-                  </li>
-                ) : null
-              ))}
-            </ul>
+            (() => {
+              const validInterests = opportunity.interests.filter(interest => interest.person && interest.person.id);
+              if (validInterests.length > 0) {
+                return (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {validInterests.map((interest) => (
+                      <Link
+                        key={interest.id}
+                        href={`/profile/${interest.person.id}`}
+                        className="block"
+                      >
+                        <div className="flex items-center gap-4 p-4 bg-white rounded-xl shadow border-2 border-blue-400 hover:shadow-lg transition-all duration-150">
+                          <ProfileImage
+                            src={interest.person.profileImage}
+                            name={`${interest.person.firstName} ${interest.person.lastName}`}
+                            className="h-12 w-12 rounded-full border-2 border-blue-200 object-cover"
+                            alt={`${interest.person.firstName} ${interest.person.lastName}`}
+                          />
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-blue-700 text-base">{interest.person.firstName} {interest.person.lastName}</span>
+                            {interest.person.type && (
+                              <span className="inline-block mt-1 text-xs font-bold px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 border border-yellow-300">{interest.person.type}</span>
+                            )}
+                            {interest.person.email1 && (
+                              <span className="text-xs text-gray-500">{interest.person.email1}</span>
+                            )}
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                );
+              } else {
+                return (
+                  <div className="text-gray-500">No people to show<br /><span className='text-xs text-gray-400'>Debug: {JSON.stringify(opportunity.interests)}</span></div>
+                );
+              }
+            })()
           ) : (
             <div className="text-gray-500">No interested people yet.</div>
           )}
         </div>
+      )}
+
+      {/* Floating Interest Button (if signed in and not owner) */}
+      {session?.user?.id && opportunity?.createdBy?.id !== session.user.id && Array.isArray(opportunity?.interests) && (
+        (() => {
+          const alreadyInterested = optimisticInterested || opportunity.interests.some((i: { user?: { id: string } }) => i.user && i.user.id === session.user.id);
+          if (!alreadyInterested) {
+            return (
+              <div className="fixed bottom-8 right-8 z-30">
+                <button
+                  className="flex items-center gap-2 px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white rounded-full font-semibold shadow-lg text-lg transition-all duration-200"
+                  style={{ boxShadow: "0 4px 24px 0 rgba(236, 72, 153, 0.15)" }}
+                  disabled={interestLoading}
+                  onClick={async () => {
+                    setInterestLoading(true);
+                    await fetch("/api/interests", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ targetType: "OPPORTUNITY", targetId: id })
+                    });
+                    setInterestLoading(false);
+                    setInterestSuccess(true);
+                    setOptimisticInterested(true);
+                    setLoading(true);
+                    fetch(`/api/opportunities/${id}`)
+                      .then((res) => res.json())
+                      .then((data) => {
+                        setOpportunity(data);
+                        setLoading(false);
+                        if (data.interests && Array.isArray(data.interests) && data.interests.some((i: { user?: { id: string } }) => i.user && i.user.id === session.user.id)) {
+                          setOptimisticInterested(false);
+                        }
+                      });
+                    setTimeout(() => setInterestSuccess(false), 4000);
+                  }}
+                >
+                  <HeartIcon className="h-6 w-6 text-white" />
+                  {interestLoading ? "Submitting..." : "I'm Interested"}
+                </button>
+                {interestSuccess && (
+                  <div className="mt-4 bg-green-100 text-green-800 px-4 py-2 rounded shadow-lg border border-green-300 animate-fade-in">
+                    Notified to the author that you are interested
+                  </div>
+                )}
+              </div>
+            );
+          } else {
+            return (
+              <div className="fixed bottom-8 right-8 z-30 group">
+                <button
+                  className="flex items-center gap-2 px-6 py-3 border border-red-400 text-red-600 bg-white hover:bg-red-50 rounded-full font-semibold shadow-lg text-lg transition-all duration-200"
+                  style={{ boxShadow: "0 4px 24px 0 rgba(236, 72, 153, 0.10)" }}
+                  disabled={interestLoading}
+                  onClick={async () => {
+                    setInterestLoading(true);
+                    await fetch("/api/interests", {
+                      method: "DELETE",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ targetType: "OPPORTUNITY", targetId: id })
+                    });
+                    setInterestLoading(false);
+                    setOptimisticInterested(false);
+                    setLoading(true);
+                    fetch(`/api/opportunities/${id}`)
+                      .then((res) => res.json())
+                      .then((data) => {
+                        setOpportunity(data);
+                        setLoading(false);
+                      });
+                  }}
+                >
+                  <HeartIcon className="h-6 w-6 text-red-400" />
+                  {interestLoading ? "Removing..." : "Remove Interest"}
+                </button>
+                <div className="absolute bottom-16 right-0 z-40 hidden group-hover:block bg-gray-800 text-white text-xs px-4 py-2 rounded shadow-lg whitespace-nowrap">
+                  Click to remove your interest in this opportunity
+                </div>
+              </div>
+            );
+          }
+        })()
       )}
     </div>
   );

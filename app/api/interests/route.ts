@@ -1,3 +1,39 @@
+// GET /api/interests?targetType=JOB&targetId=j1
+import { InterestTargetType } from '@prisma/client';
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const targetType = searchParams.get('targetType');
+  const targetId = searchParams.get('targetId');
+  if (!targetType || !targetId) {
+    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  }
+  if (!Object.values(InterestTargetType).includes(targetType as InterestTargetType)) {
+    return NextResponse.json({ error: 'Invalid targetType' }, { status: 400 });
+  }
+  try {
+    const interests = await prisma.interest.findMany({
+      where: { targetType: targetType as InterestTargetType, targetId },
+      include: {
+        person: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+    // For compatibility with frontend, rename 'person' to 'user' in each interest
+    const result = interests.map((i) => ({
+      ...i,
+      user: i.person,
+      person: undefined,
+    }));
+    return NextResponse.json(result);
+  } catch (err) {
+    return NextResponse.json({ error: 'Failed to fetch interests' }, { status: 500 });
+  }
+}
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getServerSession } from 'next-auth/next';

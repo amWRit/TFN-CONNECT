@@ -200,65 +200,92 @@ async function main() {
   });
 
   // ===== 10. JOB POSTINGS (5) =====
-  const jobPostings = await prisma.jobPosting.createMany({
-    data: [
-      {
-        id: 'j1',
-        createdById: 'p16',
-        title: 'Mathematics Teacher',
-        description: 'Seeking experienced mathematics teacher for secondary level. Strong knowledge of curriculum and innovative teaching methods required.',
-        sector: 'Education',
-        requiredSkills: JSON.stringify(['Mathematics', 'Curriculum Design', 'Student Management']),
-        location: 'Tanahun',
-        jobType: 'FULL_TIME', // enum value
-        status: 'OPEN' // enum value
-      },
-      {
-        id: 'j2',
-        createdById: 'p17',
-        title: 'Science Teacher',
-        description: 'Full-time science teacher position for grades 8-10. Experience with lab-based learning preferred.',
-        sector: 'Education',
-        requiredSkills: JSON.stringify(['Science', 'Lab Management', 'Problem Solving']),
-        location: 'Tanahun',
-        jobType: 'FULL_TIME',
-        status: 'OPEN'
-      },
-      {
-        id: 'j3',
-        createdById: 'p18',
-        title: 'English Language Teacher',
-        description: 'Passionate English teacher needed to develop communication skills in students. Part-time position available.',
-        sector: 'Education',
-        requiredSkills: JSON.stringify(['English', 'Communication', 'Literature']),
-        location: 'Dang',
-        jobType: 'PART_TIME',
-        status: 'OPEN'
-      },
-      {
-        id: 'j4',
-        createdById: 'p19',
-        title: 'Social Studies Teacher',
-        description: 'Educator needed to teach history, geography, and civics. Must be creative in engaging students.',
-        sector: 'Education',
-        requiredSkills: JSON.stringify(['History', 'Geography', 'Civic Education']),
-        location: 'Dang',
-        jobType: 'FULL_TIME',
-        status: 'OPEN'
-      },
-      {
-        id: 'j5',
-        createdById: 'p20',
-        title: 'Physics Teacher',
-        description: 'Experienced physics teacher to conduct practical demonstrations and theory classes for advanced learners.',
-        sector: 'Education',
-        requiredSkills: JSON.stringify(['Physics', 'Laboratory Skills', 'Numeracy']),
-        location: 'Dang',
-        jobType: 'CONTRACT',
-        status: 'OPEN'
-      }
-    ]
+  // Fetch all skills to map names to IDs
+  const allSkills = await prisma.skill.findMany();
+  const skillNameToId: { [key: string]: string } = {};
+  allSkills.forEach(skill => {
+    skillNameToId[skill.name] = skill.id;
   });
+
+  const jobPostingsData = [
+    {
+      id: 'j1',
+      createdById: 'p16',
+      title: 'Mathematics Teacher',
+      description: 'Seeking experienced mathematics teacher for secondary level. Strong knowledge of curriculum and innovative teaching methods required.',
+      sector: 'Education',
+      requiredSkills: [
+        skillNameToId['Mathematics'],
+        skillNameToId['Leadership'] || 'sk6',
+        skillNameToId['Communication'] || 'sk7'
+      ].filter(Boolean),
+      location: 'Tanahun',
+      jobType: 'FULL_TIME', // enum value
+      status: 'OPEN' // enum value
+    },
+    {
+      id: 'j2',
+      createdById: 'p17',
+      title: 'Science Teacher',
+      description: 'Full-time science teacher position for grades 8-10. Experience with lab-based learning preferred.',
+      sector: 'Education',
+      requiredSkills: [
+        skillNameToId['Science'],
+        skillNameToId['Problem Solving'] || 'sk8',
+        skillNameToId['Teamwork'] || 'sk9'
+      ].filter(Boolean),
+      location: 'Tanahun',
+      jobType: 'FULL_TIME',
+      status: 'OPEN'
+    },
+    {
+      id: 'j3',
+      createdById: 'p18',
+      title: 'English Language Teacher',
+      description: 'Passionate English teacher needed to develop communication skills in students. Part-time position available.',
+      sector: 'Education',
+      requiredSkills: [
+        skillNameToId['English'],
+        skillNameToId['Communication'] || 'sk7',
+        skillNameToId['Public Speaking'] || 'sk10'
+      ].filter(Boolean),
+      location: 'Dang',
+      jobType: 'PART_TIME',
+      status: 'OPEN'
+    },
+    {
+      id: 'j4',
+      createdById: 'p19',
+      title: 'Social Studies Teacher',
+      description: 'Educator needed to teach history, geography, and civics. Must be creative in engaging students.',
+      sector: 'Education',
+      requiredSkills: [
+        skillNameToId['Social Studies'],
+        skillNameToId['Leadership'] || 'sk6',
+        skillNameToId['Teamwork'] || 'sk9'
+      ].filter(Boolean),
+      location: 'Dang',
+      jobType: 'FULL_TIME',
+      status: 'OPEN'
+    },
+    {
+      id: 'j5',
+      createdById: 'p20',
+      title: 'Physics Teacher',
+      description: 'Experienced physics teacher to conduct practical demonstrations and theory classes for advanced learners.',
+      sector: 'Education',
+      requiredSkills: [
+        skillNameToId['Science'],
+        skillNameToId['Mathematics'],
+        skillNameToId['Problem Solving'] || 'sk8'
+      ].filter(Boolean),
+      location: 'Dang',
+      jobType: 'CONTRACT',
+      status: 'OPEN'
+    }
+  ];
+
+  await prisma.jobPosting.createMany({ data: jobPostingsData });
   console.log('✅ Created 5 Job Postings');
 
   // ===== 11. JOB APPLICATIONS (8) =====
