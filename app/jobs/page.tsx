@@ -264,15 +264,17 @@ export default function JobsPage() {
       )}
       </div>
 
-      {/* Floating Add New Job Button */}
-      <button
-        onClick={handleAddJob}
-        className="fixed bottom-8 right-8 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"
-        title="Add New Job"
-      >
-        <span className="text-2xl leading-none">＋</span>
-        <span className="hidden sm:inline">Add Job</span>
-      </button>
+      {/* Floating Add New Job Button (only if signed in) */}
+      {status === "authenticated" && (
+        <button
+          onClick={handleAddJob}
+          className="fixed bottom-8 right-8 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"
+          title="Add New Job"
+        >
+          <span className="text-2xl leading-none">＋</span>
+          <span className="hidden sm:inline">Add Job</span>
+        </button>
+      )}
     </div>
   )
 }

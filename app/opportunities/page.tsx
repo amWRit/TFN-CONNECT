@@ -133,15 +133,17 @@ export default function OpportunitiesPage() {
           )}
         </div>
       </div>
-      {/* Floating Add New Opportunity Button */}
-      <button
-        onClick={handleAddOpportunity}
-        className="fixed bottom-8 right-8 z-50 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"
-        title="Add New Opportunity"
-      >
-        <span className="text-2xl leading-none">＋</span>
-        <span className="hidden sm:inline">Add Opportunity</span>
-      </button>
+      {/* Floating Add New Opportunity Button (only if signed in) */}
+      {status === "authenticated" && (
+        <button
+          onClick={handleAddOpportunity}
+          className="fixed bottom-8 right-8 z-50 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"
+          title="Add New Opportunity"
+        >
+          <span className="text-2xl leading-none">＋</span>
+          <span className="hidden sm:inline">Add Opportunity</span>
+        </button>
+      )}
     </>
   );
 }

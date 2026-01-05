@@ -85,7 +85,7 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
         <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 px-4 py-2 text-sm font-bold tracking-wide uppercase shadow">Opportunities</Badge>
       </div>
       <div className="flex justify-end items-center mb-2">
-        {session?.user?.id && opportunity?.createdBy?.id === session.user.id && (
+        {session?.user && session.user.id && opportunity?.createdBy?.id === session.user.id && (
           <button
             className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg shadow transition"
             onClick={() => router.push(`/opportunities/${id}/edit`)}
