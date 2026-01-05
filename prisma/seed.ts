@@ -210,8 +210,8 @@ async function main() {
         sector: 'Education',
         requiredSkills: JSON.stringify(['Mathematics', 'Curriculum Design', 'Student Management']),
         location: 'Tanahun',
-        jobType: 'full_time',
-        status: 'open'
+        jobType: 'FULL_TIME', // enum value
+        status: 'OPEN' // enum value
       },
       {
         id: 'j2',
@@ -221,8 +221,8 @@ async function main() {
         sector: 'Education',
         requiredSkills: JSON.stringify(['Science', 'Lab Management', 'Problem Solving']),
         location: 'Tanahun',
-        jobType: 'full_time',
-        status: 'open'
+        jobType: 'FULL_TIME',
+        status: 'OPEN'
       },
       {
         id: 'j3',
@@ -232,8 +232,8 @@ async function main() {
         sector: 'Education',
         requiredSkills: JSON.stringify(['English', 'Communication', 'Literature']),
         location: 'Dang',
-        jobType: 'part_time',
-        status: 'open'
+        jobType: 'PART_TIME',
+        status: 'OPEN'
       },
       {
         id: 'j4',
@@ -243,8 +243,8 @@ async function main() {
         sector: 'Education',
         requiredSkills: JSON.stringify(['History', 'Geography', 'Civic Education']),
         location: 'Dang',
-        jobType: 'full_time',
-        status: 'open'
+        jobType: 'FULL_TIME',
+        status: 'OPEN'
       },
       {
         id: 'j5',
@@ -254,8 +254,8 @@ async function main() {
         sector: 'Education',
         requiredSkills: JSON.stringify(['Physics', 'Laboratory Skills', 'Numeracy']),
         location: 'Dang',
-        jobType: 'contract',
-        status: 'open'
+        jobType: 'CONTRACT',
+        status: 'OPEN'
       }
     ]
   });

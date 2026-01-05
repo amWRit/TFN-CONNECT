@@ -246,6 +246,27 @@ model ExperienceSkill {
 }
 
 // ===== JOBS & HIRING =====
+
+enum JobType {
+  FULL_TIME     // Permanent/permanent 40hr contracts
+  PART_TIME     // <30 hours/week
+  CONTRACT      // Fixed-term (6-24 months)
+  INTERNSHIP    // Paid/unpaid student placements
+  VOLUNTEER     // Pro-bono roles (teaching support)
+  FREELANCE     // Project-based consulting
+  TEMPORARY     // Seasonal/short-term (<3 months)
+  REMOTE        // Work-from-home flexibility
+  HYBRID        // Office + remote mix
+}
+
+enum JobStatus {
+  OPEN      // Actively accepting applications
+  FILLED    // Position filled, closed
+  CLOSED    // Posting expired/removed
+  PAUSED    // Temporarily not accepting apps
+  DRAFT     // Admin saved but not published
+}
+
 model JobPosting {
   id            String   @id @default(cuid())
   createdById   String?
@@ -254,8 +275,8 @@ model JobPosting {
   sector        String   // 'Education'
   requiredSkills String? // JSON array stored as string
   location      String?
-  jobType       String   // 'full_time'|'part_time'|'contract'
-  status        String   @default("open") // 'open'|'closed'|'filled'
+  jobType       JobType   @default(FULL_TIME)
+  status        JobStatus   @default(OPEN)
   
   createdBy     Person?  @relation("JobPostings", fields: [createdById], references: [id], onDelete: SetNull)
   applications  JobApplication[]

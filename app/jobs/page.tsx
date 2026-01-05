@@ -69,18 +69,18 @@ export default function JobsPage() {
     )
   }
 
+  const handleAddJob = () => {
+    window.location.href = "/jobs/new";
+  };
+
   return (
     <div className="w-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 py-8 sm:py-16">
         {/* Header Section */}
-        <div className="mb-12 sm:mb-16">
-          <div className="inline-block mb-4">
-            <Badge className="bg-blue-100 text-blue-800 pointer-events-none">OPPORTUNITIES</Badge>
+        <div>
+          <div className="inline-block">
+            <Badge className="bg-blue-100 text-blue-800 pointer-events-none text-lg px-6 py-2">Jobs</Badge>
           </div>
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4 text-gray-900 tracking-tight">Jobs & Opportunities</h1>
-          <p className="text-gray-600 text-base sm:text-lg max-w-2xl">
-            {jobs.length} positions posted by our TFN community members - find your next opportunity
-          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-7">
@@ -162,6 +162,16 @@ export default function JobsPage() {
         </div>
       )}
       </div>
+
+      {/* Floating Add New Job Button */}
+      <button
+        onClick={handleAddJob}
+        className="fixed bottom-8 right-8 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"
+        title="Add New Job"
+      >
+        <span className="text-2xl leading-none">＋</span>
+        <span className="hidden sm:inline">Add Job</span>
+      </button>
     </div>
   )
 }
