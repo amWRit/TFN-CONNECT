@@ -99,7 +99,7 @@ export default function JobsPage() {
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div className="inline-block mb-2 sm:mb-0">
-            <Badge className="bg-blue-100 text-blue-800 pointer-events-none text-lg px-6 py-2">Jobs</Badge>
+            <Badge className="bg-blue-600 text-white border-0 px-4 py-2 text-base font-bold tracking-wide uppercase shadow pointer-events-none text-lg px-6 py-2">Jobs</Badge>
           </div>
           <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="w-full flex justify-center">
@@ -145,7 +145,7 @@ export default function JobsPage() {
                       isMulti
                       options={allSkills}
                       value={skillsFilter}
-                      onChange={setSkillsFilter}
+                      onChange={(newValue) => setSkillsFilter(Array.isArray(newValue) ? [...newValue] : [])}
                       classNamePrefix="react-select"
                       placeholder="All"
                       styles={{ menu: base => ({ ...base, zIndex: 9999 }), control: base => ({ ...base, minHeight: '32px', borderColor: '#bfdbfe', boxShadow: 'none' }) }}

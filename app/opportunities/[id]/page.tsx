@@ -80,6 +80,10 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
           // ...existing code...
   return (
     <div className="max-w-2xl mx-auto p-6">
+      {/* Badge label above card, similar to jobs page */}
+      <div className="flex items-center mb-4">
+        <Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 px-4 py-2 text-sm font-bold tracking-wide uppercase shadow">Opportunities</Badge>
+      </div>
       <div className="flex justify-end items-center mb-2">
         {session?.user?.id && opportunity?.createdBy?.id === session.user.id && (
           <button
@@ -91,7 +95,7 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
           </button>
         )}
       </div>
-      <div className="relative bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 border-2 border-purple-400 hover:shadow-xl hover:border-purple-600 transition-all duration-300 rounded-2xl shadow-lg p-8 mb-8 overflow-hidden group">
+      <div className="relative bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 border-2 border-purple-400 hover:shadow-xl hover:border-purple-600 transition-all duration-300 rounded-2xl shadow-lg p-8 overflow-hidden group">
                 {/* Floating interest button is now handled below; old button removed for clarity and consistency */}
         <div className="flex items-center gap-3 mb-4">
           <BriefcaseIcon className="h-8 w-8 text-purple-500" />
@@ -156,9 +160,7 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
                           <div className="flex flex-col">
                             <span className="font-semibold text-blue-700 text-base">{interest.user.firstName} {interest.user.lastName}</span>
                             {/* If you want to display a user type, add it to the user object in the Opportunity interface and API response */}
-                            {interest.user.email1 && (
-                              <span className="text-xs text-gray-500">{interest.user.email1}</span>
-                            )}
+                            {/* User type or other info can go here if needed, but do not show email for privacy */}
                           </div>
                         </div>
                       </Link>

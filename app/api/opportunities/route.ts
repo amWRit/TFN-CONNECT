@@ -35,6 +35,10 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const mine = url.searchParams.get('mine') === 'true';
   const type = url.searchParams.get('type');
+  const status = url.searchParams.get('status');
+
+  // Only allow valid JobStatus enum values (for compatibility with frontend filter)
+  const validStatuses = ['OPEN', 'FILLED', 'CLOSED', 'PAUSED', 'DRAFT'];
 
   const where: any = {};
   if (mine && session?.user?.id) {
@@ -42,6 +46,9 @@ export async function GET(request: NextRequest) {
   }
   if (type) {
     where.types = { has: type };
+  }
+  if (status && validStatuses.includes(status)) {
+    where.status = status;
   }
 
   const opportunities = await prisma.opportunity.findMany({

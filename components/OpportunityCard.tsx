@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { TagIcon } from "@heroicons/react/24/outline";
+import { TagIcon, InformationCircleIcon } from "@heroicons/react/24/outline";
 
 interface OpportunityCardProps {
   id: string;
@@ -29,7 +29,10 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ id, title, descriptio
           </Badge>
         ))}
       </div>
-      <div className="mb-2 text-sm text-gray-600">{description}</div>
+      <div className="mb-2 text-sm text-gray-600 flex items-center gap-2">
+        <InformationCircleIcon className="h-4 w-4 text-purple-400 flex-shrink-0" />
+        <span>{description}</span>
+      </div>
       <div className="flex justify-end mt-3">
         <Link href={`/opportunities/${id}`}>
           <button className="px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-semibold shadow transition">

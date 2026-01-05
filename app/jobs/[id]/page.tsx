@@ -147,9 +147,6 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                           {interest.user.type && (
                             <span className="inline-block mt-1 text-xs font-bold px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 border border-yellow-300">{interest.user.type}</span>
                           )}
-                          {interest.user.email1 && (
-                            <span className="text-xs text-gray-500">{interest.user.email1}</span>
-                          )}
                         </div>
                       </div>
                     </a>

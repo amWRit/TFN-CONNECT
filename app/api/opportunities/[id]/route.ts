@@ -43,15 +43,21 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
     // Fetch interests for this opportunity
-    const interests = await prisma.interest.findMany({
+    const interestsRaw = await prisma.interest.findMany({
       where: {
         targetType: 'OPPORTUNITY',
         targetId: id
       },
       include: {
-        person: { select: { id: true, firstName: true, lastName: true } }
+        person: { select: { id: true, firstName: true, lastName: true, email1: true, profileImage: true } }
       }
     });
+    // Map 'person' to 'user' for frontend compatibility
+    const interests = interestsRaw.map(i => ({
+      ...i,
+      user: i.person,
+      person: undefined
+    }));
     return NextResponse.json({ ...opportunity, interests });
     if (!opportunity) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
