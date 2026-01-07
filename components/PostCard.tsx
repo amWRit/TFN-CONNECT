@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, MessageCircle, Bookmark, BookmarkCheck, Briefcase, Trophy, Rocket, MessageSquare, FileText, PartyPopper, Star, Users } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, BookmarkCheck, Briefcase, Trophy, Rocket, MessageSquare, FileText, PartyPopper, Star, Users, Pencil } from "lucide-react";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 
@@ -104,10 +104,12 @@ export function PostCard({
   hideBookmark = false,
   hideStats = false,
   leftBorder = false,
-}: PostProps) {
-  const { status } = useSession();
+  onEdit,
+}: PostProps & { onEdit?: () => void }) {
+  const { status, data: session } = useSession();
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
+  const isOwner = session?.user?.id === author.id;
 
   // Fetch initial bookmark state
   useEffect(() => {
@@ -140,44 +142,59 @@ export function PostCard({
 
   return (
     <Card
-      className={`border-4 border-blue-100 bg-white hover:shadow-2xl transition-all duration-300 rounded-2xl overflow-hidden ring-2 ring-blue-200 ${getPostTypeBorder(postType)} ${leftBorder ? 'border-l-4 border-purple-400' : ''}`}
+      className={`border-2 border-pink-400 bg-white transition-all duration-300 rounded-2xl overflow-hidden${leftBorder ? ' border-l-4 border-purple-400' : ''}`}
     >
       <CardHeader className="relative">
-        {/* Bookmark Button (UI only) - top right */}
+        {/* Edit or Bookmark Button (UI only) - top right */}
         {!hideBookmark && (
-          <button
-            aria-label={bookmarked ? "Remove Bookmark" : "Add Bookmark"}
-            disabled={bookmarkLoading || status !== "authenticated"}
-            onClick={async (e) => {
-              e.preventDefault();
-              setBookmarkLoading(true);
-              try {
-                const res = await fetch("/api/bookmarks/post", {
-                  method: bookmarked ? "DELETE" : "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ targetPostId: postId }),
-                });
-                if (res.ok) {
-                  setBookmarked((prev) => !prev);
+          isOwner ? (
+            <button
+              aria-label="Edit Post"
+              className="p-2 rounded-full shadow-md transition-colors duration-200 border-2 bg-white border-blue-300 text-blue-600 hover:bg-blue-50 hover:scale-110 disabled:opacity-60"
+              style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}
+              onClick={onEdit}
+            >
+              <Pencil size={22} />
+            </button>
+          ) : (
+            <button
+              aria-label={bookmarked ? "Remove Bookmark" : "Add Bookmark"}
+              disabled={bookmarkLoading || status !== "authenticated"}
+              onClick={async (e) => {
+                e.preventDefault();
+                setBookmarkLoading(true);
+                try {
+                  const res = await fetch("/api/bookmarks/post", {
+                    method: bookmarked ? "DELETE" : "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ targetPostId: postId }),
+                  });
+                  if (res.ok) {
+                    setBookmarked((prev) => !prev);
+                  }
+                } finally {
+                  setBookmarkLoading(false);
                 }
-              } finally {
-                setBookmarkLoading(false);
-              }
-            }}
-            className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${bookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110 disabled:opacity-60`}
-            style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}
-          >
-            {bookmarked ? <BookmarkCheck size={22} /> : <Bookmark size={22} />}
-          </button>
+              }}
+              className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${bookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110 disabled:opacity-60`}
+              style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}
+            >
+              {bookmarked ? <BookmarkCheck size={22} /> : <Bookmark size={22} />}
+            </button>
+          )
         )}
         <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
           <div className="flex items-start gap-3 flex-1">
-            {author.profileImage && (
+            {author.profileImage ? (
               <img
                 src={author.profileImage}
                 alt={author.firstName}
                 className="h-10 w-10 rounded-full flex-shrink-0 border-2 border-blue-200 shadow-sm"
               />
+            ) : (
+              <div className="h-10 w-10 rounded-full flex-shrink-0 border-2 border-blue-200 shadow-sm bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-base uppercase">
+                {author.firstName?.[0] || ''}{author.lastName?.[0] || ''}
+              </div>
             )}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">

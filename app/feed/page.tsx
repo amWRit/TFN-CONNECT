@@ -33,6 +33,13 @@ export default function FeedPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const [editPost, setEditPost] = useState<Post | null>(null);
+  const [editContent, setEditContent] = useState("");
+  const [editPostType, setEditPostType] = useState("GENERAL");
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editError, setEditError] = useState("");
+  const [editAction, setEditAction] = useState<"save" | "delete" | null>(null);
+
   const postTypeOptions = Object.entries(PostType).map(([key, value]) => ({ key, value }));
 
   useEffect(() => {
@@ -73,6 +80,62 @@ export default function FeedPage() {
       setError(err.message || "Failed to add post");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // Handler to open edit modal
+  const handleEdit = (post: Post) => {
+    setEditPost(post);
+    setEditContent(post.content);
+    setEditPostType(post.postType);
+    setEditError("");
+  };
+  // Handler to save edit
+  const handleEditSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditAction("save");
+    setEditSubmitting(true);
+    setEditError("");
+    try {
+      const res = await fetch(`/api/feed/${editPost?.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: editContent, postType: editPostType }),
+      });
+      if (!res.ok) throw new Error("Failed to update post");
+      setEditPost(null);
+      // Refresh posts
+      setLoading(true);
+      const data = await fetch("/api/feed").then((r) => r.json());
+      setPosts(Array.isArray(data) ? data : []);
+      setLoading(false);
+    } catch (err: any) {
+      setEditError(err.message || "Failed to update post");
+    } finally {
+      setEditSubmitting(false);
+      setEditAction(null);
+    }
+  };
+  // Handler to delete post
+  const handleEditDelete = async () => {
+    if (!editPost) return;
+    setEditAction("delete");
+    setEditSubmitting(true);
+    setEditError("");
+    try {
+      const res = await fetch(`/api/feed/${editPost.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete post");
+      setEditPost(null);
+      // Refresh posts
+      setLoading(true);
+      const data = await fetch("/api/feed").then((r) => r.json());
+      setPosts(Array.isArray(data) ? data : []);
+      setLoading(false);
+    } catch (err: any) {
+      setEditError(err.message || "Failed to delete post");
+    } finally {
+      setEditSubmitting(false);
+      setEditAction(null);
     }
   };
 
@@ -177,6 +240,68 @@ export default function FeedPage() {
           </div>
         )}
 
+        {/* Edit Post Modal */}
+        {editPost && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm">
+            <div className="bg-gradient-to-br from-blue-50 via-white to-blue-100 rounded-2xl shadow-2xl p-4 sm:p-8 w-full max-w-xl sm:max-w-2xl border-4 border-blue-400/70 relative animate-fadeIn mx-2">
+              <button
+                className="absolute top-3 right-3 text-blue-400 hover:text-blue-700 text-3xl font-bold transition-colors duration-150"
+                onClick={() => setEditPost(null)}
+                aria-label="Close"
+              >
+                &times;
+              </button>
+              <h2 className="text-2xl font-extrabold mb-6 text-blue-700 text-center tracking-tight drop-shadow">Edit Post</h2>
+              <form onSubmit={handleEditSave} className="space-y-6">
+                <textarea
+                  className="w-full border-2 border-blue-300 focus:border-blue-500 rounded-xl px-4 py-3 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none text-lg shadow-sm"
+                  rows={4}
+                  placeholder="Edit your post..."
+                  value={editContent}
+                  onChange={e => setEditContent(e.target.value)}
+                  required
+                />
+                <div>
+                  <label className="block font-semibold mb-2 text-blue-700">Type</label>
+                  <select
+                    className="w-full border-2 border-blue-400 focus:border-blue-600 rounded-lg px-4 py-2 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none font-semibold text-blue-700"
+                    value={editPostType}
+                    onChange={e => setEditPostType(e.target.value)}
+                  >
+                    {postTypeOptions.map(opt => (
+                      <option key={opt.key} value={opt.value}>
+                        {opt.key.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {editError && (
+                  <div className="text-red-500 text-sm text-center font-semibold">
+                    {editError}
+                  </div>
+                )}
+                <div className="flex gap-4 mt-8">
+                  <button
+                    type="submit"
+                    className="flex-1 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
+                    disabled={editSubmitting || !editContent.trim()}
+                  >
+                    {editAction === "save" && editSubmitting ? "Saving..." : "Save"}
+                  </button>
+                  <button
+                    type="button"
+                    className="flex-1 bg-white border-2 border-red-400 text-red-600 font-bold px-8 py-3 rounded-xl shadow transition-all duration-200 text-lg tracking-wide hover:bg-red-50 hover:border-red-600"
+                    onClick={handleEditDelete}
+                    disabled={editSubmitting}
+                  >
+                    {editAction === "delete" && editSubmitting ? "Deleting..." : "Delete"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-7 sm:space-y-10 mt-8">
           {posts.map((post) => (
             <PostCard
@@ -195,6 +320,7 @@ export default function FeedPage() {
               createdAt={new Date(post.createdAt)}
               showEmojiBadge
               hideStats
+              onEdit={() => handleEdit(post)}
             />
           ))}
         </div>
