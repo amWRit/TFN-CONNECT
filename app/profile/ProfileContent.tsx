@@ -8,7 +8,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, Edit2, Trash2, Save, X, Upload, Image as ImageIcon, Mail, Phone, Calendar, Linkedin, Info, Star, GraduationCap, Briefcase, Globe, User } from "lucide-react";
+import { Plus, Edit2, Trash2, Save, X, Upload, Image as ImageIcon, Mail, Phone, Calendar, Linkedin, Info, Star, GraduationCap, Briefcase, Globe, User, Users, Activity } from "lucide-react";
 import { ProfileImage } from "@/components/ProfileImage";
 
 
@@ -512,31 +512,45 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
+    <div className="max-w-4xl mx-auto px-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">My Profile</h1>
-        {/* Only show edit button if signed in as user or admin and viewing own profile or as admin */}
-        {!editing && (isProfileOwner || isAdmin) && (
-            <Button onClick={() => setEditing(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
-              <Edit2 size={16} className="mr-2" />
-              Edit Profile
-            </Button>
-        )}
+        <div />
       </div>
 
       {/* Basic Information */}
       <Card className="relative p-6 mb-6 border-2 border-blue-400 rounded-xl shadow-sm">
-        <h2 className="text-xl font-semibold mb-4 text-blue-600">Basic Information</h2>
-        {/* Alumni Type Label in Top Right of Card */}
-        {person.type && (
-          <div className="absolute top-0 right-0 mt-2 mr-2 z-20">
-            <span className="inline-flex items-center gap-1 bg-yellow-400 text-yellow-900 text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wide shadow-lg border-2 border-yellow-500" style={{ boxShadow: '0 0 8px 2px #facc15, 0 0 16px 4px #fde68a' }}>
-              <Star size={16} className="text-yellow-700 drop-shadow" fill="#facc15" stroke="#b45309" />
-              {person.type}
-            </span>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-blue-600 m-0 p-0">Basic Information</h2>
+          <div className="flex items-center ml-2" style={{ position: 'relative', top: 0, right: 0, zIndex: 20 }}>
+            {/* Edit Icon Button (only for profile owner or admin) */}
+            {!editing && (isProfileOwner || isAdmin) && (
+              <div className="relative group inline-block">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="p-2 rounded-full shadow-md transition-colors duration-200 border-2 border-blue-400 text-blue-600 bg-white hover:bg-blue-50 hover:border-blue-500 hover:scale-110"
+                  aria-label="Edit Profile"
+                  onClick={() => setEditing(true)}
+                >
+                  <Edit2 size={24} strokeWidth={2} className="text-blue-600" />
+                </Button>
+                <div className="absolute left-1/2 -translate-x-1/2 mt-2 z-50 hidden group-hover:block bg-gray-800 text-white text-xs px-3 py-1 rounded shadow-lg whitespace-nowrap">
+                  Edit Profile
+                </div>
+              </div>
+            )}
           </div>
-        )}
-        
+              {/* Floating View Activity Button (always visible) */}
+              <button
+                aria-label="View Activity"
+                onClick={() => {/* TODO: handle view activity navigation */}}
+                className="fixed bottom-8 right-8 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"
+                title="View Activity"
+              >
+                <Activity size={28} strokeWidth={2.5} className="text-white" />
+                <span className="hidden sm:inline">View Activity</span>
+              </button>
+        </div>
         {/* Profile Image Section */}
         <div className="mb-6 flex items-center gap-6">
           <div className="flex-shrink-0">
@@ -559,34 +573,36 @@ export default function ProfilePage() {
                 className="hidden"
                 onChange={handleImageUpload}
               />
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingImage}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-                size="sm"
-              >
-                {uploadingImage ? (
-                  <>
-                    <Upload size={16} className="mr-2 animate-spin" />
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    <ImageIcon size={16} className="mr-2" />
-                    {person.profileImage ? "Change Image" : "Upload Image"}
-                  </>
-                )}
-              </Button>
-              {person.profileImage && (
+              <div className="flex items-center gap-2">
                 <Button
-                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingImage}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
                   size="sm"
-                  className="ml-2 border-red-600 text-red-600 hover:bg-red-50"
-                  onClick={handleRemoveImage}
                 >
-                  Remove
+                  {uploadingImage ? (
+                    <>
+                      <Upload size={16} className="mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <ImageIcon size={16} className="mr-2" />
+                      {person.profileImage ? "Change Image" : "Upload Image"}
+                    </>
+                  )}
                 </Button>
-              )}
+                {person.profileImage && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-red-600 text-red-600 hover:bg-red-50"
+                    onClick={handleRemoveImage}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -722,6 +738,21 @@ export default function ProfilePage() {
             <div className="flex items-center gap-2 text-lg font-semibold">
               <User size={22} className="text-blue-500" />
               <span>{person.firstName} {person.lastName}</span>
+              {person.type === "ALUMNI" && (
+                <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 text-xs font-semibold px-3 py-1 rounded-full pointer-events-none">
+                  <span className="text-base">⭐</span> Alumni
+                </span>
+              )}
+              {person.type === "STAFF" && (
+                <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full pointer-events-none">
+                  <span className="text-base">👔</span> Staff
+                </span>
+              )}
+              {person.type === "LEADERSHIP" && (
+                <span className="inline-flex items-center gap-1 bg-yellow-100 text-yellow-800 text-xs font-semibold px-3 py-1 rounded-full pointer-events-none">
+                  <span className="text-base">👑</span> Leadership
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-2">
               {(isProfileOwner || isAdmin) && person.dob && (

@@ -26,7 +26,7 @@ export default function Navbar() {
           <h1 className="hidden lg:block text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">TFN-Connect</h1>
         </a>
         <div className="flex gap-3 sm:gap-6 text-xs sm:text-sm items-center">
-          <a href="/alumni" className="text-gray-700 hover:text-blue-600 font-semibold transition">Alumni</a>
+              <a href="/people" className="text-gray-700 hover:text-blue-600 font-semibold transition">People</a>
           <a href="/jobs" className="text-gray-700 hover:text-blue-600 font-semibold transition">Jobs</a>
           <a href="/opportunities" className="text-gray-700 hover:text-purple-600 font-semibold transition">Opportunities</a>
           {(session?.user || isAdmin) && (
