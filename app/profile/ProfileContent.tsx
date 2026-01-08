@@ -10,7 +10,9 @@ import { useSearchParams, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Plus, Edit2, Trash2, Save, X, Upload, Image as ImageIcon, Mail, Phone, Calendar, Linkedin, Info, Star, GraduationCap, Briefcase, Globe, User, Users, Activity } from "lucide-react";
+
 import { ProfileImage } from "@/components/ProfileImage";
+import { ProfileHeaderCard } from "@/components/profile/ProfileHeaderCard";
 
 
 interface Fellowship {
@@ -68,8 +70,9 @@ interface Experience {
 }
 
 export default function ProfilePage() {
-      // ...existing code...
-    // ...existing code...
+  // --- Bookmark state and logic (must be at top level, before any return/conditional) ---
+  const [bookmarked, setBookmarked] = useState(false);
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const params = useParams();
@@ -81,6 +84,38 @@ export default function ProfilePage() {
   const isProfileOwner = React.useMemo(() => {
     return session && person && session.user && session.user.id === person.id;
   }, [session, person]);
+
+  // Only show bookmark if signed in and not profile owner
+  const showBookmark = session && session.user && !isProfileOwner;
+
+  useEffect(() => {
+    if (!showBookmark || !person?.id) return;
+    setBookmarkLoading(true);
+    fetch(`/api/bookmarks/person?targetPersonId=${person.id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setBookmarked(!!data.bookmarked);
+        setBookmarkLoading(false);
+      })
+      .catch(() => setBookmarkLoading(false));
+  }, [showBookmark, person?.id]);
+
+  const handleBookmarkToggle = async () => {
+    if (!person?.id) return;
+    setBookmarkLoading(true);
+    try {
+      const res = await fetch("/api/bookmarks/person", {
+        method: bookmarked ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetPersonId: person.id }),
+      });
+      if (res.ok) {
+        setBookmarked((b) => !b);
+      }
+    } finally {
+      setBookmarkLoading(false);
+    }
+  };
   const [showFellowshipForm, setShowFellowshipForm] = useState(false);
   const [editingFellowship, setEditingFellowship] = useState<string | null>(null);
   const [fellowshipForm, setFellowshipForm] = useState<{
@@ -508,353 +543,43 @@ export default function ProfilePage() {
   };
 
 
-  if (!person) {
-    return <div className="text-center py-12">Profile not found.</div>;
-  }
 
   return (
     <div className="max-w-4xl mx-auto px-4">
-      <div className="flex justify-between items-center mb-6">
-        <div />
+      {/* New ProfileHeaderCard for reference */}
+      <div className="mb-8">
+        <ProfileHeaderCard
+          person={{
+            ...person,
+            type: person.type ?? ""
+          }}
+          isProfileOwner={isProfileOwner ?? false}
+          showBookmark={!!showBookmark}
+          bookmarked={bookmarked}
+          bookmarkLoading={bookmarkLoading}
+          onBookmarkToggle={handleBookmarkToggle}
+          onEdit={() => setEditing(true)}
+          editing={editing}
+          formData={formData}
+          onFormChange={e => setFormData({ ...formData, [e.target.name]: e.target.value })}
+          onSave={async () => {
+            await handleUpdateProfile();
+            setEditing(false);
+          }}
+          onCancel={() => setEditing(false)}
+        />
       </div>
 
-      {/* Basic Information */}
-      <Card className="relative p-6 mb-6 border-2 border-blue-400 rounded-xl shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-blue-600 m-0 p-0">Basic Information</h2>
-          <div className="flex items-center ml-2" style={{ position: 'relative', top: 0, right: 0, zIndex: 20 }}>
-            {/* Edit Icon Button (only for profile owner or admin) */}
-            {!editing && (isProfileOwner || isAdmin) && (
-              <div className="relative group inline-block">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="p-2 rounded-full shadow-md transition-colors duration-200 border-2 border-blue-400 text-blue-600 bg-white hover:bg-blue-50 hover:border-blue-500 hover:scale-110"
-                  aria-label="Edit Profile"
-                  onClick={() => setEditing(true)}
-                >
-                  <Edit2 size={24} strokeWidth={2} className="text-blue-600" />
-                </Button>
-                <div className="absolute left-1/2 -translate-x-1/2 mt-2 z-50 hidden group-hover:block bg-gray-800 text-white text-xs px-3 py-1 rounded shadow-lg whitespace-nowrap">
-                  Edit Profile
-                </div>
-              </div>
-            )}
-          </div>
-              {/* Floating View Activity Button (always visible) */}
-        <ViewActivityButton personId={person.id} />
-        </div>
-        {/* Profile Image Section */}
-        <div className="mb-6 flex items-center gap-6">
-          <div className="flex-shrink-0">
-            <ProfileImage
-              key={person.profileImage || 'no-image'}
-              src={person.profileImage}
-              name={`${person.firstName} ${person.lastName}`}
-              className="h-24 w-24 rounded-full border-4 border-blue-200 object-cover"
-              alt={`${person.firstName} ${person.lastName}`}
-            />
-          </div>
-          {/* Only show label and upload if signed in as user or admin and viewing own profile or as admin */}
-          {(isProfileOwner || isAdmin) && (
-            <div>
-              <h3 className="font-semibold mb-2">Profile Picture</h3>
-              <input
-                type="file"
-                ref={fileInputRef}
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageUpload}
-              />
-              <div className="flex items-center gap-2">
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingImage}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                  size="sm"
-                >
-                  {uploadingImage ? (
-                    <>
-                      <Upload size={16} className="mr-2 animate-spin" />
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <ImageIcon size={16} className="mr-2" />
-                      {person.profileImage ? "Change Image" : "Upload Image"}
-                    </>
-                  )}
-                </Button>
-                {person.profileImage && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-red-600 text-red-600 hover:bg-red-50"
-                    onClick={handleRemoveImage}
-                  >
-                    Remove
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {editing && (isProfileOwner || isAdmin) ? (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">First Name</label>
-                <input
-                  type="text"
-                  className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Last Name</label>
-                <input
-                  type="text"
-                  className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Primary Email</label>
-              <input
-                type="email"
-                className="w-full border rounded p-2 bg-gray-100"
-                value={person.email1}
-                disabled
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Secondary Email</label>
-              <input
-                type="email"
-                className="w-full border rounded p-2"
-                value={formData.email2}
-                onChange={(e) => setFormData({ ...formData, email2: e.target.value })}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Phone 1</label>
-                <input
-                  type="tel"
-                  className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={formData.phone1}
-                  onChange={(e) => setFormData({ ...formData, phone1: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Phone 2</label>
-                <input
-                  type="tel"
-                  className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={formData.phone2}
-                  onChange={(e) => setFormData({ ...formData, phone2: e.target.value })}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">LinkedIn</label>
-              <input
-                type="url"
-                className="w-full border rounded p-2"
-                value={formData.linkedin}
-                onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
-                placeholder="https://linkedin.com/in/yourprofile"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Date of Birth</label>
-              <input
-                type="date"
-                className="w-full border rounded p-2"
-                value={formData.dob}
-                onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Education Status</label>
-                <select
-                  className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={formData.eduStatus}
-                  onChange={(e) => setFormData({ ...formData, eduStatus: e.target.value })}
-                >
-                  <option value="COMPLETED">Completed</option>
-                  <option value="ENROLLED">Enrolled</option>
-                  <option value="NOT_ENROLLED">Not Enrolled</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Employment Status</label>
-                <select
-                  className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={formData.empStatus}
-                  onChange={(e) => setFormData({ ...formData, empStatus: e.target.value })}
-                >
-                  <option value="SEEKING">Seeking</option>
-                  <option value="EMPLOYED">Employed</option>
-                  <option value="UNEMPLOYED">Unemployed</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Bio</label>
-              <textarea
-                className="w-full border rounded p-2"
-                rows={4}
-                value={formData.bio}
-                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={handleUpdateProfile} className="bg-blue-600 hover:bg-blue-700 text-white">
-                <Save size={16} className="mr-2" />
-                Save
-              </Button>
-              <Button variant="outline" onClick={() => setEditing(false)} className="border-blue-600 text-blue-600 hover:bg-blue-50">
-                <X size={16} className="mr-2" />
-                Cancel
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 text-left">
-            {/* Name | DOB (DOB only for admin or profile owner) */}
-            <div className="flex items-center gap-2 text-lg font-semibold">
-              <User size={22} className="text-blue-500" />
-              <span>{person.firstName} {person.lastName}</span>
-              {person.type === "ALUMNI" && (
-                <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 text-xs font-semibold px-3 py-1 rounded-full pointer-events-none">
-                  <span className="text-base">⭐</span> Alumni
-                </span>
-              )}
-              {person.type === "STAFF" && (
-                <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full pointer-events-none">
-                  <span className="text-base">👔</span> Staff
-                </span>
-              )}
-              {person.type === "LEADERSHIP" && (
-                <span className="inline-flex items-center gap-1 bg-yellow-100 text-yellow-800 text-xs font-semibold px-3 py-1 rounded-full pointer-events-none">
-                  <span className="text-base">👑</span> Leadership
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {(isProfileOwner || isAdmin) && person.dob && (
-                <span className="inline-flex items-center gap-2 text-base font-normal text-gray-700 bg-purple-50 py-1 rounded"><Calendar size={16} className="text-purple-500" />{new Date(person.dob).toLocaleDateString()}</span>
-              )}
-            </div>
-            {/* Email/Phone: Only show if signed in as user or admin, else show connect message */}
-            {(session || isAdmin) ? (
-              <>
-                <div className="flex items-center gap-2">
-                  <Mail size={18} className="text-blue-500" />
-                  <span>{person.email1}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {person.email2 && (<><Mail size={18} className="text-blue-500" /><span>{person.email2}</span></>)}
-                </div>
-                <div className="flex items-center gap-2">
-                  {person.phone1 && (<><Phone size={18} className="text-green-500" /><span>{person.phone1}</span></>)}
-                </div>
-                <div className="flex items-center gap-2">
-                  {person.phone2 && (<><Phone size={18} className="text-green-500" /><span>{person.phone2}</span></>)}
-                </div>
-              </>
-            ) : (
-              <div className="flex items-center gap-2 text-base font-normal text-gray-700 py-2 col-span-1 sm:col-span-2">
-                <Mail size={18} className="text-blue-500" />
-                <span>
-                  Email <a href="mailto:connect@teachfornepal.org" className="text-blue-700 underline font-semibold">connect@teachfornepal.org</a> to connect with this person
-                </span>
-              </div>
-            )}
-            {/* LinkedIn and Website (two columns) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 col-span-1 sm:col-span-2">
-              <div className="flex items-center gap-2">
-                <Linkedin size={18} className="text-blue-700" />
-                {person.linkedin ? (
-                  <a href={person.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">{person.linkedin}</a>
-                ) : (
-                  <span className="text-gray-400">---</span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Globe size={18} className="text-blue-700" />
-                <a href="https://www.teachfornepal.org" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">www.teachfornepal.org</a>
-              </div>
-            </div>
-            {/* Statuses */}
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <GraduationCap size={18} className="text-blue-500" />
-                <span className="font-medium text-gray-700">Education Status:</span>
-                <span className="font-normal">{person.eduStatus}</span>
-              </div>
-              {(person.eduStatus === "ENROLLED" || person.eduStatus === "COMPLETED") && person.educations && person.educations.length > 0 && (
-                (() => {
-                  // Find most recent education by start date (or end date if available)
-                  const recentEdu = [...person.educations].sort((a, b) => {
-                    const aDate = new Date(a.end || a.start).getTime();
-                    const bDate = new Date(b.end || b.start).getTime();
-                    return bDate - aDate;
-                  })[0];
-                  return recentEdu ? (
-                    <div className="flex items-center gap-2 text-sm text-blue-800 pl-7">
-                      <span className="font-semibold">Recent:</span>
-                      <span>{recentEdu.name}</span>
-                    </div>
-                  ) : null;
-                })()
-              )}
-            </div>
-            <div className="flex flex-col gap-1 justify-start">
-              <div className="flex items-center gap-2">
-                <Briefcase size={18} className="text-green-600" />
-                <span className="font-medium text-gray-700">Employment Status:</span>
-                <span className="font-normal">{person.empStatus}</span>
-              </div>
-              {person.empStatus === "EMPLOYED" && person.experiences && person.experiences.length > 0 && (
-                (() => {
-                  // Find most recent experience by start date (or end date if available)
-                  const recentExp = [...person.experiences].sort((a, b) => {
-                    const aDate = new Date(a.end || a.start).getTime();
-                    const bDate = new Date(b.end || b.start).getTime();
-                    return bDate - aDate;
-                  })[0];
-                  return recentExp ? (
-                    <div className="flex items-center gap-2 text-sm text-green-800 pl-7">
-                      <span className="font-semibold">Recent:</span>
-                      <span>{recentExp.type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())} at {recentExp.orgName}</span>
-                    </div>
-                  ) : null;
-                })()
-              )}
-            </div>
-            {/* Bio (full width) */}
-            {person.bio && (
-              <blockquote className="col-span-1 sm:col-span-2 border-l-4 border-yellow-400 bg-yellow-50/60 px-4 py-3 my-2 italic text-yellow-900 relative">
-                <span className="pl-6 block">{person.bio}</span>
-              </blockquote>
-            )}
-          </div>
-        )}
-      </Card>
+      {/* Existing header UI and Basic Information card removed; all editing is now in ProfileHeaderCard */}
 
 
       {/* Fellowship (only for alumni) */}
       {person.type && person.type.toLowerCase() === "alumni" && (
           <Card className="p-6 mb-6 border-2 border-purple-400 rounded-xl shadow-sm">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-blue-600">Fellowships</h2>
+              <h2 className="text-xl font-semibold text-blue-600 flex items-center">
+                <Users className="w-6 h-6 mr-2 text-blue-600" /> Fellowships
+              </h2>
               {/* Only show add button if signed in as user or admin and viewing own profile or as admin */}
               {!showFellowshipForm && (isProfileOwner || isAdmin) && (
                 <Button onClick={() => setShowFellowshipForm(true)} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
@@ -928,7 +653,7 @@ export default function ProfilePage() {
                     } else {
                       alert("Failed to save fellowship");
                     }
-                  }} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                  }} size="sm" className="bg-white border-blue-600 text-blue-600 hover:bg-blue-50 border">
                     <Save size={16} className="mr-2" />
                     Save
                   </Button>
@@ -1011,7 +736,9 @@ export default function ProfilePage() {
       {/* Education */}
       <Card className="p-6 mb-6 border-2 border-green-400 rounded-xl shadow-sm">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-blue-600">Education</h2>
+          <h2 className="text-xl font-semibold text-blue-600 flex items-center">
+            <GraduationCap className="w-6 h-6 mr-2 text-blue-600" /> Education
+          </h2>
           {/* Only show add button if signed in as user or admin and viewing own profile or as admin */}
           {!showEducationForm && (isProfileOwner || isAdmin) && (
             <Button onClick={() => setShowEducationForm(true)} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
@@ -1269,7 +996,9 @@ export default function ProfilePage() {
       {/* Experience */}
       <Card className="p-6 border-2 border-orange-400 rounded-xl shadow-sm">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-blue-600">Experience</h2>
+          <h2 className="text-xl font-semibold text-blue-600 flex items-center">
+            <Briefcase className="w-6 h-6 mr-2 text-blue-600" /> Experience
+          </h2>
           {/* Only show add button if signed in as user or admin and viewing own profile or as admin */}
           {!showExperienceForm && (isProfileOwner || isAdmin) && (
             <Button onClick={() => setShowExperienceForm(true)} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">

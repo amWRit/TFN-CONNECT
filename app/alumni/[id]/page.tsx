@@ -300,7 +300,7 @@ export default function AlumniDetailPage({
           {person.experiences.length > 0 && (
             <div>
               <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <span className="text-2xl">💼</span>
+                <Briefcase className="text-green-600" size={28} />
                 Experience
               </h2>
               <div className="space-y-5">
@@ -323,7 +323,7 @@ export default function AlumniDetailPage({
           {person.educations.length > 0 && (
             <div>
               <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <span className="text-2xl">🎓</span>
+                <GraduationCap className="text-blue-500" size={28} />
                 Education
               </h2>
               <div className="space-y-4">
@@ -354,7 +354,7 @@ export default function AlumniDetailPage({
           {person.fellowships.length > 0 && (
             <div>
               <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                <span className="text-2xl">🎯</span>
+                <Users className="text-purple-600" size={28} />
                 Fellowships
               </h2>
               <div className="space-y-4">
