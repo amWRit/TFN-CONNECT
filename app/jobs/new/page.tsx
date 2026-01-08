@@ -99,6 +99,11 @@ export default function NewJobPage() {
 						onChange={(e) => setDescription(e.target.value)}
 						required
 					/>
+					<div className="text-xs text-gray-500 mt-1 italic">
+						Tip: You can use Markdown to format your post.<br />
+						Supports <b>bold</b>, <i>italics</i>, headings, ordered and unordered lists.<br />
+						You can use <a href="https://markdownlivepreview.com/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Live Preview</a>.
+					</div>
 				</div>
 				<div>
 					<label className="block font-semibold mb-2 text-blue-700">Location</label>

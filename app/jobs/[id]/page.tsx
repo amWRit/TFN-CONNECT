@@ -96,58 +96,62 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
   }
 
   return (
-    <div className="w-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 min-h-screen py-8 sm:py-12">
-      <div className="max-w-3xl mx-auto px-4">
-        <JobPostingCard
-          id={job.id}
-          title={job.title}
-          company={job.school ? job.school.name : undefined}
-          location={job.location}
-          jobType={job.jobType}
-          status={job.status}
-          description={job.description}
-          requiredSkills={requiredSkills}
-          createdBy={job.createdBy && job.createdBy.id ? job.createdBy as { id: string; firstName: string; lastName: string } : undefined}
-          hideViewButton={true}
-          deadline={job.deadline}
-        />
-
-        {/* Show interested people if owner */}
-        {session?.user?.id && job?.createdBy?.id === session.user.id && (
-          <div className="mt-8">
-            <h2 className="text-lg font-semibold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">People Interested</h2>
-            {interests && interests.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {interests.map((interest) => (
-                  interest.user && interest.user.id ? (
-                    <a
-                      key={interest.id}
-                      href={`/profile/${interest.user.id}`}
-                      className="block"
-                    >
-                      <div className="flex items-center gap-4 p-4 bg-white rounded-xl shadow border-2 border-blue-400 hover:shadow-lg transition-all duration-150">
-                        <ProfileImage
-                          src={interest.user.profileImage}
-                          name={`${interest.user.firstName} ${interest.user.lastName}`}
-                          className="h-12 w-12 rounded-full border-2 border-blue-200 object-cover"
-                          alt={`${interest.user.firstName} ${interest.user.lastName}`}
-                        />
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-blue-700 text-base">{interest.user.firstName} {interest.user.lastName}</span>
-                          {interest.user.type && (
-                            <span className="inline-block mt-1 text-xs font-bold px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 border border-yellow-300">{interest.user.type}</span>
-                          )}
-                        </div>
-                      </div>
-                    </a>
-                  ) : null
-                ))}
-              </div>
-            ) : (
-              <div className="text-gray-500">No interested people yet.</div>
-            )}
+    <div className="w-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 min-h-screen">
+      <div className="max-w-5xl mx-auto px-4 md:p-8">
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Main Card (left column) */}
+          <div className="flex-1 min-w-0">
+            <JobPostingCard
+              id={job.id}
+              title={job.title}
+              company={job.school ? job.school.name : undefined}
+              location={job.location}
+              jobType={job.jobType}
+              status={job.status}
+              description={job.description}
+              requiredSkills={requiredSkills}
+              createdBy={job.createdBy && job.createdBy.id ? job.createdBy as { id: string; firstName: string; lastName: string } : undefined}
+              hideViewButton={true}
+              deadline={job.deadline}
+            />
           </div>
-        )}
+          {/* People Interested (right column, only for owner) */}
+          {session?.user?.id && job?.createdBy?.id === session.user.id && (
+            <div className="w-full md:w-64 flex-shrink-0">
+              <h2 className="text-lg font-semibold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">People Interested</h2>
+              {interests && interests.length > 0 ? (
+                <div className="grid grid-cols-1 gap-4">
+                  {interests.map((interest) => (
+                    interest.user && interest.user.id ? (
+                      <a
+                        key={interest.id}
+                        href={`/profile/${interest.user.id}`}
+                        className="block"
+                      >
+                        <div className="flex items-center gap-4 p-4 bg-white rounded-xl shadow border-2 border-blue-400 hover:shadow-lg transition-all duration-150">
+                          <ProfileImage
+                            src={interest.user.profileImage}
+                            name={`${interest.user.firstName} ${interest.user.lastName}`}
+                            className="h-12 w-12 rounded-full border-2 border-blue-200 object-cover"
+                            alt={`${interest.user.firstName} ${interest.user.lastName}`}
+                          />
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-blue-700 text-base">{interest.user.firstName} {interest.user.lastName}</span>
+                            {interest.user.type && (
+                              <span className="inline-block mt-1 text-xs font-bold px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 border border-yellow-300">{interest.user.type}</span>
+                            )}
+                          </div>
+                        </div>
+                      </a>
+                    ) : null
+                  ))}
+                </div>
+              ) : (
+                <div className="text-gray-500">No interested people yet.</div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
       {/* Floating Interest Button (if signed in, not owner, and deadline not crossed) */}
       {session?.user?.id && job?.createdBy?.id !== session.user.id && job?.deadline && (() => {
