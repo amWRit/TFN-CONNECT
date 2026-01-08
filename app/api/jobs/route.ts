@@ -53,6 +53,7 @@ export async function POST(request: Request) {
     const job = await prisma.jobPosting.create({
       data: {
         title: body.title,
+        overview: body.overview || body.description?.slice(0, 140) || '',
         description: body.description,
         location: body.location,
         jobType: body.jobType,
@@ -60,6 +61,7 @@ export async function POST(request: Request) {
         requiredSkills,
         status: body.status,
         createdById: body.createdById,
+        deadline: body.deadline ? new Date(body.deadline) : undefined,
       },
     });
     return NextResponse.json(job, { status: 201 });

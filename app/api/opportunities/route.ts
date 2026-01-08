@@ -4,14 +4,15 @@ export async function POST(request: NextRequest) {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const { title, description, types, location, status } = await request.json();
-  if (!title || !description || !types || types.length === 0) {
+  const { title, overview, description, types, location, status } = await request.json();
+  if (!title || !overview || !description || !types || types.length === 0) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
   try {
     const opportunity = await prisma.opportunity.create({
       data: {
         title,
+        overview,
         description,
         types,
         location,

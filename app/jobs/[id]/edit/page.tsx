@@ -12,6 +12,7 @@ interface Job {
   jobType?: string;
   status?: string;
   requiredSkills?: string[];
+  deadline?: string;
 }
 
 const jobTypes = ["FULL_TIME", "PART_TIME", "CONTRACT", "INTERNSHIP", "FELLOWSHIP"];
@@ -28,6 +29,7 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
     jobType: "FULL_TIME",
     status: "OPEN",
     requiredSkills: [] as string[],
+    deadline: "",
   });
   const [skills, setSkills] = useState<{ id: string; name: string }[]>([]);
   const [selectedSkills, setSelectedSkills] = useState<{ value: string; label: string }[]>([]);
@@ -46,6 +48,7 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
           jobType: data.jobType || "FULL_TIME",
           status: data.status || "OPEN",
           requiredSkills: data.requiredSkills || [],
+          deadline: data.deadline ? new Date(data.deadline).toISOString().slice(0, 10) : "",
         });
         // Map skill IDs to skill names for react-select
         fetch("/api/skills")
@@ -119,6 +122,9 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
         </label>
         <label className="font-semibold">Location
           <input name="location" value={form.location} onChange={handleChange} className="block w-full border-2 border-blue-400 rounded px-3 py-2 mt-1 font-normal focus:border-blue-600 focus:ring-blue-500" />
+        </label>
+        <label className="font-semibold">Deadline
+          <input type="date" name="deadline" value={form.deadline || ''} onChange={handleChange} className="block w-full border-2 border-blue-400 rounded px-3 py-2 mt-1 font-normal focus:border-blue-600 focus:ring-blue-500" />
         </label>
         <label className="font-semibold">Status
           <select name="status" value={form.status} onChange={handleChange} className="block w-full border-2 border-blue-400 rounded px-3 py-2 mt-1 font-normal focus:border-blue-600 focus:ring-blue-500">

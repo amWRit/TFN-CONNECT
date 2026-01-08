@@ -48,6 +48,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
         sector: body.sector,
         requiredSkills,
         status: body.status,
+        deadline: body.deadline ? new Date(body.deadline) : null,
       },
     });
     return NextResponse.json(updatedJob);

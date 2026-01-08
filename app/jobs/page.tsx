@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import Select from "react-select"
 import { useSession } from "next-auth/react"
-import { Bookmark, BookmarkCheck } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { JobPostingCard } from "@/components/JobPostingCard"
 
@@ -26,13 +25,13 @@ interface JobPosting {
     id: string
   }>
   status?: string
+  deadline?: string
 }
 
 export default function JobsPage() {
   const [jobs, setJobs] = useState<JobPosting[]>([])
   const [loading, setLoading] = useState(true)
   const { data: session, status } = useSession();
-  const [bookmarkStates, setBookmarkStates] = useState<Record<string, { bookmarked: boolean; loading: boolean }>>({});
   const [skillMap, setSkillMap] = useState<Record<string, string>>({});
   const [showOnlyMine, setShowOnlyMine] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>("");
@@ -60,26 +59,6 @@ export default function JobsPage() {
     fetchData();
   }, []);
 
-  // Fetch bookmark state for each job when session is ready
-  useEffect(() => {
-    if (!session || !session.user) return;
-    const fetchBookmarks = async () => {
-      const states: Record<string, { bookmarked: boolean; loading: boolean }> = {};
-      await Promise.all(
-        jobs.map(async (job) => {
-          try {
-            const res = await fetch(`/api/bookmarks/job?targetJobId=${job.id}`);
-            const data = await res.json();
-            states[job.id] = { bookmarked: !!data.bookmarked, loading: false };
-          } catch {
-            states[job.id] = { bookmarked: false, loading: false };
-          }
-        })
-      );
-      setBookmarkStates(states);
-    };
-    if (jobs.length > 0) fetchBookmarks();
-  }, [session, jobs]);
 
   if (loading) {
     return (
@@ -170,91 +149,38 @@ export default function JobsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-7">
-        {(showOnlyMine && session?.user
-          ? jobs.filter(job => job.createdBy && job.createdBy.id === session.user.id)
-          : jobs
-        )
-        .filter(job => !typeFilter || job.jobType === typeFilter)
-        .filter(job => !statusFilter || job.status === statusFilter)
-        .filter(job =>
-          skillsFilter.length === 0 ||
-          (Array.isArray(job.requiredSkills) && skillsFilter.every(sf => job.requiredSkills?.includes(sf.value)))
-        )
-        .map((job) => {
-          let requiredSkillIds: string[] = [];
-          if (Array.isArray(job.requiredSkills)) {
-            requiredSkillIds = job.requiredSkills;
-          } else if (typeof job.requiredSkills === 'string') {
-            try {
-              requiredSkillIds = JSON.parse(job.requiredSkills);
-            } catch {
-              requiredSkillIds = [];
-            }
-          }
-          const requiredSkills = requiredSkillIds.map((id) => skillMap[id] || id);
+        {/* Job List */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+          {jobs
+            .filter(job =>
+              (!showOnlyMine || (session?.user && job.createdBy?.id === session.user.id)) &&
+              (!typeFilter || job.jobType === typeFilter) &&
+              (!statusFilter || job.status === statusFilter) &&
+              (skillsFilter.length === 0 || (job.requiredSkills && skillsFilter.every(f => job.requiredSkills?.includes(f.value))))
+            )
+            .map(job => {
+              const requiredSkills = Array.isArray(job.requiredSkills)
+                ? job.requiredSkills.map((id) => skillMap[id] || id)
+                : [];
+              return (
+                <div key={job.id} className="relative">
+                  <JobPostingCard
+                    id={job.id}
+                    title={job.title}
+                    company={job.school ? job.school.name : undefined}
+                    location={job.location}
+                    jobType={job.jobType}
+                    status={job.status}
+                    description={job.description}
+                    requiredSkills={requiredSkills}
+                    createdBy={job.createdBy}
+                    deadline={job.deadline}
+                    href={`/jobs/${job.id}`}
+                  />
+                </div>
+              );
+            })}
 
-          const showBookmark = session && session.user;
-          const bookmarkState = bookmarkStates[job.id] || { bookmarked: false, loading: false };
-
-          return (
-            <div key={job.id} className="relative group">
-              <JobPostingCard
-                id={job.id}
-                title={job.title}
-                company={job.school ? job.school.name : undefined}
-                location={job.location}
-                jobType={job.jobType}
-                status={job.status}
-                description={job.description}
-                requiredSkills={requiredSkills}
-                createdBy={job.createdBy}
-                href={`/jobs/${job.id}`}
-              />
-              {/* Bookmark Button (only for signed-in users) */}
-              {showBookmark && (
-                <button
-                  aria-label={bookmarkState.bookmarked ? "Remove Bookmark" : "Add Bookmark"}
-                  disabled={bookmarkState.loading}
-                  onClick={async (e) => {
-                    e.preventDefault();
-                    setBookmarkStates((prev) => ({
-                      ...prev,
-                      [job.id]: { ...prev[job.id], loading: true },
-                    }));
-                    try {
-                      const res = await fetch("/api/bookmarks/job", {
-                        method: bookmarkState.bookmarked ? "DELETE" : "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ targetJobId: job.id }),
-                      });
-                      if (res.ok) {
-                        setBookmarkStates((prev) => ({
-                          ...prev,
-                          [job.id]: { bookmarked: !bookmarkState.bookmarked, loading: false },
-                        }));
-                      } else {
-                        setBookmarkStates((prev) => ({
-                          ...prev,
-                          [job.id]: { ...prev[job.id], loading: false },
-                        }));
-                      }
-                    } catch {
-                      setBookmarkStates((prev) => ({
-                        ...prev,
-                        [job.id]: { ...prev[job.id], loading: false },
-                      }));
-                    }
-                  }}
-                  className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${bookmarkState.bookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110 disabled:opacity-60 ml-2`}
-                  style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}
-                >
-                  {bookmarkState.bookmarked ? <BookmarkCheck size={24} /> : <Bookmark size={24} />}
-                </button>
-              )}
-            </div>
-          )
-        })}
         </div>
 
       {jobs.length === 0 && (
