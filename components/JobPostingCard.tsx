@@ -225,7 +225,12 @@ export function JobPostingCard({
             {createdBy && (
               <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
                 <Users className="h-4 w-4 mr-1 text-blue-400" />
-                <span>Posted by {createdBy.firstName} {createdBy.lastName}</span>
+                <span>Posted by </span>
+                {createdBy.id ? (
+                  <Link href={`/profile/${createdBy.id}`} className="text-blue-700 hover:underline font-semibold">{createdBy.firstName} {createdBy.lastName}</Link>
+                ) : (
+                  <span>{createdBy.firstName} {createdBy.lastName}</span>
+                )}
               </div>
             )}
           </div>

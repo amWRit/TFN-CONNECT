@@ -94,6 +94,7 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
             status={opportunity.status || ""}
             location={opportunity.location}
             createdById={opportunity.createdBy?.id}
+            createdByName={opportunity.createdBy ? `${opportunity.createdBy.firstName} ${opportunity.createdBy.lastName}` : undefined}
             showOverviewOnly={false}
           />
         </div>

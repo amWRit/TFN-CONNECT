@@ -2,7 +2,9 @@ import React, { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { TagIcon, InformationCircleIcon, PencilIcon, BookmarkIcon, BookmarkSquareIcon, MapPinIcon, CheckCircleIcon, XCircleIcon, EyeIcon } from "@heroicons/react/24/outline";
+import { Users } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 // Helper to count lines in markdown string
@@ -27,12 +29,13 @@ interface OpportunityCardProps {
   status: string;
   location?: string;
   createdById?: string;
+  createdByName?: string;
   showOverviewOnly?: boolean;
 }
 
 
 
-const OpportunityCard: React.FC<OpportunityCardProps> = ({ id, title, description, overview, types, status, location, createdById, showOverviewOnly }) => {
+const OpportunityCard: React.FC<OpportunityCardProps> = ({ id, title, description, overview, types, status, location, createdById, createdByName, showOverviewOnly }) => {
   const { data: session } = useSession();
   const userId = session?.user?.id;
   const isOwner = userId && createdById && userId === createdById;
@@ -58,7 +61,9 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ id, title, descriptio
   }, [userId, isOwner, id]);
 
   return (
-    <div className="relative border-2 border-purple-400 hover:border-purple-600 transition-all duration-300 rounded-xl p-4 bg-white shadow-sm">
+    <Card className="relative border-2 border-purple-400 hover:border-purple-600 transition-all duration-300 rounded-xl overflow-hidden pt-5 px-6 pb-4 bg-white shadow-sm">
+      {/* Top Status Bar - absolutely positioned */}
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-400 rounded-t-xl" />
       {/* Edit or Bookmark Button (top right) */}
       {session?.user && isOwner ? (
         <button
@@ -107,19 +112,30 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ id, title, descriptio
           )}
         </div>
       )}
-      {/* Title and status */}
-      <div className="flex items-center gap-2 mb-2">
+      {/* Status badge above title */}
+      <div className="flex flex-col gap-1 mb-2">
+        <span className={`self-start flex items-center gap-1 px-2 py-1 rounded text-xs font-bold ${status === 'OPEN' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}> 
+          {status === 'OPEN' ? (
+            <CheckCircleIcon className="h-4 w-4 text-green-500" />
+          ) : (
+            <XCircleIcon className="h-4 w-4 text-red-400" />
+          )}
+          {status}
+        </span>
         <h2 className="text-xl font-semibold text-purple-700 flex items-center gap-2">
           <Link href={`/opportunities/${id}`} className="hover:underline">{title}</Link>
-          <span className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-bold ml-2 ${status === 'OPEN' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}> 
-            {status === 'OPEN' ? (
-              <CheckCircleIcon className="h-4 w-4 text-green-500" />
-            ) : (
-              <XCircleIcon className="h-4 w-4 text-red-400" />
-            )}
-            {status}
-          </span>
         </h2>
+        {createdByName && (
+          <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+            <Users className="h-4 w-4 mr-1 text-purple-400" />
+            <span>Posted by </span>
+            {createdById ? (
+              <Link href={`/profile/${createdById}`} className="text-purple-700 hover:underline font-semibold">{createdByName}</Link>
+            ) : (
+              <span>{createdByName}</span>
+            )}
+          </div>
+        )}
       </div>
       {/* Type badges */}
       <div className="flex gap-2 flex-wrap mb-2 ml-1">
@@ -222,7 +238,7 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ id, title, descriptio
           </Link>
         </div>
       )}
-    </div>
+    </Card>
   );
 };
 
