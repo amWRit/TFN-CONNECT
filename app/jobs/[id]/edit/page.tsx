@@ -34,6 +34,7 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
   const [skills, setSkills] = useState<{ id: string; name: string }[]>([]);
   const [selectedSkills, setSelectedSkills] = useState<{ value: string; label: string }[]>([]);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -103,10 +104,35 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
 
   if (loading) return <div className="max-w-2xl mx-auto p-6">Loading...</div>;
 
+  async function handleDelete() {
+    if (!window.confirm("Are you sure you want to delete this job? This action cannot be undone.")) return;
+    setDeleting(true);
+    const res = await fetch(`/api/jobs/${id}`, {
+      method: "DELETE",
+    });
+    setDeleting(false);
+    if (res.ok) {
+      router.push("/jobs");
+    } else {
+      alert("Failed to delete job");
+    }
+  }
+
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6 text-blue-700">Edit Job</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold text-blue-700">Edit Job</h1>
+        <button
+          type="button"
+          className="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg border border-red-700 shadow disabled:opacity-60"
+          onClick={handleDelete}
+          disabled={deleting}
+        >
+          {deleting ? "Deleting..." : "Delete"}
+        </button>
+      </div>
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow p-6 flex flex-col gap-4 border-2 border-blue-400">
+        {/* ...existing code... */}
         <label className="font-semibold">Title
           <input name="title" value={form.title} onChange={handleChange} className="block w-full border-2 border-blue-400 rounded px-3 py-2 mt-1 font-normal focus:border-blue-600 focus:ring-blue-500" required />
         </label>
@@ -118,6 +144,7 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
             You can use <a href="https://markdownlivepreview.com/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Live Preview</a>.
           </div>
         </label>
+        {/* ...existing code... */}
         <label className="font-semibold">Job Type
           <select name="jobType" value={form.jobType} onChange={handleChange} className="block w-full border-2 border-blue-400 rounded px-3 py-2 mt-1 font-normal focus:border-blue-600 focus:ring-blue-500">
             {jobTypes.map(type => (
@@ -125,6 +152,7 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
             ))}
           </select>
         </label>
+        {/* ...existing code... */}
         <label className="font-semibold">Location
           <input name="location" value={form.location} onChange={handleChange} className="block w-full border-2 border-blue-400 rounded px-3 py-2 mt-1 font-normal focus:border-blue-600 focus:ring-blue-500" />
         </label>
@@ -138,6 +166,7 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
             ))}
           </select>
         </label>
+        {/* ...existing code... */}
         <label className="font-semibold">Required Skills
           <Select
             instanceId="edit-job-required-skills"

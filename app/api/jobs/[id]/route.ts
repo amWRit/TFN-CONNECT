@@ -1,3 +1,17 @@
+export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await context.params;
+    await prisma.jobPosting.delete({ where: { id } });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Error deleting job posting:", errorMessage);
+    return NextResponse.json(
+      { error: "Failed to delete job posting", details: errorMessage },
+      { status: 500 }
+    );
+  }
+}
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 

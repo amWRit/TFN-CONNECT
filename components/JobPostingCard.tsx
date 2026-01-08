@@ -233,18 +233,16 @@ export function JobPostingCard({
       </CardHeader>
 
       <CardContent className={`flex flex-col${isDetailPage ? ' flex-1' : ''}`}>
-        {location && (
-          <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-            <MapPin className="h-4 w-4 flex-shrink-0 text-blue-500" />
-            <span className="font-medium">{location}</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+          <MapPin className="h-4 w-4 flex-shrink-0 text-blue-500" />
+          <span className="font-medium">{location ? location : '---'}</span>
+        </div>
 
         {/* Only show description and required skills if detail page */}
         {isDetailPage && (
           <>
             {/* Collapsible markdown description section */}
-            {(() => {
+            {description && description.trim() !== '' ? (() => {
               // Helper to count lines in markdown string
               function countLines(str: string) {
                 return (str.match(/\n/g) || []).length + 1;
@@ -300,7 +298,15 @@ export function JobPostingCard({
                   )}
                 </div>
               );
-            })()}
+            })() : (
+              <div className="mb-4 text-sm text-gray-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                <div className="flex items-center gap-2 mb-1">
+                  <Info className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                  <span className="font-semibold text-blue-700">Description</span>
+                </div>
+                <div className="text-gray-400 italic">---</div>
+              </div>
+            )}
 
             {requiredSkills.length > 0 && (
               <div className="mb-5">
@@ -319,28 +325,32 @@ export function JobPostingCard({
 
         <div className={`flex flex-row items-end justify-between gap-3 pt-3 border-t border-gray-100 w-full${isDetailPage ? ' mt-auto' : ''}`}> 
           {/* Deadline badge at bottom only for listing page */}
-          {!isDetailPage && deadline && (() => {
-            const now = new Date();
-            const deadlineDate = new Date(deadline);
-            const diff = (deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-            const isExpiring = diff >= 0 && diff <= 7;
-            const isExpired = deadlineDate.getTime() < now.getTime();
-            return (
-              <span
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700`}
-              >
-                <svg className="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Deadline: {deadlineDate.toLocaleDateString()}
-                {isExpired ? (
-                  <span className="ml-1 font-bold uppercase text-red-800">EXPIRED</span>
-                ) : isExpiring ? (
-                  <span className="ml-1 font-bold uppercase">Expiring Soon</span>
-                ) : null}
-              </span>
-            );
-          })()}
+          {!isDetailPage && (
+            deadline ? (() => {
+              const now = new Date();
+              const deadlineDate = new Date(deadline);
+              const diff = (deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+              const isExpiring = diff >= 0 && diff <= 7;
+              const isExpired = deadlineDate.getTime() < now.getTime();
+              return (
+                <span
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700`}
+                >
+                  <svg className="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Deadline: {deadlineDate.toLocaleDateString()}
+                  {isExpired ? (
+                    <span className="ml-1 font-bold uppercase text-red-800">EXPIRED</span>
+                  ) : isExpiring ? (
+                    <span className="ml-1 font-bold uppercase">Expiring Soon</span>
+                  ) : null}
+                </span>
+              );
+            })() : (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-gray-400 bg-gray-100">Deadline: ---</span>
+            )
+          )}
           <div />
           <div>
             {!hideViewButton && (

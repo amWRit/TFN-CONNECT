@@ -130,12 +130,10 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ id, title, descriptio
         ))}
       </div>
       {/* Location */}
-      {location && (
-        <div className="flex items-center gap-2 text-sm text-blue-700 mb-2">
-          <MapPinIcon className="h-4 w-4 text-blue-400 flex-shrink-0" />
-          <span>{location}</span>
-        </div>
-      )}
+      <div className="flex items-center gap-2 text-sm text-blue-700 mb-2">
+        <MapPinIcon className="h-4 w-4 text-blue-400 flex-shrink-0" />
+        <span>{location ? location : '---'}</span>
+      </div>
       {/* Overview/description logic */}
       {showOverviewOnly ? (
         overview && (
@@ -158,7 +156,7 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ id, title, descriptio
               <span>{overview}</span>
             </div>
           )}
-          {description && (
+          {description && description.trim() !== '' ? (
             <div className="mb-2 text-sm text-gray-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
               <div className="flex items-center gap-2 mb-1">
                 <InformationCircleIcon className="h-4 w-4 text-blue-400 flex-shrink-0" />
@@ -203,6 +201,14 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ id, title, descriptio
                   {descExpanded ? 'Show less' : 'Show more'}
                 </button>
               )}
+            </div>
+          ) : (
+            <div className="mb-2 text-sm text-gray-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+              <div className="flex items-center gap-2 mb-1">
+                <InformationCircleIcon className="h-4 w-4 text-blue-400 flex-shrink-0" />
+                <span className="font-semibold text-blue-700">Description</span>
+              </div>
+              <div className="text-gray-400 italic">---</div>
             </div>
           )}
         </>
