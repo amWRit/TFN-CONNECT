@@ -3,6 +3,7 @@
 export const dynamic = "force-dynamic";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useParams } from "next/navigation";
@@ -541,15 +542,7 @@ export default function ProfilePage() {
             )}
           </div>
               {/* Floating View Activity Button (always visible) */}
-              <button
-                aria-label="View Activity"
-                onClick={() => {/* TODO: handle view activity navigation */}}
-                className="fixed bottom-8 right-8 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"
-                title="View Activity"
-              >
-                <Activity size={28} strokeWidth={2.5} className="text-white" />
-                <span className="hidden sm:inline">View Activity</span>
-              </button>
+        <ViewActivityButton personId={person.id} />
         </div>
         {/* Profile Image Section */}
         <div className="mb-6 flex items-center gap-6">
@@ -1548,5 +1541,21 @@ export default function ProfilePage() {
         </div>
       </Card>
     </div>
+  );
+}
+
+// Floating View Activity Button component
+function ViewActivityButton({ personId }: { personId: string }) {
+  const router = useRouter();
+  return (
+    <button
+      aria-label="View Activity"
+      onClick={() => router.push(`/profile/${personId}/activity`)}
+      className="fixed bottom-8 right-8 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"
+      title="View Activity"
+    >
+      <Activity size={28} strokeWidth={2.5} className="text-white" />
+      <span className="hidden sm:inline">View Activity</span>
+    </button>
   );
 }

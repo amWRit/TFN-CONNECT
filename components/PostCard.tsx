@@ -109,7 +109,7 @@ export function PostCard({
   const { status, data: session } = useSession();
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
-  const isOwner = session?.user?.id === author.id;
+  const isOwner = author && author.id && session?.user?.id === author.id;
 
   // Fetch initial bookmark state
   useEffect(() => {
@@ -185,7 +185,7 @@ export function PostCard({
         )}
         <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
           <div className="flex items-start gap-3 flex-1">
-            {author.profileImage ? (
+            {author && author.profileImage ? (
               <img
                 src={author.profileImage}
                 alt={author.firstName}
@@ -193,15 +193,19 @@ export function PostCard({
               />
             ) : (
               <div className="h-10 w-10 rounded-full flex-shrink-0 border-2 border-blue-200 shadow-sm bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-base uppercase">
-                {author.firstName?.[0] || ''}{author.lastName?.[0] || ''}
+                {author?.firstName?.[0] || ''}{author?.lastName?.[0] || ''}
               </div>
             )}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <CardTitle className="text-base font-semibold text-blue-700 group-hover:text-blue-800 transition m-0 p-0">
-                  <Link href={`/profile?id=${encodeURIComponent(author.id)}`} className="hover:underline focus:underline">
-                    {author.firstName} {author.lastName}
-                  </Link>
+                  {author && author.id ? (
+                    <Link href={`/profile?id=${encodeURIComponent(author.id)}`} className="hover:underline focus:underline">
+                      {author.firstName} {author.lastName}
+                    </Link>
+                  ) : (
+                    <span>Unknown Author</span>
+                  )}
                 </CardTitle>
                 <Badge className={`${getPostTypeColor(postType)} flex-shrink-0 text-xs px-3 py-1 rounded-full font-semibold flex items-center gap-1`} style={{ background: undefined, color: undefined }}>
                   {(() => { console.log('PostType in badge:', postType); return null; })()}
