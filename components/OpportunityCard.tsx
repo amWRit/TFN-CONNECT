@@ -74,32 +74,38 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ id, title, descriptio
           <PencilIcon className="h-6 w-6" />
         </button>
       ) : session?.user && !isOwner && (
-        <button
-          aria-label={bookmarkState.bookmarked ? "Remove Bookmark" : "Add Bookmark"}
-          disabled={bookmarkState.loading}
-          onClick={async (e) => {
-            e.preventDefault();
-            setBookmarkState((prev) => ({ ...prev, loading: true }));
-            try {
-              const res = await fetch("/api/bookmarks/opportunity", {
-                method: bookmarkState.bookmarked ? "DELETE" : "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ targetOpportunityId: id }),
-              });
-              if (res.ok) {
-                setBookmarkState((prev) => ({ bookmarked: !prev.bookmarked, loading: false }));
-              } else {
+        <div className="group absolute top-4 right-4" style={{ zIndex: 20 }}>
+          <button
+            aria-label={bookmarkState.bookmarked ? "Remove Bookmark" : "Add Bookmark"}
+            disabled={bookmarkState.loading}
+            onClick={async (e) => {
+              e.preventDefault();
+              setBookmarkState((prev) => ({ ...prev, loading: true }));
+              try {
+                const res = await fetch("/api/bookmarks/opportunity", {
+                  method: bookmarkState.bookmarked ? "DELETE" : "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ targetOpportunityId: id }),
+                });
+                if (res.ok) {
+                  setBookmarkState((prev) => ({ bookmarked: !prev.bookmarked, loading: false }));
+                } else {
+                  setBookmarkState((prev) => ({ ...prev, loading: false }));
+                }
+              } catch {
                 setBookmarkState((prev) => ({ ...prev, loading: false }));
               }
-            } catch {
-              setBookmarkState((prev) => ({ ...prev, loading: false }));
-            }
-          }}
-          className={`absolute top-4 right-4 p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${bookmarkState.bookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110 disabled:opacity-60`}
-          style={{ zIndex: 20 }}
-        >
-          {bookmarkState.bookmarked ? <BookmarkSquareIcon className="h-6 w-6" /> : <BookmarkIcon className="h-6 w-6" />}
-        </button>
+            }}
+            className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${bookmarkState.bookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110 disabled:opacity-60`}
+          >
+            {bookmarkState.bookmarked ? <BookmarkSquareIcon className="h-6 w-6" /> : <BookmarkIcon className="h-6 w-6" />}
+          </button>
+          {!bookmarkState.bookmarked && (
+            <div className="absolute top-12 right-0 z-40 hidden group-hover:block bg-gray-800 text-white text-xs px-4 py-2 rounded shadow-lg whitespace-nowrap">
+              Add to my bookmarks
+            </div>
+          )}
+        </div>
       )}
       {/* Title and status */}
       <div className="flex items-center gap-2 mb-2">

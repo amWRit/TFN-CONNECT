@@ -140,32 +140,38 @@ export function JobPostingCard({
             <Pencil size={24} strokeWidth={2} className="text-blue-600" />
           </button>
         ) : session?.user && !isJobOwner && (
-          <button
-            aria-label={bookmarkState.bookmarked ? "Remove Bookmark" : "Add Bookmark"}
-            disabled={bookmarkState.loading}
-            onClick={async (e) => {
-              e.preventDefault();
-              setBookmarkState((prev) => ({ ...prev, loading: true }));
-              try {
-                const res = await fetch("/api/bookmarks/job", {
-                  method: bookmarkState.bookmarked ? "DELETE" : "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ targetJobId: id }),
-                });
-                if (res.ok) {
-                  setBookmarkState((prev) => ({ bookmarked: !prev.bookmarked, loading: false }));
-                } else {
+          <div className="group" style={{ position: 'absolute', top: 12, right: 12, zIndex: 20 }}>
+            <button
+              aria-label={bookmarkState.bookmarked ? "Remove Bookmark" : "Add Bookmark"}
+              disabled={bookmarkState.loading}
+              onClick={async (e) => {
+                e.preventDefault();
+                setBookmarkState((prev) => ({ ...prev, loading: true }));
+                try {
+                  const res = await fetch("/api/bookmarks/job", {
+                    method: bookmarkState.bookmarked ? "DELETE" : "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ targetJobId: id }),
+                  });
+                  if (res.ok) {
+                    setBookmarkState((prev) => ({ bookmarked: !prev.bookmarked, loading: false }));
+                  } else {
+                    setBookmarkState((prev) => ({ ...prev, loading: false }));
+                  }
+                } catch {
                   setBookmarkState((prev) => ({ ...prev, loading: false }));
                 }
-              } catch {
-                setBookmarkState((prev) => ({ ...prev, loading: false }));
-              }
-            }}
-            className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${bookmarkState.bookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110 disabled:opacity-60 ml-2`}
-            style={{ position: 'absolute', top: 12, right: 12, zIndex: 20 }}
-          >
-            {bookmarkState.bookmarked ? <BookmarkCheck size={24} /> : <Bookmark size={24} />}
-          </button>
+              }}
+              className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${bookmarkState.bookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110 disabled:opacity-60 ml-2`}
+            >
+              {bookmarkState.bookmarked ? <BookmarkCheck size={24} /> : <Bookmark size={24} />}
+            </button>
+            {!bookmarkState.bookmarked && (
+              <div className="absolute top-12 right-0 z-40 hidden group-hover:block bg-gray-800 text-white text-xs px-4 py-2 rounded shadow-lg whitespace-nowrap">
+                Add to my bookmarks
+              </div>
+            )}
+          </div>
         )}
         <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-3 mb-2">
           <div className="flex-1">

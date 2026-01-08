@@ -162,7 +162,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
         const alreadyInterested = optimisticInterested || interests.some((i: { personId?: string }) => i.personId === session.user.id);
         if (!alreadyInterested) {
           return (
-            <div className="fixed bottom-8 right-8 z-30">
+            <div className="fixed bottom-8 right-8 z-30 group">
               <button
                 className="flex items-center gap-2 px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white rounded-full font-semibold shadow-lg text-lg transition-all duration-200"
                 style={{ boxShadow: "0 4px 24px 0 rgba(236, 72, 153, 0.15)" }}
@@ -193,6 +193,9 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                 <HeartIcon className="h-6 w-6 text-white" />
                 {interestLoading ? "Submitting..." : "I'm Interested"}
               </button>
+              <div className="absolute bottom-16 right-0 z-40 hidden group-hover:block bg-gray-800 text-white text-xs px-4 py-2 rounded shadow-lg whitespace-nowrap">
+                This will let the job poster know that you are interested
+              </div>
               {interestSuccess && (
                 <div className="mt-4 bg-green-100 text-green-800 px-4 py-2 rounded shadow-lg border border-green-300 animate-fade-in">
                   Notified to the author that you are interested
