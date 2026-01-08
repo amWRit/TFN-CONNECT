@@ -11,6 +11,7 @@ export default function NewOpportunityPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [types, setTypes] = useState<string[]>([]);
+  const [overview, setOverview] = useState("");
   const [location, setLocation] = useState("");
   const [status, setStatus] = useState("OPEN");
   const [loading, setLoading] = useState(false);
@@ -32,7 +33,7 @@ export default function NewOpportunityPage() {
       const res = await fetch("/api/opportunities", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, types, location, status }),
+        body: JSON.stringify({ title, overview, description, types, location, status }),
       });
       if (res.ok) {
         setSuccess(true);
@@ -61,6 +62,15 @@ export default function NewOpportunityPage() {
           />
         </div>
         <div>
+          <label className="block font-semibold mb-2 text-purple-700">Overview</label>
+          <input
+            className="w-full border-2 border-purple-300 focus:border-purple-500 rounded-lg px-4 py-2 bg-white/80 focus:bg-purple-50 transition-all duration-200 outline-none"
+            value={overview}
+            onChange={e => setOverview(e.target.value)}
+            required
+          />
+        </div>
+        <div>
           <label className="block font-semibold mb-2 text-purple-700">Description</label>
           <textarea
             className="w-full border-2 border-purple-300 focus:border-purple-500 rounded-lg px-4 py-2 bg-white/80 focus:bg-purple-50 transition-all duration-200 outline-none"
@@ -68,6 +78,11 @@ export default function NewOpportunityPage() {
             onChange={e => setDescription(e.target.value)}
             required
           />
+          <div className="text-xs text-gray-500 mt-1 italic">
+            Tip: You can use Markdown to format your post.<br />
+            Supports <b>bold</b>, <i>italics</i>, headings, ordered and unordered lists.<br />
+            You can use <a href="https://markdownlivepreview.com/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Live Preview</a>.
+          </div>
         </div>
         <div>
           <label className="block font-semibold mb-2 text-purple-700">Types</label>

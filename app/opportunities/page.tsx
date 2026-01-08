@@ -13,9 +13,12 @@ interface Opportunity {
   id: string;
   title: string;
   description: string;
+  overview: string;
+  location?: string;
   types: string[];
   status: string;
   createdById: string;
+  createdByName: string;
 }
 
 export default function OpportunitiesPage() {
@@ -123,9 +126,13 @@ export default function OpportunitiesPage() {
                     key={opp.id}
                     id={opp.id}
                     title={opp.title}
-                    description={opp.description}
+                    overview={opp.overview}
+                    location={opp.location}
                     types={opp.types}
+                    createdByName={opp.createdByName}
                     status={opp.status}
+                    createdById={opp.createdById}
+                    showOverviewOnly={true}
                   />
                 ))
               )}

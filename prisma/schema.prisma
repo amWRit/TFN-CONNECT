@@ -271,12 +271,14 @@ model JobPosting {
   id            String   @id @default(cuid())
   createdById   String?
   title         String
+  overview      String
   description   String
   sector        String   // 'Education'
   requiredSkills String[] // Array of skill IDs
   location      String?
   jobType       JobType   @default(FULL_TIME)
   status        JobStatus   @default(OPEN)
+  deadline      DateTime?
   
   createdBy     Person?  @relation("JobPostings", fields: [createdById], references: [id], onDelete: SetNull)
   applications  JobApplication[]
@@ -299,17 +301,45 @@ model JobApplication {
 }
 
 // ===== ACTIVITY FEED =====
+
+enum PostType {
+  // Personal Updates
+  CAREER_UPDATE     // "Promoted to Principal @ ABC School!"
+  ACHIEVEMENT       // "Masters in Education Policy completed"
+  CERTIFICATION     // "Google Cloud Educator certified"
+
+  // Job Opportunities  
+  JOB_POSTING       // Hiring: Math Teacher, Tanahun
+  JOB_APPLICATION   // "Applied for Program Coordinator"
+
+  // Community & Events
+  EVENT_ANNOUNCEMENT // "TFN Alumni Summit - Register now!"
+  EVENT_RSVP        // "RSVP'd for Paaila Reunion"
+
+  // Knowledge Sharing
+  ARTICLE_SHARE     // "5 tips for rural school leadership"
+  RESOURCE_SHARE    // "Free teacher training course"
+
+  // Networking & Collaboration
+  SEEK_COLLABORATION // "Looking for Math curriculum partner"
+  SEEK_MENTOR       // "Need Principal mentor - Tanahun"
+  OFFER_MENTORSHIP  // "Experienced fellows: happy to mentor"
+
+  // General
+  GENERAL           // Casual updates, questions
+}
+
 model Post {
   id            String   @id @default(cuid())
   personId      String
   content       String
-  postType      String   // 'career_update'|'job_posting'|'achievement'|'general'
+  postType      PostType // enum for post type
   imageUrl      String?
   likes         Int      @default(0)
-  
+
   person        Person   @relation("Posts", fields: [personId], references: [id], onDelete: Cascade)
   comments      Comment[]
-  
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -373,16 +403,11 @@ enum OpportunityStatus {
   CLOSED
 }
 
-enum InterestTargetType {
-  JOB
-  OPPORTUNITY
-  EVENT // Future
-}
-
 model Opportunity {
   id            String   @id @default(cuid())
   createdById   String
   title         String
+  overview      String
   description   String
   types         OpportunityType[] // Multiple: ['JOB', 'MENTORSHIP', 'TRAINING']
   location      String?
@@ -392,6 +417,12 @@ model Opportunity {
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+enum InterestTargetType {
+  JOB
+  OPPORTUNITY
+  EVENT // Future
 }
 
 model Interest {

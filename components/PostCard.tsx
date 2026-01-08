@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, MessageCircle, Bookmark, BookmarkCheck } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, BookmarkCheck, Briefcase, Trophy, Rocket, MessageSquare, FileText, PartyPopper, Star, Users, Pencil } from "lucide-react";
 import Link from "next/link";
+import ReactMarkdown from "react-markdown";
 
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
@@ -30,15 +31,15 @@ interface PostProps {
 const getPostTypeColor = (type: string) => {
   switch (type) {
     case "achievement":
-      return "bg-green-100 text-green-800 hover:bg-green-100 hover:text-green-800";
+      return "bg-green-400 text-white ring-2 ring-green-300 shadow-md";
     case "job_posting":
-      return "bg-blue-100 text-blue-800 hover:bg-blue-100 hover:text-blue-800";
+      return "bg-blue-500 text-white ring-2 ring-blue-300 shadow-md";
     case "career_update":
-      return "bg-purple-100 text-purple-800 hover:bg-purple-100 hover:text-purple-800";
+      return "bg-purple-500 text-white ring-2 ring-purple-300 shadow-md";
     case "general":
-      return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 hover:text-yellow-800";
+      return "bg-yellow-400 text-white ring-2 ring-yellow-200 shadow-md";
     default:
-      return "bg-gray-100 text-gray-800 hover:bg-gray-100 hover:text-gray-800";
+      return "bg-pink-400 text-white ring-2 ring-pink-200 shadow-md";
   }
 };
 
@@ -57,18 +58,36 @@ const getPostTypeBorder = (type: string) => {
   }
 };
 
-const getPostTypeEmoji = (type: string) => {
+const getPostTypeIcon = (type: string) => {
   switch (type) {
-    case "achievement":
-      return "🏆";
-    case "job_posting":
-      return "💼";
-    case "career_update":
-      return "🚀";
-    case "general":
-      return "💬";
+    case "CAREER_UPDATE":
+      return <Rocket className="w-4 h-4 mr-1" />;
+    case "ACHIEVEMENT":
+      return <Trophy className="w-4 h-4 mr-1" />;
+    case "CERTIFICATION":
+      return <Star className="w-4 h-4 mr-1" />;
+    case "JOB_POSTING":
+      return <Briefcase className="w-4 h-4 mr-1" />;
+    case "JOB_APPLICATION":
+      return <FileText className="w-4 h-4 mr-1" />;
+    case "EVENT_ANNOUNCEMENT":
+      return <PartyPopper className="w-4 h-4 mr-1" />;
+    case "EVENT_RSVP":
+      return <MessageSquare className="w-4 h-4 mr-1" />;
+    case "ARTICLE_SHARE":
+      return <FileText className="w-4 h-4 mr-1" />;
+    case "RESOURCE_SHARE":
+      return <FileText className="w-4 h-4 mr-1" />;
+    case "SEEK_COLLABORATION":
+      return <Users className="w-4 h-4 mr-1" />;
+    case "SEEK_MENTOR":
+      return <Star className="w-4 h-4 mr-1" />;
+    case "OFFER_MENTORSHIP":
+      return <Star className="w-4 h-4 mr-1" />;
+    case "GENERAL":
+      return <MessageSquare className="w-4 h-4 mr-1" />;
     default:
-      return "📝";
+      return <FileText className="w-4 h-4 mr-1" />;
   }
 };
 
@@ -85,10 +104,12 @@ export function PostCard({
   hideBookmark = false,
   hideStats = false,
   leftBorder = false,
-}: PostProps) {
-  const { status } = useSession();
+  onEdit,
+}: PostProps & { onEdit?: () => void }) {
+  const { status, data: session } = useSession();
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
+  const isOwner = session?.user?.id === author.id;
 
   // Fetch initial bookmark state
   useEffect(() => {
@@ -110,46 +131,70 @@ export function PostCard({
     return d.toLocaleDateString();
   }
 
+  function linkify(text: string) {
+    // Replace plain URLs with Markdown links
+    const urlRegex = /(https?:\/\/[\w\-._~:/?#[\]@!$&'()*+,;=%]+)|(www\.[\w\-._~:/?#[\]@!$&'()*+,;=%]+)/gi;
+    return text.replace(urlRegex, (url) => {
+      const href = url.startsWith('http') ? url : `https://${url}`;
+      return `[${url}](${href})`;
+    });
+  }
+
   return (
     <Card
-      className={`border-2 bg-white hover:shadow-2xl transition-all duration-300 rounded-2xl overflow-hidden ${getPostTypeBorder(postType)} ${leftBorder ? 'border-l-4 border-purple-400' : ''}`}
+      className={`border-2 border-pink-400 bg-white transition-all duration-300 rounded-2xl overflow-hidden${leftBorder ? ' border-l-4 border-purple-400' : ''}`}
     >
       <CardHeader className="relative">
-        {/* Bookmark Button (UI only) - top right */}
+        {/* Edit or Bookmark Button (UI only) - top right */}
         {!hideBookmark && (
-          <button
-            aria-label={bookmarked ? "Remove Bookmark" : "Add Bookmark"}
-            disabled={bookmarkLoading || status !== "authenticated"}
-            onClick={async (e) => {
-              e.preventDefault();
-              setBookmarkLoading(true);
-              try {
-                const res = await fetch("/api/bookmarks/post", {
-                  method: bookmarked ? "DELETE" : "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ targetPostId: postId }),
-                });
-                if (res.ok) {
-                  setBookmarked((prev) => !prev);
+          isOwner ? (
+            <button
+              aria-label="Edit Post"
+              className="p-2 rounded-full shadow-md transition-colors duration-200 border-2 bg-white border-blue-300 text-blue-600 hover:bg-blue-50 hover:scale-110 disabled:opacity-60"
+              style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}
+              onClick={onEdit}
+            >
+              <Pencil size={22} />
+            </button>
+          ) : (
+            <button
+              aria-label={bookmarked ? "Remove Bookmark" : "Add Bookmark"}
+              disabled={bookmarkLoading || status !== "authenticated"}
+              onClick={async (e) => {
+                e.preventDefault();
+                setBookmarkLoading(true);
+                try {
+                  const res = await fetch("/api/bookmarks/post", {
+                    method: bookmarked ? "DELETE" : "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ targetPostId: postId }),
+                  });
+                  if (res.ok) {
+                    setBookmarked((prev) => !prev);
+                  }
+                } finally {
+                  setBookmarkLoading(false);
                 }
-              } finally {
-                setBookmarkLoading(false);
-              }
-            }}
-            className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${bookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110 disabled:opacity-60`}
-            style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}
-          >
-            {bookmarked ? <BookmarkCheck size={22} /> : <Bookmark size={22} />}
-          </button>
+              }}
+              className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${bookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110 disabled:opacity-60`}
+              style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}
+            >
+              {bookmarked ? <BookmarkCheck size={22} /> : <Bookmark size={22} />}
+            </button>
+          )
         )}
         <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
           <div className="flex items-start gap-3 flex-1">
-            {author.profileImage && (
+            {author.profileImage ? (
               <img
                 src={author.profileImage}
                 alt={author.firstName}
                 className="h-10 w-10 rounded-full flex-shrink-0 border-2 border-blue-200 shadow-sm"
               />
+            ) : (
+              <div className="h-10 w-10 rounded-full flex-shrink-0 border-2 border-blue-200 shadow-sm bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-base uppercase">
+                {author.firstName?.[0] || ''}{author.lastName?.[0] || ''}
+              </div>
             )}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
@@ -158,8 +203,9 @@ export function PostCard({
                     {author.firstName} {author.lastName}
                   </Link>
                 </CardTitle>
-                <Badge className={`${getPostTypeColor(postType)} flex-shrink-0 text-xs px-3 py-1 rounded-full font-semibold flex items-center gap-1 transition-none`} style={{ background: undefined, color: undefined }}>
-                  {showEmojiBadge && <span>{getPostTypeEmoji(postType)}</span>}
+                <Badge className={`${getPostTypeColor(postType)} flex-shrink-0 text-xs px-3 py-1 rounded-full font-semibold flex items-center gap-1`} style={{ background: undefined, color: undefined }}>
+                  {(() => { console.log('PostType in badge:', postType); return null; })()}
+                  {getPostTypeIcon(postType)}
                   <span>{postType.replace(/_/g, " ")}</span>
                 </Badge>
               </div>
@@ -173,7 +219,23 @@ export function PostCard({
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-gray-700 mb-4 leading-relaxed">{content}</p>
+        <div className="text-sm text-gray-700 mb-4 leading-relaxed break-words">
+          <ReactMarkdown
+            components={{
+              a: ({node, ...props}) => <a {...props} className="text-blue-600 underline break-all" target="_blank" rel="noopener noreferrer" />,
+              ul: ({node, ...props}) => <ul {...props} className="list-disc ml-6" />,
+              ol: ({node, ...props}) => <ol {...props} className="list-decimal ml-6" />,
+              li: ({node, ...props}) => <li {...props} className="mb-1" />,
+              strong: ({node, ...props}) => <strong {...props} className="font-bold" />,
+              em: ({node, ...props}) => <em {...props} className="italic" />,
+              blockquote: ({node, ...props}) => <blockquote {...props} className="border-l-4 border-blue-200 pl-4 italic text-gray-500 my-2" />,
+              code: ({node, ...props}) => <code {...props} className="bg-gray-100 px-1 rounded text-xs" />,
+            }}
+          >
+            {linkify(content)}
+          </ReactMarkdown>
+        </div>
+        {/* Hide stats (love/comment) if hideStats is true */}
         {!hideStats && (
           <div className="flex gap-6 text-xs sm:text-sm text-gray-600">
             <button className="flex items-center gap-1.5 hover:text-red-500 transition">

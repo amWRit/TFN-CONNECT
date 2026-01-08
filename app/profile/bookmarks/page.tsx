@@ -1,4 +1,3 @@
-
 "use client";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
@@ -43,6 +42,7 @@ type Person = {
   firstName: string;
   lastName: string;
   profileImage?: string;
+  type?: string; // PersonType
 };
 
 interface JobDetail {
@@ -149,7 +149,7 @@ export default function BookmarksPage() {
       {error && <p className="text-center text-red-500">{error}</p>}
       {bookmarks && (
         <div className="space-y-10">
-          {['people', 'jobs', 'jobApplications', 'posts']
+          {['people', 'jobs', 'posts']
             .filter((type) => bookmarks[type as keyof BookmarksResponse])
             .map((type) => {
               const items = bookmarks[type as keyof BookmarksResponse] as Bookmark[];
@@ -182,11 +182,18 @@ export default function BookmarksPage() {
                                 ) : (
                                   <div className="h-12 w-12 rounded-full bg-gray-200" />
                                 )}
-                                <CardTitle className="text-lg font-semibold text-blue-700 flex-1">
+                                <CardTitle className="text-lg font-semibold text-blue-700 flex-1 flex items-center gap-2">
                                   {person ? (
-                                    <Link href={`/profile?id=${person.id}`} className="hover:underline">
-                                      {person.firstName} {person.lastName}
-                                    </Link>
+                                    <>
+                                      <Link href={`/profile?id=${person.id}`} className="hover:underline">
+                                        {person.firstName} {person.lastName}
+                                      </Link>
+                                      {person.type && (
+                                        <span className="ml-2 px-2 py-0.5 rounded-full text-xs font-bold bg-blue-200 text-blue-800 border border-blue-300 uppercase tracking-wide">
+                                          {person.type}
+                                        </span>
+                                      )}
+                                    </>
                                   ) : (
                                     <span>Person ID: {bm.targetId}</span>
                                   )}

@@ -1,8 +1,19 @@
 "use client";
 
 import UserMenu from "@/components/UserMenu";
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
 
 export default function Navbar() {
+  const { data: session, status } = useSession();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsAdmin(localStorage.getItem("adminAuth") === "true");
+    }
+  }, []);
+
   return (
     <nav className="border-b-2 border-blue-400 bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 py-3 sm:py-4 flex items-center justify-between">
@@ -18,7 +29,9 @@ export default function Navbar() {
           <a href="/alumni" className="text-gray-700 hover:text-blue-600 font-semibold transition">Alumni</a>
           <a href="/jobs" className="text-gray-700 hover:text-blue-600 font-semibold transition">Jobs</a>
           <a href="/opportunities" className="text-gray-700 hover:text-purple-600 font-semibold transition">Opportunities</a>
-          <a href="/feed" className="text-gray-700 hover:text-blue-600 font-semibold transition">Feed</a>
+          {(session?.user || isAdmin) && (
+            <a href="/feed" className="text-gray-700 hover:text-blue-600 font-semibold transition">Feed</a>
+          )}
           <UserMenu />
         </div>
       </div>
