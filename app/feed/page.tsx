@@ -164,17 +164,15 @@ export default function FeedPage() {
             <span className="inline-block bg-gradient-to-r from-pink-200 via-blue-200 to-green-200 text-blue-900 text-2xl font-extrabold px-8 py-3 rounded-full tracking-wide shadow-lg border-2 border-blue-200 animate-fadeIn">✨ FEED ✨</span>
           </div>
           <p className="text-blue-500 text-lg sm:text-2xl max-w-2xl font-semibold mt-2 mb-2 drop-shadow">Recent updates from the TFN community</p>
-          {/* Don't show New Post button for local admins */}
-          {!isAdmin && (
-            <button
-              className="fixed bottom-8 right-8 z-50 bg-gradient-to-br from-blue-500 to-pink-400 text-white rounded-full shadow-2xl p-5 hover:scale-110 transition font-bold text-3xl flex items-center gap-2 border-4 border-white/60"
-              title="New Post"
-              style={{ boxShadow: '0 4px 24px 0 rgba(80, 80, 200, 0.18)' }}
-              onClick={() => setShowModal(true)}
-            >
-              <span>＋</span> <span className="hidden sm:inline text-lg">New Post</span>
-            </button>
-          )}
+          {/* Floating Action Button (enabled) */}
+          <button
+            className="fixed bottom-8 right-8 z-50 bg-gradient-to-br from-blue-500 to-pink-400 text-white rounded-full shadow-2xl p-5 hover:scale-110 transition font-bold text-3xl flex items-center gap-2 border-4 border-white/60"
+            title="New Post"
+            style={{ boxShadow: '0 4px 24px 0 rgba(80, 80, 200, 0.18)' }}
+            onClick={() => setShowModal(true)}
+          >
+            <span>＋</span> <span className="hidden sm:inline text-lg">New Post</span>
+          </button>
         </div>
 
         {/* Add Post Modal */}
