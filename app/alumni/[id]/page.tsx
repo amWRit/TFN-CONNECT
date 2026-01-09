@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { ExperienceCard } from "@/components/ExperienceCard"
 import { ProfileImage } from "@/components/ProfileImage"
 import { Button } from "@/components/ui/button"
-import { Bookmark, BookmarkCheck, Briefcase, Mail, Phone, Linkedin, Globe, GraduationCap } from "lucide-react"
+import { Bookmark, BookmarkCheck, Briefcase, Mail, Phone, Linkedin, Globe, GraduationCap, Users } from "lucide-react"
 
 interface PersonDetail {
   id: string

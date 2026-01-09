@@ -22,6 +22,7 @@ export default function ProfileActivityPage() {
   const [notFound, setNotFound] = useState(false);
   const [isProfileOwner, setIsProfileOwner] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [sessionUser, setSessionUser] = useState<any>(null);
   const [tab, setTab] = useState("jobs");
   const [jobs, setJobs] = useState<any[]>([]);
   const [opportunities, setOpportunities] = useState<any[]>([]);
@@ -57,11 +58,12 @@ export default function ProfileActivityPage() {
       let sessionData = null;
       let sessionRes;
       try {
-        sessionRes = await fetch("/api/profile");
+        sessionRes = await fetch("/api/profile", { credentials: 'include' });
       } catch {}
       if (sessionRes && sessionRes.ok) {
         allow = true;
         sessionData = await sessionRes.json();
+        setSessionUser(sessionData);
       } else if (typeof window !== 'undefined' && localStorage.getItem('adminAuth') === 'true') {
         allow = true;
       }
@@ -72,7 +74,9 @@ export default function ProfileActivityPage() {
       }
       // set local admin flag for UI (used to hide bookmark buttons for local admins)
       if (typeof window !== 'undefined') {
-        setIsAdmin(localStorage.getItem('adminAuth') === 'true');
+        const localAdmin = localStorage.getItem('adminAuth') === 'true';
+        const sessionIsAdmin = !!(sessionData && sessionData.type === 'ADMIN');
+        setIsAdmin(localAdmin || sessionIsAdmin);
       }
       // Fetch all skills for mapping
       const skillsRes = await fetch('/api/skills');
@@ -153,12 +157,26 @@ export default function ProfileActivityPage() {
 
   // Fetch bookmarks and details only when isProfileOwner is true
   useEffect(() => {
-    if (!isProfileOwner) return;
+    // Only fetch bookmarks for the profile owner or a signed-in admin session
+    // Wait until initial loading is complete so isAdmin/isProfileOwner are determined
+    if (loading) return;
+    if (!isProfileOwner && !isAdmin) return;
     setBmLoading(true);
     setBmError(null);
     async function fetchBookmarksAndDetails() {
       try {
-        const bmRes = await fetch("/api/bookmarks/all");
+        let bmUrl = "/api/bookmarks/all";
+        let fetchOptions = {};
+        // If signed-in admin is viewing someone else's profile, request their bookmarks
+        if (isAdmin && !isProfileOwner && id) {
+          bmUrl += `?personId=${encodeURIComponent(id)}`;
+          // If bypass admin, send header
+          if (typeof window !== 'undefined' && localStorage.getItem('adminAuth') === 'true') {
+            fetchOptions = { headers: { 'x-admin-bypass': 'true' } };
+          }
+        }
+        console.log("[BOOKMARKS FETCH] Fetching:", bmUrl, "isAdmin:", isAdmin, "isProfileOwner:", isProfileOwner, "id:", id, fetchOptions);
+        const bmRes = await fetch(bmUrl, fetchOptions);
         if (bmRes.ok) {
           const data = await bmRes.json();
           setBookmarks(data);
@@ -203,14 +221,14 @@ export default function ProfileActivityPage() {
       }
     }
     fetchBookmarksAndDetails();
-  }, [isProfileOwner]);
+  }, [isProfileOwner, isAdmin, id, loading]);
 
   // Tab definitions
   const tabs = [
     { key: "jobs", label: "Jobs" },
     { key: "opportunities", label: "Opportunities" },
     { key: "posts", label: "Posts" },
-    ...(isProfileOwner ? [{ key: "bookmarks", label: "Bookmarks" }] : []),
+    ...((isProfileOwner || isAdmin) ? [{ key: "bookmarks", label: "Bookmarks" }] : []),
   ];
 
   // Render activity content per tab
@@ -242,7 +260,7 @@ export default function ProfileActivityPage() {
           ))
         : <div className="text-gray-500">No posts found.</div>;
     }
-    if (tab === "bookmarks" && isProfileOwner) {
+    if (tab === "bookmarks" && (isProfileOwner || isAdmin)) {
       if (bmLoading) return <div className="text-center text-gray-500">Loading bookmarks...</div>;
       if (bmError) return <div className="text-center text-red-500">{bmError}</div>;
       return bookmarks && Object.keys(bookmarks).length > 0 ? (
