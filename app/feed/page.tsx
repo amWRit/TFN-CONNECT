@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useSession, signIn } from "next-auth/react"
 import { PostCard } from "@/components/PostCard"
 import NotFound from "@/components/NotFound"
@@ -43,6 +43,12 @@ export default function FeedPage() {
   const [editAction, setEditAction] = useState<"save" | "delete" | null>(null);
 
   const postTypeOptions = Object.entries(PostType).map(([key, value]) => ({ key, value }));
+  const [selectedPostType, setSelectedPostType] = useState<string>("");
+
+  const filteredPosts = useMemo(() => {
+    if (!selectedPostType) return posts;
+    return posts.filter(p => p.postType === selectedPostType);
+  }, [posts, selectedPostType]);
 
   useEffect(() => {
     // allow fetch if signed-in via NextAuth OR if running as local admin
@@ -159,20 +165,26 @@ export default function FeedPage() {
     <div className="w-full bg-gradient-to-br from-blue-100 via-white to-blue-200 min-h-screen py-10">
       <div className="max-w-4xl mx-auto px-2 sm:px-4">
         {/* Header Section */}
-        <div className="mb-4 sm:mb-6 relative">
-          <div className="inline-block mb-0">
-            <span className="inline-block bg-gradient-to-r from-pink-200 via-blue-200 to-green-200 text-blue-900 text-2xl font-extrabold px-8 py-3 rounded-full tracking-wide shadow-lg border-2 border-blue-200 animate-fadeIn">✨ FEED ✨</span>
+        <div className="mb-4 sm:mb-6 relative flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="inline-block mb-0">
+              <span className="inline-block bg-gradient-to-r from-pink-200 via-blue-200 to-green-200 text-blue-900 text-2xl font-extrabold px-8 py-3 rounded-full tracking-wide shadow-lg border-2 border-blue-200 animate-fadeIn">✨ FEED ✨</span>
+            </div>
           </div>
-          <p className="text-blue-500 text-lg sm:text-2xl max-w-2xl font-semibold mt-2 mb-2 drop-shadow">Recent updates from the TFN community</p>
+          <div className="flex items-center gap-3">
+            <label className="hidden sm:inline font-semibold text-blue-700">Type</label>
+            <select
+              className="border border-blue-300 rounded px-3 py-2 bg-white/90 font-semibold text-blue-700 focus:ring-2 focus:ring-blue-200 outline-none transition"
+              value={selectedPostType}
+              onChange={e => setSelectedPostType(e.target.value)}
+            >
+              <option value="">All</option>
+              {postTypeOptions.map(opt => (
+                <option key={opt.key} value={opt.value}>{opt.key.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</option>
+              ))}
+            </select>
+          </div>
           {/* Floating Action Button (enabled) */}
-          <button
-            className="fixed bottom-8 right-8 z-50 bg-gradient-to-br from-blue-500 to-pink-400 text-white rounded-full shadow-2xl p-5 hover:scale-110 transition font-bold text-3xl flex items-center gap-2 border-4 border-white/60"
-            title="New Post"
-            style={{ boxShadow: '0 4px 24px 0 rgba(80, 80, 200, 0.18)' }}
-            onClick={() => setShowModal(true)}
-          >
-            <span>＋</span> <span className="hidden sm:inline text-lg">New Post</span>
-          </button>
         </div>
 
         {/* Add Post Modal */}
@@ -307,7 +319,7 @@ export default function FeedPage() {
         )}
 
         <div className="space-y-7 sm:space-y-10 mt-8">
-          {posts.map((post) => (
+          {filteredPosts.map((post) => (
             <PostCard
               key={post.id}
               postId={post.id}
