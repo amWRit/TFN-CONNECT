@@ -8,7 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import NotFound from "@/components/NotFound";
 import { ProfileImage } from "@/components/ProfileImage";
 import { Button } from "@/components/ui/button";
-import { Trash2, Mail } from "lucide-react";
+import { Trash2, Mail, Phone } from "lucide-react";
 import { JobPostingCard } from "@/components/JobPostingCard";
 import OpportunityCard from "@/components/OpportunityCard";
 import { PostCard } from "@/components/PostCard";
@@ -382,10 +382,18 @@ export default function ProfileActivityPage() {
                       </span>
                     )}
                   </div>
-                  {/* Email on the next line with icon */}
-                  <div className="mt-1 flex items-center text-sm text-gray-600 truncate">
-                    <Mail className="mr-2 text-gray-500" size={16} aria-hidden />
-                    <span className="truncate">{profile.email1 || profile.email || 'No email provided'}</span>
+                  {/* Email and phone on the next line with icons */}
+                  <div className="mt-1 flex items-center text-sm text-gray-600 truncate gap-4 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0 truncate">
+                      <Mail className="text-gray-500" size={14} aria-hidden />
+                      <span className="truncate">{profile.email1 || profile.email || 'No email provided'}</span>
+                    </div>
+                    {profile.phone && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600 min-w-0 truncate">
+                        <Phone className="text-gray-500" size={14} aria-hidden />
+                        <span className="truncate">{profile.phone}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
