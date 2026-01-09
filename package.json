@@ -17,7 +17,6 @@
     "@paralleldrive/cuid2": "^3.0.4",
     "@prisma/client": "^5.7.1",
     "@radix-ui/react-slot": "^1.2.4",
-    "@tailwindcss/typography": "^0.5.19",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "date-fns": "2.30.0",
@@ -38,6 +37,7 @@
     "zod": "3.22.4"
   },
   "devDependencies": {
+    "@tailwindcss/typography": "^0.5.19",
     "@types/node": "20.10.0",
     "@types/react": "18.2.42",
     "@types/react-dom": "18.2.17",

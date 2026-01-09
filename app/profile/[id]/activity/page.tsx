@@ -19,6 +19,7 @@ export default function ProfileActivityPage() {
   const [profile, setProfile] = useState<any>(null);
   const [notFound, setNotFound] = useState(false);
   const [isProfileOwner, setIsProfileOwner] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [tab, setTab] = useState("jobs");
   const [jobs, setJobs] = useState<any[]>([]);
   const [opportunities, setOpportunities] = useState<any[]>([]);
@@ -52,6 +53,10 @@ export default function ProfileActivityPage() {
         setNotFound(true);
         setLoading(false);
         return;
+      }
+      // set local admin flag for UI (used to hide bookmark buttons for local admins)
+      if (typeof window !== 'undefined') {
+        setIsAdmin(localStorage.getItem('adminAuth') === 'true');
       }
       // Fetch all skills for mapping
       const skillsRes = await fetch('/api/skills');
@@ -169,7 +174,7 @@ export default function ProfileActivityPage() {
       const myPosts = posts.filter((post: any) => post.person?.id === profile?.id);
       return myPosts.length > 0
         ? myPosts.map((post: any) => (
-            <PostCard key={post.id} {...post} author={post.person} />
+            <PostCard key={post.id} {...post} author={post.person} hideBookmark={isAdmin} />
           ))
         : <div className="text-gray-500">No posts found.</div>;
     }

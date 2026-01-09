@@ -1,4 +1,3 @@
-
 "use client";
 export const dynamic = "force-dynamic";
 
@@ -569,6 +568,10 @@ export default function ProfilePage() {
           onCancel={() => setEditing(false)}
         />
       </div>
+      {/* Show floating ViewActivity button for admins or the profile owner */}
+      {(isAdmin || isProfileOwner) && person?.id && (
+        <ViewActivityButton personId={person.id} />
+      )}
 
       {/* Existing header UI and Basic Information card removed; all editing is now in ProfileHeaderCard */}
 
