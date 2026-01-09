@@ -1,17 +1,19 @@
 "use client";
 
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import Select from 'react-select';
 import { useParams } from "next/navigation";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import NotFound from "@/components/NotFound";
 import { ProfileImage } from "@/components/ProfileImage";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, Mail } from "lucide-react";
 import { JobPostingCard } from "@/components/JobPostingCard";
 import OpportunityCard from "@/components/OpportunityCard";
 import { PostCard } from "@/components/PostCard";
 import Link from "next/link";
+import { PostType } from "@prisma/client";
 
 export default function ProfileActivityPage() {
   const params = useParams();
@@ -24,9 +26,23 @@ export default function ProfileActivityPage() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [opportunities, setOpportunities] = useState<any[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
+  const postTypeOptions = Object.entries(PostType).map(([key, value]) => ({ key, value }));
+  const [selectedPostType, setSelectedPostType] = useState<string>("");
+  // Opportunities filters
+  const opportunityTypes = [
+    "MENTORSHIP", "TRAINING", "GRANTS", "FELLOWSHIPS", "INTERNSHIPS", "JOBS", "COMPETITIONS", "COLLABORATION", "VOLUNTEERING", "NETWORKING", "FUNDING", "EVENTS", "ACCELERATORS", "EDUCATION"
+  ];
+  const [oppTypeFilter, setOppTypeFilter] = useState<string>("");
+  const [oppStatusFilter, setOppStatusFilter] = useState<string>("");
+  // Jobs filters
+  const jobTypeOptions = ["FULL_TIME","PART_TIME","CONTRACT","INTERNSHIP","VOLUNTEER","FREELANCE","TEMPORARY","REMOTE","HYBRID"];
+  const [jobTypeFilter, setJobTypeFilter] = useState<string>("");
+  const [jobStatusFilter, setJobStatusFilter] = useState<string>("");
+  const [jobSkillsFilter, setJobSkillsFilter] = useState<{value:string;label:string}[]>([]);
   const [bookmarks, setBookmarks] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
   const [skills, setSkills] = useState<any[]>([]); // All skills for mapping
+  const allSkillsOptions = useMemo(() => skills.map((s:any) => ({ value: s.id, label: s.name })), [skills]);
   const [personDetails, setPersonDetails] = useState<Record<string, any>>({});
   const [jobDetails, setJobDetails] = useState<Record<string, any>>({});
   const [postDetails, setPostDetails] = useState<Record<string, any>>({});
@@ -85,6 +101,55 @@ export default function ProfileActivityPage() {
     fetchProfileAndActivity();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // Reset post type filter when leaving posts tab
+  useEffect(() => {
+    if (tab !== 'posts' && selectedPostType) {
+      setSelectedPostType('');
+    }
+  }, [tab, selectedPostType]);
+
+  // Reset opportunity filters when leaving opportunities tab
+  useEffect(() => {
+    if (tab !== 'opportunities') {
+      if (oppTypeFilter) setOppTypeFilter('');
+      if (oppStatusFilter) setOppStatusFilter('');
+    }
+    // also reset post filter when leaving posts (already added earlier)
+  }, [tab]);
+
+  // Reset jobs filters when leaving jobs tab
+  useEffect(() => {
+    if (tab !== 'jobs') {
+      if (jobTypeFilter) setJobTypeFilter('');
+      if (jobStatusFilter) setJobStatusFilter('');
+      if (jobSkillsFilter.length) setJobSkillsFilter([]);
+    }
+  }, [tab]);
+
+  // Memoized filtered opportunities for the profile
+  const filteredOpps = useMemo(() => {
+    const myOpps = opportunities.filter((opp: any) => opp.createdById === profile?.id);
+    return myOpps.filter((opp: any) => {
+      if (oppTypeFilter && (!Array.isArray(opp.types) || !opp.types.includes(oppTypeFilter))) return false;
+      if (oppStatusFilter && opp.status !== oppStatusFilter) return false;
+      return true;
+    });
+  }, [opportunities, profile, oppTypeFilter, oppStatusFilter]);
+
+  // Memoized filtered jobs for the profile
+  const filteredJobs = useMemo(() => {
+    const myJobs = jobs.filter((job: any) => job.createdBy?.id === profile?.id);
+    return myJobs.filter((job: any) => {
+      if (jobTypeFilter && job.jobType !== jobTypeFilter) return false;
+      if (jobStatusFilter && job.status !== jobStatusFilter) return false;
+      if (jobSkillsFilter.length > 0) {
+        const ids = jobSkillsFilter.map(s => s.value);
+        if (!job.requiredSkills || !ids.every((id) => job.requiredSkills.includes(id))) return false;
+      }
+      return true;
+    });
+  }, [jobs, profile, jobTypeFilter, jobStatusFilter, jobSkillsFilter]);
 
   // Fetch bookmarks and details only when isProfileOwner is true
   useEffect(() => {
@@ -154,11 +219,9 @@ export default function ProfileActivityPage() {
     if (loading) return <div className="text-center text-gray-500">Loading activity...</div>;
     if (!profile) return <div className="text-center text-gray-500">Profile not found.</div>;
     if (tab === "jobs") {
-      const myJobs = jobs.filter((job: any) => job.createdBy?.id === profile?.id);
-      // Map requiredSkills IDs to names for each job
       const skillIdToName = Object.fromEntries(skills.map((s: any) => [s.id, s.name]));
-      return myJobs.length > 0
-        ? myJobs.map((job: any) => {
+      return filteredJobs.length > 0
+        ? filteredJobs.map((job: any) => {
             const skillNames = Array.isArray(job.requiredSkills)
               ? job.requiredSkills.map((id: string) => skillIdToName[id] || id)
               : [];
@@ -167,13 +230,14 @@ export default function ProfileActivityPage() {
         : <div className="text-gray-500">No jobs found.</div>;
     }
     if (tab === "opportunities") {
-      const myOpps = opportunities.filter((opp: any) => opp.createdById === profile?.id);
-      return myOpps.length > 0 ? myOpps.map((opp: any) => <OpportunityCard key={opp.id} {...opp} />) : <div className="text-gray-500">No opportunities found.</div>;
+      const list = filteredOpps;
+      return list.length > 0 ? list.map((opp: any) => <OpportunityCard key={opp.id} {...opp} />) : <div className="text-gray-500">No opportunities found.</div>;
     }
     if (tab === "posts") {
       const myPosts = posts.filter((post: any) => post.person?.id === profile?.id);
-      return myPosts.length > 0
-        ? myPosts.map((post: any) => (
+      const filtered = selectedPostType ? myPosts.filter((p: any) => p.postType === selectedPostType) : myPosts;
+      return filtered.length > 0
+        ? filtered.map((post: any) => (
             <PostCard key={post.id} {...post} author={post.person} hideBookmark={isAdmin} />
           ))
         : <div className="text-gray-500">No posts found.</div>;
@@ -299,17 +363,31 @@ export default function ProfileActivityPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Profile Header Card */}
-      <div className="mb-8">
+      <div className="mb-4">  {/* reduced bottom margin */}
         {profile && (
-          <div className="rounded-xl border-2 border-blue-400 bg-white shadow p-6 flex flex-col sm:flex-row items-center gap-6">
-            <ProfileImage src={profile.profileImage} name={profile.firstName + ' ' + profile.lastName} className="h-24 w-24" alt={profile.firstName + ' ' + profile.lastName} />
-            <div className="flex-1">
-              <div className="text-2xl font-bold text-blue-700 mb-1">{profile.firstName} {profile.lastName}</div>
-              <div className="text-sm text-gray-600 mb-2">{profile.email1}</div>
-              <div className="flex gap-2 items-center">
-                {profile.type && (
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold" style={{ backgroundColor: profile.type === 'ALUMNI' ? '#fee2e2' : profile.type === 'STAFF' ? '#dbeafe' : '#fef9c3', color: profile.type === 'ALUMNI' ? '#b91c1c' : profile.type === 'STAFF' ? '#1d4ed8' : '#b45309' }}>{profile.type}</span>
-                )}
+          <div className="rounded-xl border-2 border-blue-400 bg-white shadow p-4 flex items-center gap-4"> {/* reduced padding and gap */}
+            <ProfileImage src={profile.profileImage} name={profile.firstName + ' ' + profile.lastName} className="h-20 w-20" alt={profile.firstName + ' ' + profile.lastName} /> {/* smaller image */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  {/* Name and person type on a single line */}
+                  <div className="flex items-center gap-3">
+                    <div className="text-xl font-bold text-blue-700 truncate">{profile.firstName} {profile.lastName}</div>
+                    {profile.type && (
+                      <span className="flex items-center gap-2 ml-2 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200 uppercase tracking-wide">
+                        <span className="text-sm">
+                          {profile.type === 'ALUMNI' ? '⭐' : profile.type === 'STAFF' ? '👔' : profile.type === 'LEADERSHIP' ? '👑' : profile.type === 'ADMIN' ? '🛡️' : '👤'}
+                        </span>
+                        <span className="truncate">{String(profile.type).charAt(0) + String(profile.type).slice(1).toLowerCase()}</span>
+                      </span>
+                    )}
+                  </div>
+                  {/* Email on the next line with icon */}
+                  <div className="mt-1 flex items-center text-sm text-gray-600 truncate">
+                    <Mail className="mr-2 text-gray-500" size={16} aria-hidden />
+                    <span className="truncate">{profile.email1 || profile.email || 'No email provided'}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -328,6 +406,98 @@ export default function ProfileActivityPage() {
             </button>
           ))}
         </div>
+
+        {/* Post Type Filter (shown only when Posts tab is active) */}
+        {tab === 'posts' && (
+          <div className="flex justify-end mb-4">
+            <div className="flex items-center gap-3">
+              <label className="hidden sm:inline font-semibold text-blue-700">Type</label>
+              <select
+                className="border border-blue-300 rounded px-3 py-1 bg-white/90 font-semibold text-blue-700 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                value={selectedPostType}
+                onChange={e => setSelectedPostType(e.target.value)}
+              >
+                <option value="">All</option>
+                {postTypeOptions.map(opt => (
+                  <option key={opt.key} value={opt.value}>{opt.key.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* Jobs Filter (shown only when Jobs tab is active) - styled like Posts filter */}
+        {tab === 'jobs' && (
+          <div className="flex justify-end mb-4">
+            <div className="flex items-center gap-3">
+              <label className="hidden sm:inline font-semibold text-blue-700">Type</label>
+              <select
+                className="border border-blue-300 rounded px-3 py-1 bg-white/90 font-semibold text-blue-700 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                value={jobTypeFilter}
+                onChange={e => setJobTypeFilter(e.target.value)}
+              >
+                <option value="">All</option>
+                {jobTypeOptions.map(t => (
+                  <option key={t} value={t}>{t.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</option>
+                ))}
+              </select>
+              <label className="hidden sm:inline font-semibold text-blue-700">Status</label>
+              <select
+                className="border border-blue-300 rounded px-3 py-1 bg-white/90 font-semibold text-blue-700 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                value={jobStatusFilter}
+                onChange={e => setJobStatusFilter(e.target.value)}
+              >
+                <option value="">All</option>
+                <option value="OPEN">Open</option>
+                <option value="FILLED">Filled</option>
+                <option value="CLOSED">Closed</option>
+                <option value="PAUSED">Paused</option>
+                <option value="DRAFT">Draft</option>
+              </select>
+              <div className="min-w-[220px]">
+                <Select
+                  isMulti
+                  options={allSkillsOptions}
+                  value={jobSkillsFilter}
+                  onChange={(nv) => setJobSkillsFilter(Array.isArray(nv) ? [...nv] : [])}
+                  classNamePrefix="react-select"
+                  placeholder="Skills"
+                  styles={{ menu: base => ({ ...base, zIndex: 9999 }), control: base => ({ ...base, minHeight: '32px', borderColor: '#bfdbfe', boxShadow: 'none' }) }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Opportunities Filter (shown only when Opportunities tab is active) - styled like Posts filter */}
+        {tab === 'opportunities' && (
+          <div className="flex justify-end mb-4">
+            <div className="flex items-center gap-3">
+              <label className="hidden sm:inline font-semibold text-blue-700">Type</label>
+              <select
+                className="border border-blue-300 rounded px-3 py-1 bg-white/90 font-semibold text-blue-700 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                value={oppTypeFilter}
+                onChange={e => setOppTypeFilter(e.target.value)}
+              >
+                <option value="">All</option>
+                {opportunityTypes.map(t => (
+                  <option key={t} value={t}>{t.charAt(0) + t.slice(1).toLowerCase()}</option>
+                ))}
+              </select>
+              <label className="hidden sm:inline font-semibold text-blue-700">Status</label>
+              <select
+                className="border border-blue-300 rounded px-3 py-1 bg-white/90 font-semibold text-blue-700 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                value={oppStatusFilter}
+                onChange={e => setOppStatusFilter(e.target.value)}
+              >
+                <option value="">All</option>
+                <option value="OPEN">Open</option>
+                <option value="CLOSED">Closed</option>
+              </select>
+            </div>
+          </div>
+        )}
+
         <div className="bg-white rounded-xl shadow p-6 min-h-[200px]">
           {renderTabContent()}
         </div>
