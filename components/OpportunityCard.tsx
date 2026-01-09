@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { TagIcon, InformationCircleIcon, PencilIcon, BookmarkIcon, BookmarkSquareIcon, MapPinIcon, CheckCircleIcon, XCircleIcon, EyeIcon } from "@heroicons/react/24/outline";
-import { Users } from "lucide-react";
+import { Users, Bookmark, BookmarkCheck, } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 // Helper to count lines in markdown string
@@ -103,7 +103,7 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ id, title, descriptio
             }}
             className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${bookmarkState.bookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110 disabled:opacity-60`}
           >
-            {bookmarkState.bookmarked ? <BookmarkSquareIcon className="h-6 w-6" /> : <BookmarkIcon className="h-6 w-6" />}
+            {bookmarkState.bookmarked ? <BookmarkCheck className="h-6 w-6" /> : <Bookmark className="h-6 w-6" />}
           </button>
           {!bookmarkState.bookmarked && (
             <div className="absolute top-12 right-0 z-40 hidden group-hover:block bg-gray-800 text-white text-xs px-4 py-2 rounded shadow-lg whitespace-nowrap">

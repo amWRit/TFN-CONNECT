@@ -363,6 +363,7 @@ enum BookmarkType {
   JOB_POSTING
   POST
   JOB_APPLICATION
+  OPPORTUNITY
 }
 
 model Bookmark {

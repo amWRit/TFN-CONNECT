@@ -276,7 +276,7 @@ export default function ProfileActivityPage() {
                 {Array.isArray(items) && items.length > 0 ? (
                   <div className="grid gap-4">
                     {type === "people"
-                      ? items.map((bm: any) => {
+                      ? items.map((bm) => {
                           const person = personDetails[bm.targetId];
                           return (
                             <Card key={bm.id} className="flex items-center gap-4 p-4 hover:shadow-lg transition-shadow bg-white border-l-4 border-blue-300">
@@ -307,6 +307,17 @@ export default function ProfileActivityPage() {
                                     <span>Person ID: {bm.targetId}</span>
                                   )}
                                 </CardTitle>
+                                {isProfileOwner && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-red-500 hover:bg-red-100 ml-2"
+                                    title="Remove bookmark"
+                                    onClick={() => handleDelete(bm, type)}
+                                  >
+                                    <Trash2 />
+                                  </Button>
+                                )}
                               </CardHeader>
                             </Card>
                           );
@@ -330,6 +341,17 @@ export default function ProfileActivityPage() {
                                   hideStats
                                   leftBorder
                                 />
+                                {isProfileOwner && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-red-500 hover:bg-red-100 absolute top-2 right-2 z-20"
+                                    title="Remove bookmark"
+                                    onClick={() => handleDelete(bm, type)}
+                                  >
+                                    <Trash2 />
+                                  </Button>
+                                )}
                               </div>
                             ) : (
                               <Card key={bm.id} className="p-4 bg-white border-l-4 border-purple-300 flex items-center">
@@ -338,15 +360,26 @@ export default function ProfileActivityPage() {
                                     <span>Post ID: {bm.targetId}</span>
                                   </CardTitle>
                                 </CardHeader>
+                                {isProfileOwner && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-red-500 hover:bg-red-100 ml-2"
+                                    title="Remove bookmark"
+                                    onClick={() => handleDelete(bm, type)}
+                                  >
+                                    <Trash2 />
+                                  </Button>
+                                )}
                               </Card>
                             );
                           })
                         : items.map((bm: any) => {
                             const job = jobDetails[bm.targetId];
                             return (
-                              <Card key={bm.id} className="p-4 bg-white border-l-4 border-green-300 flex items-center">
-                                <CardHeader className="p-0 flex-1">
-                                  <CardTitle className="text-lg font-semibold text-green-700 flex items-center gap-2">
+                              <Card key={bm.id} className="flex items-center gap-4 p-4 hover:shadow-lg transition-shadow bg-white border-l-4 border-green-300">
+                                <CardHeader className="flex flex-row items-center gap-4 p-0 pr-4 bg-transparent w-full">
+                                  <CardTitle className="text-lg font-semibold text-green-700 flex-1 flex items-center gap-2">
                                     {job ? (
                                       <>
                                         <Link href={`/jobs/${job.id}`} className="hover:underline">
@@ -360,6 +393,17 @@ export default function ProfileActivityPage() {
                                       <span>Job ID: {bm.targetId}</span>
                                     )}
                                   </CardTitle>
+                                  {isProfileOwner && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="text-red-500 hover:bg-red-100 ml-2 self-start"
+                                      title="Remove bookmark"
+                                      onClick={() => handleDelete(bm, type)}
+                                    >
+                                      <Trash2 />
+                                    </Button>
+                                  )}
                                 </CardHeader>
                               </Card>
                             );
@@ -375,6 +419,41 @@ export default function ProfileActivityPage() {
       ) : <div className="text-gray-500">No bookmarks found.</div>;
     }
     return <div className="text-gray-500">No activity found.</div>;
+  }
+
+  function handleDelete(bm: any, type: string) {
+    let url = "/api/bookmarks/";
+    let body: any = {};
+    if (type === "people") {
+      url += "person";
+      body = { targetPersonId: bm.targetId };
+    } else if (type === "jobs") {
+      url += "job";
+      body = { targetJobId: bm.targetId };
+    } else if (type === "posts") {
+      url += "post";
+      body = { targetPostId: bm.targetId };
+    } else {
+      alert("Unbookmarking for this type is not implemented yet.");
+      return;
+    }
+    fetch(url, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }).then((res) => {
+      if (res.ok) {
+        setBookmarks((prev: any) => {
+          if (!prev) return prev;
+          const items = prev[type];
+          if (!Array.isArray(items)) return prev;
+          return {
+            ...prev,
+            [type]: items.filter((b: any) => b.id !== bm.id),
+          };
+        });
+      }
+    });
   }
 
   if (notFound) return <NotFound />;
@@ -482,6 +561,7 @@ export default function ProfileActivityPage() {
               </select>
               <div className="min-w-[220px]">
                 <Select
+                  instanceId="job-skills-select"
                   isMulti
                   options={allSkillsOptions}
                   value={jobSkillsFilter}
