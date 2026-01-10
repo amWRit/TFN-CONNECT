@@ -12,6 +12,7 @@ import { Trash2, Mail, Phone } from "lucide-react";
 import { JobPostingCard } from "@/components/JobPostingCard";
 import OpportunityCard from "@/components/OpportunityCard";
 import { PostCard } from "@/components/PostCard";
+import { EditPostModal } from "@/components/EditPostModal";
 import Link from "next/link";
 import { PostType } from "@prisma/client";
 
@@ -50,6 +51,13 @@ export default function ProfileActivityPage() {
   const [opportunityDetails, setOpportunityDetails] = useState<Record<string, any>>({});
   const [bmLoading, setBmLoading] = useState(false);
   const [bmError, setBmError] = useState<string | null>(null);
+  // Post edit modal state (reuse logic from feed page)
+  const [editPost, setEditPost] = useState<any | null>(null);
+  const [editContent, setEditContent] = useState("");
+  const [editPostType, setEditPostType] = useState("GENERAL");
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editError, setEditError] = useState("");
+  const [editAction, setEditAction] = useState<"save" | "delete" | null>(null);
 
   useEffect(() => {
     async function fetchProfileAndActivity() {
@@ -253,6 +261,69 @@ export default function ProfileActivityPage() {
     ...((isProfileOwner || isAdmin) ? [{ key: "bookmarks", label: "Bookmarks" }] : []),
   ];
 
+  // Handlers for editing posts (similar to feed page)
+  const handleEdit = (post: any) => {
+    setEditPost(post);
+    setEditContent(post.content);
+    setEditPostType(post.postType);
+    setEditError("");
+  };
+
+  const handleEditSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editPost) return;
+    setEditAction("save");
+    setEditSubmitting(true);
+    setEditError("");
+    try {
+      const res = await fetch(`/api/feed/${editPost.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: editContent, postType: editPostType }),
+      });
+      if (!res.ok) throw new Error("Failed to update post");
+      setEditPost(null);
+      // Refresh posts for this profile
+      try {
+        const refreshed = await fetch(`/api/feed?personId=${id}`);
+        if (refreshed.ok) {
+          const data = await refreshed.json();
+          setPosts(Array.isArray(data) ? data : []);
+        }
+      } catch {}
+    } catch (err: any) {
+      setEditError(err.message || "Failed to update post");
+    } finally {
+      setEditSubmitting(false);
+      setEditAction(null);
+    }
+  };
+
+  const handleEditDelete = async () => {
+    if (!editPost) return;
+    setEditAction("delete");
+    setEditSubmitting(true);
+    setEditError("");
+    try {
+      const res = await fetch(`/api/feed/${editPost.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete post");
+      setEditPost(null);
+      // Refresh posts for this profile
+      try {
+        const refreshed = await fetch(`/api/feed?personId=${id}`);
+        if (refreshed.ok) {
+          const data = await refreshed.json();
+          setPosts(Array.isArray(data) ? data : []);
+        }
+      } catch {}
+    } catch (err: any) {
+      setEditError(err.message || "Failed to delete post");
+    } finally {
+      setEditSubmitting(false);
+      setEditAction(null);
+    }
+  };
+
   // Render activity content per tab
   function renderTabContent() {
     if (notFound) return <NotFound />;
@@ -282,7 +353,14 @@ export default function ProfileActivityPage() {
       const filtered = selectedPostType ? myPosts.filter((p: any) => p.postType === selectedPostType) : myPosts;
       return filtered.length > 0
         ? filtered.map((post: any) => (
-            <PostCard key={post.id} {...post} author={post.person} hideBookmark={isAdmin} />
+            <PostCard
+              key={post.id}
+              {...post}
+              author={post.person}
+              hideBookmark={isAdmin}
+              hideStats
+              onEdit={() => handleEdit(post)}
+            />
           ))
         : <div className="text-gray-500">No posts found.</div>;
     }
@@ -526,6 +604,21 @@ export default function ProfileActivityPage() {
   if (notFound) return <NotFound />;
   return (
     <div className="max-w-4xl mx-auto px-4 py-4">
+      <EditPostModal
+        open={!!editPost}
+        editContent={editContent}
+        editPostType={editPostType}
+        postTypeOptions={postTypeOptions}
+        editError={editError}
+        editSubmitting={editSubmitting}
+        editAction={editAction}
+        onClose={() => setEditPost(null)}
+        onSubmit={handleEditSave}
+        onDelete={handleEditDelete}
+        onChangeContent={setEditContent}
+        onChangeType={setEditPostType}
+      />
+
       {/* Profile Header Card */}
       <div className="mb-2">  {/* reduced bottom margin */}
         {profile && (
