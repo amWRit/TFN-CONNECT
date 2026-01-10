@@ -4,6 +4,7 @@ import { redirect } from "next/navigation"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import prisma from "@/lib/prisma"
+import type { PersonType } from "@prisma/client"
 
 export default async function Home() {
   const session = await getServerSession(authOptions)
@@ -15,11 +16,11 @@ export default async function Home() {
   // Live stats from the database
   const now = new Date()
   const [alumniCount, openJobCount, opportunityCount, postCount, activeCohortCount] = await Promise.all([
-    // Treat ALUMNI / STAFF_ALUMNI / STAFF_ADMIN as part of the alumni network
+    // Treat FELLOW and ALUMNI / STAFF_ALUMNI as part of the alumni & fellows network
     prisma.person.count({
       where: {
         type: {
-          in: ["ALUMNI", "STAFF_ALUMNI"],
+          in: [ "FELLOW", "ALUMNI", "STAFF_ALUMNI" ] as PersonType[],
         },
       },
     }),
@@ -104,7 +105,7 @@ export default async function Home() {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 sm:p-6 rounded-xl border-2 border-blue-500 text-center hover:shadow-md transition">
               <div className="text-2xl sm:text-3xl font-bold text-blue-600">{alumniCount}</div>
-              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Alumni in the network</p>
+              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Alumni & Fellows in the network</p>
             </div>
             <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 sm:p-6 rounded-xl border-2 border-green-500 text-center hover:shadow-md transition">
               <div className="text-2xl sm:text-3xl font-bold text-green-600">{openJobCount}</div>

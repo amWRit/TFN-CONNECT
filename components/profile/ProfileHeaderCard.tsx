@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import React from "react";
 
 const TYPE_META: Record<string, { bg: string; text: string; icon: string; label: string }> = {
+  FELLOW:  { bg: "bg-purple-100",   text: "text-purple-700",   icon: "🎓", label: "Fellow" },
   ALUMNI:   { bg: "bg-red-100",      text: "text-red-700",      icon: "⭐",  label: "Alumni" },
   STAFF:    { bg: "bg-blue-100",     text: "text-blue-700",     icon: "👔", label: "Staff" },
   LEADERSHIP: { bg: "bg-yellow-100", text: "text-yellow-800",   icon: "👑", label: "Leadership" },
@@ -150,7 +151,7 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                   className="w-full border border-indigo-200 px-3 py-1.5 rounded-md text-sm bg-white focus:border-indigo-500 focus:outline-none"
                 >
                   <option value="">Select type</option>
-                  {(personTypes.length ? personTypes : ["ALUMNI", "STAFF", "ADMIN", "STAFF_ALUMNI", "STAFF_ADMIN", "LEADERSHIP", "GENERAL"]) 
+                  {(personTypes.length ? personTypes : ["FELLOW", "ALUMNI", "STAFF", "ADMIN", "STAFF_ALUMNI", "STAFF_ADMIN", "LEADERSHIP", "GENERAL"]) 
                     .filter((type) => {
                       if (isAdminUser) return true;
                       if (type === "ADMIN") {

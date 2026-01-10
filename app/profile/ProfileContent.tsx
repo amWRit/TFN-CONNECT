@@ -610,8 +610,8 @@ export default function ProfilePage() {
       {/* Existing header UI and Basic Information card removed; all editing is now in ProfileHeaderCard */}
 
 
-        {/* Fellowship (only for alumni-type people, including STAFF_ALUMNI) */}
-        {person.type && person.type.toUpperCase().includes("ALUMNI") && (
+        {/* Fellowship (for fellows and alumni-type people, including STAFF_ALUMNI) */}
+        {person.type && (person.type === "FELLOW" || person.type.toUpperCase().includes("ALUMNI")) && (
           <Card className="p-5 mb-4 border-2 border-purple-400 rounded-xl shadow-sm">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-blue-600 flex items-center">
