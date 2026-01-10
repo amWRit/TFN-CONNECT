@@ -145,7 +145,7 @@ export default function UserMenu() {
             <span role="img" aria-label="Bookmarks">🔖</span> My Bookmarks
           </Link>
           <button
-            onClick={() => { setOpen(false); signOut(); }}
+            onClick={() => { setOpen(false); signOut({ callbackUrl: "/" }); }}
             className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-blue-50 text-gray-700 text-sm"
           >
             <LogOut size={16} /> Logout
