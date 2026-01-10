@@ -26,11 +26,16 @@ interface Person {
 }
 
 const TABS = [
+  // Kept for potential future metadata, but options now come from enum
 	{ key: "ALL", label: "All", enabled: true },
-	{ key: "ALUMNI", label: "Alumni", enabled: true },
-	{ key: "STAFF", label: "Staff", enabled: true },
-	{ key: "LEADERSHIP", label: "Leadership Team", enabled: false },
 ];
+
+const TYPE_META: Record<string, { bg: string; text: string; icon: string; label: string }> = {
+	ALUMNI:   { bg: "bg-red-100",      text: "text-red-700",      icon: "⭐",  label: "Alumni" },
+	STAFF:    { bg: "bg-blue-100",     text: "text-blue-700",     icon: "👔", label: "Staff" },
+	LEADERSHIP: { bg: "bg-yellow-100", text: "text-yellow-800",   icon: "👑", label: "Leadership" },
+	ADMIN:    { bg: "bg-green-100",    text: "text-green-700",    icon: "🛡️", label: "Admin" },
+};
 
 export default function PeoplePage() {
 	const [people, setPeople] = useState<Person[]>([]);
@@ -40,6 +45,7 @@ export default function PeoplePage() {
 	const [empStatusFilter, setEmpStatusFilter] = useState("");
 	const [nameFilter, setNameFilter] = useState("");
 	const [allCohorts, setAllCohorts] = useState<string[]>([]);
+	const [personTypes, setPersonTypes] = useState<string[]>([]);
 	const { data: session } = useSession();
 	const [bookmarkStates, setBookmarkStates] = useState<Record<string, { bookmarked: boolean; loading: boolean }>>({});
 
@@ -60,6 +66,24 @@ export default function PeoplePage() {
 				setAllCohorts(Array.from(cohortSet));
 				setLoading(false);
 			});
+	}, []);
+
+	useEffect(() => {
+		const loadPersonTypes = async () => {
+			try {
+				const res = await fetch("/api/meta/person-types");
+				if (res.ok) {
+					const data = await res.json();
+					if (Array.isArray(data.types)) {
+						setPersonTypes(data.types);
+					}
+				}
+			} catch (err) {
+				console.error("Error fetching person types", err);
+			}
+		};
+
+		loadPersonTypes();
 	}, []);
 
 	// Fetch bookmark state for each person when session is ready
@@ -131,15 +155,18 @@ export default function PeoplePage() {
 									<Users size={18} />
 								</span>
 								<select
-									className="appearance-none pl-9 pr-12 py-2 w-40 border-2 border-blue-400 rounded-full bg-blue-100/80 font-semibold text-blue-800 focus:ring-2 focus:ring-blue-400 outline-none transition shadow-sm text-base"
+										className="appearance-none pl-9 pr-12 py-2 w-52 border-2 border-blue-400 rounded-full bg-blue-100/80 font-semibold text-blue-800 focus:ring-2 focus:ring-blue-400 outline-none transition shadow-sm text-base"
 									value={tab}
 									onChange={e => setTab(e.target.value)}
 								>
-									{TABS.map((t) => (
-										<option key={t.key} value={t.key} disabled={!t.enabled}>
-											{t.label}
-										</option>
-									))}
+										<option value="ALL">All</option>
+										{personTypes
+											.filter((t) => t !== "ADMIN")
+											.map((t) => (
+											<option key={t} value={t}>
+												{TYPE_META[t]?.label ?? t.toLowerCase().replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
+											</option>
+											))}
 								</select>
 								<span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-blue-500">
 									<svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -148,41 +175,47 @@ export default function PeoplePage() {
 						</div>
 					</div>
 					<div className="flex-1 flex justify-center">
-						<div className="bg-white/80 border border-purple-100 rounded-xl shadow-sm px-4 py-3 flex flex-row items-center gap-3">
+						<div className="bg-white/80 border border-purple-100 rounded-xl shadow-sm px-4 py-3 flex flex-row flex-wrap md:flex-nowrap items-center gap-3 w-full">
 							{tab === "ALUMNI" && (
 								<>
-									<label className="mr-2 font-semibold text-purple-700">Cohort</label>
-									<select
-										className="border border-purple-200 rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition"
-										value={cohortFilter}
-										onChange={e => setCohortFilter(e.target.value)}
-									>
-										<option value="">All</option>
-										{allCohorts.map((c) => (
-											<option key={c} value={c}>{c}</option>
-										))}
-									</select>
-									<label className="ml-4 mr-2 font-semibold text-purple-700">Employment</label>
-									<select
-										className="border border-purple-200 rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition"
-										value={empStatusFilter}
-										onChange={e => setEmpStatusFilter(e.target.value)}
-									>
-										<option value="">All</option>
-										<option value="EMPLOYED">Employed</option>
-										<option value="SEEKING">Seeking</option>
-										<option value="UNEMPLOYED">Unemployed</option>
-									</select>
+									<div className="flex items-center gap-2 w-full sm:w-auto">
+										<label className="font-semibold text-purple-700">Cohort</label>
+										<select
+											className="border border-purple-200 rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition"
+											value={cohortFilter}
+											onChange={e => setCohortFilter(e.target.value)}
+										>
+											<option value="">All</option>
+											{allCohorts.map((c) => (
+												<option key={c} value={c}>{c}</option>
+											))}
+										</select>
+									</div>
+									<div className="flex items-center gap-2 w-full sm:w-auto">
+										<label className="font-semibold text-purple-700">Employment</label>
+										<select
+											className="border border-purple-200 rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition"
+											value={empStatusFilter}
+											onChange={e => setEmpStatusFilter(e.target.value)}
+										>
+											<option value="">All</option>
+											<option value="EMPLOYED">Employed</option>
+											<option value="SEEKING">Seeking</option>
+											<option value="UNEMPLOYED">Unemployed</option>
+										</select>
+									</div>
 								</>
 							)}
-							<label className="ml-4 mr-2 font-semibold text-purple-700">Name</label>
-							<input
-								type="text"
-								className="border border-purple-200 rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition"
-								placeholder="Search by name"
-								value={nameFilter}
-								onChange={e => setNameFilter(e.target.value)}
-							/>
+							<div className="flex items-center gap-2 w-full sm:flex-1">
+								<label className="font-semibold text-purple-700">Name</label>
+								<input
+									type="text"
+									className="border border-purple-300 rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition w-full min-w-[160px]"
+									placeholder="Search by name"
+									value={nameFilter}
+									onChange={e => setNameFilter(e.target.value)}
+								/>
+							</div>
 						</div>
 					</div>
 					<div className="flex-1 flex items-center sm:justify-end justify-center"></div>
@@ -217,20 +250,25 @@ export default function PeoplePage() {
 														/>
 													</div>
 													<div className="flex-1">
-														<Badge className={`mb-2 text-xs font-semibold pointer-events-none
-															${person.type === "ALUMNI" ? "bg-red-100 text-red-700" : ""}
-															${person.type === "STAFF" ? "bg-blue-100 text-blue-700" : ""}
-															${person.type === "LEADERSHIP" ? "bg-yellow-100 text-yellow-800" : ""}
-															${person.type === "ADMIN" ? "bg-green-100 text-green-700" : ""}`}> 
-															{person.type === "ALUMNI" && <span className="text-base">⭐</span>}
-															{person.type === "STAFF" && <span className="text-base">👔</span>}
-															{person.type === "LEADERSHIP" && <span className="text-base">👑</span>}
-															{person.type === "ADMIN" && <span className="text-base">🛡️</span>}
-															{person.type === "ALUMNI" && " Alumni"}
-															{person.type === "STAFF" && " Staff"}
-															{person.type === "LEADERSHIP" && " Leadership"}
-															{person.type === "ADMIN" && " Admin"}
-														</Badge>
+														<div className="mb-2 flex flex-wrap gap-1">
+															{person.type && person.type.split("_").map((part, index) => {
+																const meta = TYPE_META[part] || {
+																	bg: "bg-gray-100",
+																	text: "text-gray-700",
+																	icon: "⭐",
+																	label: part.charAt(0) + part.slice(1).toLowerCase(),
+																};
+																return (
+																	<Badge
+																		key={`${person.id}-${index}`}
+																		className={`text-xs font-semibold pointer-events-none ${meta.bg} ${meta.text}`}
+																	>
+																		<span className="text-base mr-1">{meta.icon}</span>
+																		{meta.label}
+																	</Badge>
+																);
+															})}
+														</div>
 													</div>
 												</div>
 												{showBookmark && (

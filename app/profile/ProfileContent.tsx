@@ -34,6 +34,7 @@ interface Person {
   phone1?: string;
   phone2?: string;
   linkedin?: string;
+  website?: string;
   bio?: string;
   dob?: string;
   profileImage?: string;
@@ -51,6 +52,7 @@ interface Education {
   university?: string;
   level: string;
   name: string;
+  type?: string;
   sector?: string;
   start: string;
   end?: string;
@@ -77,7 +79,10 @@ export default function ProfilePage() {
   const params = useParams();
   const [clientReady, setClientReady] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const isSessionAdmin = !!(session && (session as any).user && (session as any).user.type === "ADMIN");
+  const isEffectiveAdmin = isAdmin || isSessionAdmin;
   const [person, setPerson] = useState<Person | null>(null);
+  const [personTypes, setPersonTypes] = useState<string[]>([]);
   // Determine if the current session user is the profile owner
   // Use useMemo to ensure isProfileOwner updates when person or session changes
   const isProfileOwner = React.useMemo(() => {
@@ -85,7 +90,7 @@ export default function ProfilePage() {
   }, [session, person]);
 
   // Only show bookmark if signed in and not profile owner
-  const showBookmark = session && session.user && !isProfileOwner;
+  const showBookmark = session && session.user && !isProfileOwner && !isEffectiveAdmin;
 
   useEffect(() => {
     if (!showBookmark || !person?.id) return;
@@ -145,14 +150,34 @@ export default function ProfilePage() {
     }
   }, []);
 
+  useEffect(() => {
+    const loadPersonTypes = async () => {
+      try {
+        const res = await fetch("/api/meta/person-types");
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.types)) {
+            setPersonTypes(data.types);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching person types", err);
+      }
+    };
+
+    loadPersonTypes();
+  }, []);
+
   // Form states
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
+    type: "",
     email2: "",
     phone1: "",
     phone2: "",
     linkedin: "",
+    website: "",
     bio: "",
     dob: "",
     eduStatus: "COMPLETED",
@@ -164,6 +189,7 @@ export default function ProfilePage() {
     university: "",
     level: "",
     name: "",
+    type: "DEGREE",
     sector: "",
     start: "",
     end: "",
@@ -220,10 +246,12 @@ export default function ProfilePage() {
         setFormData({
           firstName: data.firstName || "",
           lastName: data.lastName || "",
+          type: data.type || "",
           email2: data.email2 || "",
           phone1: data.phone1 || "",
           phone2: data.phone2 || "",
           linkedin: data.linkedin || "",
+          website: data.website || "",
           bio: data.bio || "",
           dob: data.dob ? new Date(data.dob).toISOString().split("T")[0] : "",
           eduStatus: data.eduStatus || "COMPLETED",
@@ -246,10 +274,12 @@ export default function ProfilePage() {
         setFormData({
           firstName: data.firstName || "",
           lastName: data.lastName || "",
+          type: data.type || "",
           email2: data.email2 || "",
           phone1: data.phone1 || "",
           phone2: data.phone2 || "",
           linkedin: data.linkedin || "",
+          website: data.website || "",
           bio: data.bio || "",
           dob: data.dob ? new Date(data.dob).toISOString().split("T")[0] : "",
           eduStatus: data.eduStatus || "COMPLETED",
@@ -342,7 +372,7 @@ export default function ProfilePage() {
   const handleSaveEducation = async () => {
     // Validate required fields
     if (!educationForm.institution || !educationForm.level || !educationForm.name || !educationForm.start) {
-      alert("Please fill in all required fields: Institution, Level, Degree Name, and Start Date");
+      alert("Please fill in all required fields: Institution, Level, Program/Course/Certification, and Start Date");
       return;
     }
 
@@ -382,6 +412,7 @@ export default function ProfilePage() {
           university: "",
           level: "",
           name: "",
+          type: "DEGREE",
           sector: "",
           start: "",
           end: "",
@@ -544,15 +575,17 @@ export default function ProfilePage() {
 
 
   return (
-    <div className="max-w-4xl mx-auto px-4">
+    <div className="max-w-4xl mx-auto px-4 pt-4">
       {/* New ProfileHeaderCard for reference */}
-      <div className="mb-8">
+      <div className="mb-4">
         <ProfileHeaderCard
           person={{
             ...person,
             type: person.type ?? ""
           }}
-          isProfileOwner={isProfileOwner ?? false}
+          personTypes={personTypes}
+          isAdminUser={isEffectiveAdmin}
+          isProfileOwner={!!isProfileOwner || isEffectiveAdmin}
           showBookmark={!!showBookmark}
           bookmarked={bookmarked}
           bookmarkLoading={bookmarkLoading}
@@ -566,19 +599,20 @@ export default function ProfilePage() {
             setEditing(false);
           }}
           onCancel={() => setEditing(false)}
+          canViewPhones={!!session || isEffectiveAdmin}
         />
       </div>
-      {/* Show floating ViewActivity button for admins or the profile owner */}
-      {(isAdmin || isProfileOwner) && person?.id && (
+      {/* Show floating ViewActivity button for any signed-in user, profile owners, or admins */}
+      {(isEffectiveAdmin || isProfileOwner || !!session) && person?.id && (
         <ViewActivityButton personId={person.id} />
       )}
 
       {/* Existing header UI and Basic Information card removed; all editing is now in ProfileHeaderCard */}
 
 
-      {/* Fellowship (only for alumni) */}
-      {person.type && person.type.toLowerCase() === "alumni" && (
-          <Card className="p-6 mb-6 border-2 border-purple-400 rounded-xl shadow-sm">
+        {/* Fellowship (only for alumni-type people, including STAFF_ALUMNI) */}
+        {person.type && person.type.toUpperCase().includes("ALUMNI") && (
+          <Card className="p-5 mb-4 border-2 border-purple-400 rounded-xl shadow-sm">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-blue-600 flex items-center">
                 <Users className="w-6 h-6 mr-2 text-blue-600" /> Fellowships
@@ -737,10 +771,10 @@ export default function ProfilePage() {
       )}
       
       {/* Education */}
-      <Card className="p-6 mb-6 border-2 border-green-400 rounded-xl shadow-sm">
+      <Card className="p-5 mb-4 border-2 border-green-400 rounded-xl shadow-sm">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-blue-600 flex items-center">
-            <GraduationCap className="w-6 h-6 mr-2 text-blue-600" /> Education
+            <GraduationCap className="w-6 h-6 mr-2 text-blue-600" /> Education & Certifications
           </h2>
           {/* Only show add button if signed in as user or admin and viewing own profile or as admin */}
           {!showEducationForm && (isProfileOwner || isAdmin) && (
@@ -785,7 +819,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Degree Name</label>
+                <label className="block text-sm font-medium mb-1">Program / Course / Certification</label>
                 <input
                   type="text"
                   className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -793,6 +827,21 @@ export default function ProfilePage() {
                   onChange={(e) => setEducationForm({ ...educationForm, name: e.target.value })}
                 />
               </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Type</label>
+              <select
+                className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                value={educationForm.type}
+                onChange={(e) => setEducationForm({ ...educationForm, type: e.target.value })}
+              >
+                <option value="DEGREE">Degree</option>
+                <option value="CERTIFICATION">Certification</option>
+                <option value="COURSE">Course</option>
+                <option value="WORKSHOP">Workshop</option>
+                <option value="TRAINING">Training</option>
+                <option value="OTHER">Other</option>
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Sector</label>
@@ -840,6 +889,7 @@ export default function ProfilePage() {
                     university: "",
                     level: "",
                     name: "",
+                    type: "DEGREE",
                     sector: "",
                     start: "",
                     end: "",
@@ -889,7 +939,7 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Degree Name</label>
+                      <label className="block text-sm font-medium mb-1">Program / Course / Certification</label>
                       <input
                         type="text"
                         className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -897,6 +947,21 @@ export default function ProfilePage() {
                         onChange={(e) => setEducationForm({ ...educationForm, name: e.target.value })}
                       />
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Type</label>
+                    <select
+                      className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      value={educationForm.type}
+                      onChange={(e) => setEducationForm({ ...educationForm, type: e.target.value })}
+                    >
+                      <option value="DEGREE">Degree</option>
+                      <option value="CERTIFICATION">Certification</option>
+                      <option value="COURSE">Course</option>
+                      <option value="WORKSHOP">Workshop</option>
+                      <option value="TRAINING">Training</option>
+                      <option value="OTHER">Other</option>
+                    </select>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -934,6 +999,7 @@ export default function ProfilePage() {
                           university: "",
                           level: "",
                           name: "",
+                          type: "DEGREE",
                           sector: "",
                           start: "",
                           end: "",
@@ -949,6 +1015,13 @@ export default function ProfilePage() {
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="font-semibold">{edu.name}</div>
+                    {edu.type && (
+                      <div className="mt-1 mb-1">
+                        <span className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800">
+                          {edu.type.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                        </span>
+                      </div>
+                    )}
                     <div className="text-sm text-gray-600">{edu.institution}</div>
                     {edu.university && <div className="text-sm text-gray-600">{edu.university}</div>}
                     <div className="text-sm text-gray-500">
@@ -968,6 +1041,7 @@ export default function ProfilePage() {
                             university: edu.university || "",
                             level: edu.level,
                             name: edu.name,
+                            type: edu.type || "DEGREE",
                             sector: edu.sector || "",
                             start: new Date(edu.start).toISOString().split("T")[0],
                             end: edu.end ? new Date(edu.end).toISOString().split("T")[0] : "",
@@ -997,7 +1071,7 @@ export default function ProfilePage() {
       </Card>
 
       {/* Experience */}
-      <Card className="p-6 border-2 border-orange-400 rounded-xl shadow-sm">
+      <Card className="p-5 border-2 border-orange-400 rounded-xl shadow-sm mt-4">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-blue-600 flex items-center">
             <Briefcase className="w-6 h-6 mr-2 text-blue-600" /> Experience

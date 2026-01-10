@@ -5,6 +5,13 @@ import { Bookmark, BookmarkCheck, Edit2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import React from "react";
 
+const TYPE_META: Record<string, { bg: string; text: string; icon: string; label: string }> = {
+  ALUMNI:   { bg: "bg-red-100",      text: "text-red-700",      icon: "⭐",  label: "Alumni" },
+  STAFF:    { bg: "bg-blue-100",     text: "text-blue-700",     icon: "👔", label: "Staff" },
+  LEADERSHIP: { bg: "bg-yellow-100", text: "text-yellow-800",   icon: "👑", label: "Leadership" },
+  ADMIN:    { bg: "bg-green-100",    text: "text-green-700",    icon: "🛡️", label: "Admin" },
+};
+
 interface Education {
   id: string;
   name: string;
@@ -37,10 +44,13 @@ interface ProfileHeaderCardProps {
     phone1?: string;
     phone2?: string;
     linkedin?: string;
+    website?: string;
     educations?: Education[];
     experiences?: Experience[];
     eduStatus?: string;
   };
+  personTypes?: string[];
+  isAdminUser?: boolean;
   isProfileOwner?: boolean;
   showBookmark?: boolean;
   bookmarked?: boolean;
@@ -52,10 +62,13 @@ interface ProfileHeaderCardProps {
   onFormChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   onSave?: () => void;
   onCancel?: () => void;
+  canViewPhones?: boolean;
 }
 
 const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
   person,
+  personTypes = [],
+  isAdminUser = false,
   isProfileOwner = false,
   showBookmark = false,
   bookmarked = false,
@@ -67,12 +80,15 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
   onFormChange,
   onSave,
   onCancel,
+  canViewPhones = false,
 }) => {
+
+  const canSeeContacts = !!canViewPhones;
 
   if (editing && isProfileOwner && formData && onFormChange && onSave && onCancel) {
     // Improved Edit mode UI
     return (
-      <Card className="bg-white border-2 border-indigo-500 shadow-lg rounded-xl overflow-hidden mb-8 relative">
+      <Card className="bg-white border-2 border-indigo-500 shadow-lg rounded-xl overflow-hidden mb-4 relative">
         {/* Save/Cancel Buttons */}
         <div className="absolute top-4 right-4 z-10 flex gap-2">
           <button
@@ -85,7 +101,7 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
           <button
             aria-label="Cancel"
             onClick={onCancel}
-            className="px-4 py-2 rounded-md font-semibold shadow transition-colors duration-200 border-2 border-red-600 text-red-600 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-200"
+            className="px-4 py-2 rounded-md font-semibold shadow transition-colors duration-200 border-2 border-red-600 text-red-600 bg-white hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-200"
           >
             Cancel
           </button>
@@ -119,31 +135,48 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                   placeholder="Last Name"
                 />
               </div>
-              <div className="flex items-center gap-2 flex-wrap mt-2">
-                <Badge className="text-xs font-semibold bg-red-100 text-red-700 pointer-events-none">⭐ {person.type}</Badge>
-              </div>
             </div>
           </div>
         </div>
-        <div className="relative px-6 sm:px-8 pt-6 pb-8 bg-slate-50">
+        <div className="relative px-6 sm:px-8 pt-6 pb-6 bg-slate-50">
           <div className="flex flex-col gap-6">
             <div className="flex-1">
-              <label className="block text-sm font-medium mb-1 text-gray-700">Bio</label>
-              <label className="block text-sm font-medium mb-1 text-blue-700 flex items-center gap-2">
-                <Info className="w-5 h-5 text-blue-500" /> Bio
-              </label>
-              <div className="rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 mb-5 flex items-start gap-2">
-                <Info className="w-5 h-5 mt-1 text-blue-400 flex-shrink-0" />
-                <textarea
-                  name="bio"
-                  value={formData.bio}
+              <div className="mb-3">
+                <label className="block text-sm font-medium mb-1 text-gray-700">Person Type</label>
+                <select
+                  name="type"
+                  value={formData.type || ""}
                   onChange={onFormChange}
-                  rows={3}
-                  className="text-gray-700 text-base leading-relaxed w-full border-0 bg-transparent outline-none resize-none"
-                  placeholder="Share a short bio about yourself..."
-                  maxLength={300}
-                />
+                  className="w-full border border-indigo-200 px-3 py-1.5 rounded-md text-sm bg-white focus:border-indigo-500 focus:outline-none"
+                >
+                  <option value="">Select type</option>
+                  {(personTypes.length ? personTypes : ["ALUMNI", "STAFF", "ADMIN", "STAFF_ALUMNI", "STAFF_ADMIN", "LEADERSHIP", "GENERAL"]) 
+                    .filter((type) => {
+                      if (isAdminUser) return true;
+                      if (type === "ADMIN") {
+                        // For non-admins, only show ADMIN if it's the current value
+                        return formData.type === type;
+                      }
+                      // ALUMNI and other types remain visible for everyone
+                      return true;
+                    })
+                    .map((type) => (
+                    <option key={type} value={type}>
+                      {type.charAt(0) + type.slice(1).toLowerCase()}
+                    </option>
+                  ))}
+                </select>
               </div>
+              <label className="block text-sm font-medium mb-1 text-gray-700">Bio</label>
+              <textarea
+                name="bio"
+                value={formData.bio}
+                onChange={onFormChange}
+                rows={3}
+                className="w-full border border-blue-200 px-3 py-2 rounded-md text-sm text-gray-700 leading-relaxed bg-white focus:border-blue-400 focus:outline-none resize-none mb-5"
+                placeholder="Share a short bio about yourself..."
+                maxLength={300}
+              />
               {/* Two-column Info Layout */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 mb-4 text-sm">
                 {/* Email1 (read-only) */}
@@ -205,10 +238,17 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                     placeholder="LinkedIn URL"
                   />
                 </div>
-                {/* Website (static) */}
+                {/* Website */}
                 <div className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-gray-600 mb-1">Website</label>
-                  <a href="https://www.teachfornepal.org" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">www.teachfornepal.org</a>
+                  <input
+                    type="url"
+                    name="website"
+                    value={formData.website}
+                    onChange={onFormChange}
+                    className="border border-blue-200 px-2 py-1 rounded w-full focus:border-blue-400 focus:outline-none"
+                    placeholder="Website URL"
+                  />
                 </div>
                 {/* Education Status */}
                 <div className="flex flex-col gap-1">
@@ -248,7 +288,7 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
 
   // View mode UI (default)
   return (
-    <Card className="bg-white border-2 border-indigo-500 shadow-lg rounded-3xl overflow-hidden mb-8 relative">
+    <Card className="bg-white border-2 border-indigo-500 shadow-lg rounded-3xl overflow-hidden mb-4 relative">
       {/* Edit Button if profile owner, else Bookmark Button */}
       {isProfileOwner ? (
         <div className="group absolute top-4 right-4 z-10">
@@ -290,7 +330,23 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
               {person.firstName} {person.lastName}
             </h1>
             <div className="flex items-center gap-2 flex-wrap">
-              <Badge className="text-xs font-semibold bg-red-100 text-red-700 pointer-events-none">⭐ {person.type}</Badge>
+            {person.type && person.type.split("_").map((part, index) => {
+              const meta = TYPE_META[part] || {
+                bg: "bg-gray-100",
+                text: "text-gray-700",
+                icon: "⭐",
+                label: part.charAt(0) + part.slice(1).toLowerCase(),
+              };
+              return (
+                <Badge
+                  key={`${person.id}-${index}`}
+                  className={`text-xs font-semibold pointer-events-none ${meta.bg} ${meta.text}`}
+                >
+                  <span className="text-base mr-1">{meta.icon}</span>
+                  {meta.label}
+                </Badge>
+              );
+            })}
               <Badge className="text-xs font-semibold bg-red-100 text-red-700 pointer-events-none">
                 {person.empStatus === "EMPLOYED" && "✓ Employed"}
                 {person.empStatus === "SEEKING" && "🔍 Seeking"}
@@ -299,7 +355,7 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
           </div>
         </div>
       </div>
-      <div className="relative px-6 sm:px-8 pt-6 pb-8">
+      <div className="relative px-6 sm:px-8 pt-6 pb-6">
         <div className="flex flex-col gap-6">
           <div className="flex-1">
             {person.bio && (
@@ -310,26 +366,39 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
             )}
             {/* Info Grid */}
             <div className="mb-4 text-sm">
+              {!canSeeContacts && (
+                <div className="mb-3 text-xs text-gray-500">
+                  To connect with this person, sign in or contact the Admin.
+                </div>
+              )}
               {/* Each info pair in its own row, two columns per row */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2">
-                {/* Row 1: Email */}
-                <div className="flex items-center gap-2">
-                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-500" viewBox="0 0 24 24"><path d="M4 4h16v16H4z" stroke="none"/><path d="M22 6l-10 7L2 6" /><rect x="2" y="6" width="20" height="12" rx="2" /></svg>
-                  <span>{person.email1 || <span className="text-gray-400">--</span>}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-500" viewBox="0 0 24 24"><path d="M4 4h16v16H4z" stroke="none"/><path d="M22 6l-10 7L2 6" /><rect x="2" y="6" width="20" height="12" rx="2" /></svg>
-                  <span>{person.email2 || <span className="text-gray-400">--</span>}</span>
-                </div>
-                {/* Row 2: Phone */}
-                <div className="flex items-center gap-2">
-                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-500" viewBox="0 0 24 24"><path d="M22 16.92V19a2 2 0 0 1-2 2A18 18 0 0 1 3 5a2 2 0 0 1 2-2h2.09a2 2 0 0 1 2 1.72c.13.81.28 1.6.47 2.36a2 2 0 0 1-.45 2.11l-.27.27a16 16 0 0 0 6.29 6.29l.27-.27a2 2 0 0 1 2.11-.45c.76.19 1.55.34 2.36.47A2 2 0 0 1 22 16.92z" /></svg>
-                  <span>{person.phone1 || <span className="text-gray-400">--</span>}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-500" viewBox="0 0 24 24"><path d="M22 16.92V19a2 2 0 0 1-2 2A18 18 0 0 1 3 5a2 2 0 0 1 2-2h2.09a2 2 0 0 1 2 1.72c.13.81.28 1.6.47 2.36a2 2 0 0 1-.45 2.11l-.27.27a16 16 0 0 0 6.29 6.29l.27-.27a2 2 0 0 1 2.11-.45c.76.19 1.55.34 2.36.47A2 2 0 0 1 22 16.92z" /></svg>
-                  <span>{person.phone2 || <span className="text-gray-400">--</span>}</span>
-                </div>
+                {/* Row 1: Email (only if allowed) */}
+                {canSeeContacts && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-500" viewBox="0 0 24 24"><path d="M4 4h16v16H4z" stroke="none"/><path d="M22 6l-10 7L2 6" /><rect x="2" y="6" width="20" height="12" rx="2" /></svg>
+                      <span>{person.email1 || <span className="text-gray-400">--</span>}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-500" viewBox="0 0 24 24"><path d="M4 4h16v16H4z" stroke="none"/><path d="M22 6l-10 7L2 6" /><rect x="2" y="6" width="20" height="12" rx="2" /></svg>
+                      <span>{person.email2 || <span className="text-gray-400">--</span>}</span>
+                    </div>
+                  </>
+                )}
+                {/* Row 2: Phone (only if allowed) */}
+                {canSeeContacts && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-500" viewBox="0 0 24 24"><path d="M22 16.92V19a2 2 0 0 1-2 2A18 18 0 0 1 3 5a2 2 0 0 1 2-2h2.09a2 2 0 0 1 2 1.72c.13.81.28 1.6.47 2.36a2 2 0 0 1-.45 2.11l-.27.27a16 16 0 0 0 6.29 6.29l.27-.27a2 2 0 0 1 2.11-.45c.76.19 1.55.34 2.36.47A2 2 0 0 1 22 16.92z" /></svg>
+                      <span>{person.phone1 || <span className="text-gray-400">--</span>}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-500" viewBox="0 0 24 24"><path d="M22 16.92V19a2 2 0 0 1-2 2A18 18 0 0 1 3 5a2 2 0 0 1 2-2h2.09a2 2 0 0 1 2 1.72c.13.81.28 1.6.47 2.36a2 2 0 0 1-.45 2.11l-.27.27a16 16 0 0 0 6.29 6.29l.27-.27a2 2 0 0 1 2.11-.45c.76.19 1.55.34 2.36.47A2 2 0 0 1 22 16.92z" /></svg>
+                      <span>{person.phone2 || <span className="text-gray-400">--</span>}</span>
+                    </div>
+                  </>
+                )}
                 {/* Row 3: LinkedIn & Web */}
                 <div className="flex items-center gap-2">
                   <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-700" viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z" /><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" /></svg>
@@ -341,7 +410,23 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                 </div>
                 <div className="flex items-center gap-2">
                   <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-700" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z" /></svg>
-                  <a href="https://www.teachfornepal.org" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">www.teachfornepal.org</a>
+                  {person.website ? (() => {
+                    const url = person.website.startsWith("http://") || person.website.startsWith("https://")
+                      ? person.website
+                      : `https://${person.website}`;
+                    return (
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline break-all"
+                      >
+                        {person.website}
+                      </a>
+                    );
+                  })() : (
+                    <span className="text-gray-400">--</span>
+                  )}
                 </div>
                 {/* Row 4: Employment Status & Education Status (side by side, aligned) */}
                 <div className="contents">

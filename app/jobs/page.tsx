@@ -92,7 +92,7 @@ export default function JobsPage() {
           <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="w-full flex justify-center">
               {/* Filter container: allow wrap and make children full-width on small screens */}
-              <div className="bg-white/80 border border-blue-100 rounded-xl shadow-sm px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3 flex-wrap w-full">
+              <div className="bg-white/80 border border-blue-100 rounded-xl shadow-sm px-4 py-3 flex flex-row flex-wrap items-center gap-3 w-full">
                 <div className="w-full sm:w-auto">
                   <label className="block sm:inline mr-2 font-semibold text-blue-700">Type</label>
                   <select
@@ -127,7 +127,7 @@ export default function JobsPage() {
                     <option value="DRAFT">Draft</option>
                   </select>
                 </div>
-                <div className="w-full sm:min-w-[220px] flex items-center gap-2">
+                <div className="flex-1 min-w-[220px] flex items-center gap-2">
                   <label className="block sm:inline font-semibold text-blue-700 whitespace-nowrap">Skills</label>
                   <div className="flex-1 min-w-0">
                     <Select

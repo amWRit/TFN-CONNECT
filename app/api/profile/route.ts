@@ -142,10 +142,12 @@ export async function PATCH(request: NextRequest) {
       data: {
         firstName: body.firstName,
         lastName: body.lastName,
+        type: body.type ?? existingPerson.type,
         phone1: body.phone1,
         phone2: body.phone2,
         email2: body.email2,
         linkedin: body.linkedin,
+        website: body.website,
         bio: body.bio,
         dob: body.dob ? new Date(body.dob) : null,
         eduStatus: body.eduStatus,

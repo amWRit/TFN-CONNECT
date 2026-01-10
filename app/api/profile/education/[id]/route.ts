@@ -42,6 +42,7 @@ export async function PATCH(
     if (body.university !== undefined) updateData.university = body.university;
     if (body.level !== undefined) updateData.level = body.level;
     if (body.name !== undefined) updateData.name = body.name;
+    if (body.type !== undefined) updateData.type = body.type;
     if (body.sector !== undefined) updateData.sector = body.sector;
     
     // Validate and parse start date

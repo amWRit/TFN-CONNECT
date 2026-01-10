@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import NotFound from "@/components/NotFound";
 import { ProfileImage } from "@/components/ProfileImage";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Trash2, Mail, Phone } from "lucide-react";
 import { JobPostingCard } from "@/components/JobPostingCard";
 import OpportunityCard from "@/components/OpportunityCard";
@@ -15,6 +16,13 @@ import { PostCard } from "@/components/PostCard";
 import { EditPostModal } from "@/components/EditPostModal";
 import Link from "next/link";
 import { PostType } from "@prisma/client";
+
+const TYPE_META: Record<string, { bg: string; text: string; icon: string; label: string }> = {
+  ALUMNI:   { bg: "bg-red-100",      text: "text-red-700",      icon: "⭐",  label: "Alumni" },
+  STAFF:    { bg: "bg-blue-100",     text: "text-blue-700",     icon: "👔", label: "Staff" },
+  LEADERSHIP: { bg: "bg-yellow-100", text: "text-yellow-800",   icon: "👑", label: "Leadership" },
+  ADMIN:    { bg: "bg-green-100",    text: "text-green-700",    icon: "🛡️", label: "Admin" },
+};
 
 export default function ProfileActivityPage() {
   const params = useParams();
@@ -631,12 +639,25 @@ export default function ProfileActivityPage() {
                   <div className="flex items-center gap-3">
                     <div className="text-xl font-bold text-blue-700 truncate">{profile.firstName} {profile.lastName}</div>
                     {profile.type && (
-                      <span className="flex items-center gap-2 ml-2 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200 uppercase tracking-wide">
-                        <span className="text-sm">
-                          {profile.type === 'ALUMNI' ? '⭐' : profile.type === 'STAFF' ? '👔' : profile.type === 'LEADERSHIP' ? '👑' : profile.type === 'ADMIN' ? '🛡️' : '👤'}
-                        </span>
-                        <span className="truncate">{String(profile.type).charAt(0) + String(profile.type).slice(1).toLowerCase()}</span>
-                      </span>
+                      <div className="flex flex-wrap gap-1 ml-1">
+                        {String(profile.type).split("_").map((part, index) => {
+                          const meta = TYPE_META[part] || {
+                            bg: "bg-gray-100",
+                            text: "text-gray-700",
+                            icon: "⭐",
+                            label: part.charAt(0) + part.slice(1).toLowerCase(),
+                          };
+                          return (
+                            <Badge
+                              key={`${profile.id}-${index}`}
+                              className={`text-xs font-semibold pointer-events-none ${meta.bg} ${meta.text}`}
+                            >
+                              <span className="text-sm mr-1">{meta.icon}</span>
+                              {meta.label}
+                            </Badge>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
                   {/* Email and phone on the next line with icons */}
