@@ -49,6 +49,7 @@ export async function GET(request: Request) {
   const categorized = {
     people: bookmarks.filter(b => b.type === "PERSON"),
     jobs: bookmarks.filter(b => b.type === "JOB_POSTING"),
+    opportunities: bookmarks.filter(b => b.type === "OPPORTUNITY"),
     posts: bookmarks.filter(b => b.type === "POST"),
     jobApplications: bookmarks.filter(b => b.type === "JOB_APPLICATION"),
   };

@@ -47,6 +47,7 @@ export default function ProfileActivityPage() {
   const [personDetails, setPersonDetails] = useState<Record<string, any>>({});
   const [jobDetails, setJobDetails] = useState<Record<string, any>>({});
   const [postDetails, setPostDetails] = useState<Record<string, any>>({});
+  const [opportunityDetails, setOpportunityDetails] = useState<Record<string, any>>({});
   const [bmLoading, setBmLoading] = useState(false);
   const [bmError, setBmError] = useState<string | null>(null);
 
@@ -213,6 +214,27 @@ export default function ProfileActivityPage() {
               setPostDetails(map);
             }
           }
+          // Fetch opportunity details for opportunity bookmarks
+          if (data.opportunities && data.opportunities.length > 0) {
+            const oppIds: string[] = Array.from(new Set(data.opportunities.map((b: any) => b.targetId)));
+            try {
+              const results = await Promise.all(
+                oppIds.map(async (oid) => {
+                  const res = await fetch(`/api/opportunities/${oid}`);
+                  if (!res.ok) return null;
+                  const opp = await res.json();
+                  return opp && opp.id ? opp : null;
+                })
+              );
+              const map: Record<string, any> = {};
+              results.forEach((opp) => {
+                if (opp && opp.id) map[opp.id] = opp;
+              });
+              setOpportunityDetails(map);
+            } catch (e) {
+              // swallow errors here; bookmarks UI will fall back to IDs
+            }
+          }
         }
       } catch (err: any) {
         setBmError(err.message || "Unknown error");
@@ -268,23 +290,24 @@ export default function ProfileActivityPage() {
       if (bmLoading) return <div className="text-center text-gray-500">Loading bookmarks...</div>;
       if (bmError) return <div className="text-center text-red-500">{bmError}</div>;
       return bookmarks && Object.keys(bookmarks).length > 0 ? (
-        <div className="space-y-10">
-          {['people', 'jobs', 'posts'].filter(type => bookmarks[type]?.length > 0).map(type => {
-            const items = bookmarks[type];
+        <div className="space-y-6">
+          {(["people", "jobs", "opportunities", "posts"] as const).filter(type => (bookmarks as any)[type]?.length > 0).map(type => {
+            const items = (bookmarks as any)[type];
             let border = "border-blue-400", label = "text-blue-700";
             if (type === "jobs") { border = "border-green-400"; label = "text-green-700"; }
             if (type === "posts") { border = "border-purple-400"; label = "text-purple-700"; }
+            if (type === "opportunities") { border = "border-orange-400"; label = "text-orange-700"; }
             return (
-              <section key={type} className={`rounded-xl border-2 ${border} bg-blue-50 px-6 py-5 shadow-sm`}>
-                <h2 className={`text-xl font-semibold mb-4 capitalize ${border} ${label}`}>{type.replace(/([A-Z])/g, ' $1')}</h2>
+              <section key={type} className={`rounded-xl border-2 ${border} bg-blue-50 px-4 py-4 shadow-sm`}>
+                <h2 className={`text-lg font-semibold mb-3 capitalize ${border} ${label}`}>{type.replace(/([A-Z])/g, ' $1')}</h2>
                 {Array.isArray(items) && items.length > 0 ? (
-                  <div className="grid gap-4">
+                  <div className="grid gap-3">
                     {type === "people"
                       ? items.map((bm) => {
                           const person = personDetails[bm.targetId];
                           return (
-                            <Card key={bm.id} className="flex items-center gap-4 p-4 hover:shadow-lg transition-shadow bg-white border-l-4 border-blue-300">
-                              <CardHeader className="flex flex-row items-center gap-4 p-0 pr-4 bg-transparent w-full">
+                            <Card key={bm.id} className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-blue-300">
+                              <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
                                 {person ? (
                                   <ProfileImage
                                     src={person.profileImage}
@@ -358,7 +381,7 @@ export default function ProfileActivityPage() {
                                 )}
                               </div>
                             ) : (
-                              <Card key={bm.id} className="p-4 bg-white border-l-4 border-purple-300 flex items-center">
+                              <Card key={bm.id} className="p-3 bg-white border-l-4 border-purple-300 flex items-center">
                                 <CardHeader className="p-0 flex-1">
                                   <CardTitle className="text-lg font-semibold text-purple-700">
                                     <span>Post ID: {bm.targetId}</span>
@@ -378,40 +401,77 @@ export default function ProfileActivityPage() {
                               </Card>
                             );
                           })
-                        : items.map((bm: any) => {
-                            const job = jobDetails[bm.targetId];
-                            return (
-                              <Card key={bm.id} className="flex items-center gap-4 p-4 hover:shadow-lg transition-shadow bg-white border-l-4 border-green-300">
-                                <CardHeader className="flex flex-row items-center gap-4 p-0 pr-4 bg-transparent w-full">
-                                  <CardTitle className="text-lg font-semibold text-green-700 flex-1 flex items-center gap-2">
-                                    {job ? (
-                                      <>
-                                        <Link href={`/jobs/${job.id}`} className="hover:underline">
-                                          {job.title}
-                                        </Link>
-                                        <span className="ml-2 px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold uppercase">
-                                          {job.jobType.replace(/_/g, ' ')}
-                                        </span>
-                                      </>
-                                    ) : (
-                                      <span>Job ID: {bm.targetId}</span>
+                        : type === "jobs"
+                          ? items.map((bm: any) => {
+                              const job = jobDetails[bm.targetId];
+                              return (
+                                <Card key={bm.id} className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-green-300">
+                                  <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
+                                    <CardTitle className="text-lg font-semibold text-green-700 flex-1 flex items-center gap-2">
+                                      {job ? (
+                                        <>
+                                          <Link href={`/jobs/${job.id}`} className="hover:underline">
+                                            {job.title}
+                                          </Link>
+                                          <span className="ml-2 px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold uppercase">
+                                            {job.jobType.replace(/_/g, ' ')}
+                                          </span>
+                                        </>
+                                      ) : (
+                                        <span>Job ID: {bm.targetId}</span>
+                                      )}
+                                    </CardTitle>
+                                    {isProfileOwner && (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-red-500 hover:bg-red-100 ml-2 self-start"
+                                        title="Remove bookmark"
+                                        onClick={() => handleDelete(bm, type)}
+                                      >
+                                        <Trash2 />
+                                      </Button>
                                     )}
-                                  </CardTitle>
-                                  {isProfileOwner && (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="text-red-500 hover:bg-red-100 ml-2 self-start"
-                                      title="Remove bookmark"
-                                      onClick={() => handleDelete(bm, type)}
-                                    >
-                                      <Trash2 />
-                                    </Button>
-                                  )}
-                                </CardHeader>
-                              </Card>
-                            );
-                          })}
+                                  </CardHeader>
+                                </Card>
+                              );
+                            })
+                          : items.map((bm: any) => {
+                              const opp = opportunityDetails[bm.targetId];
+                              return (
+                                <Card key={bm.id} className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-orange-300">
+                                  <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
+                                    <CardTitle className="text-lg font-semibold text-orange-700 flex-1 flex items-center gap-2">
+                                      {opp ? (
+                                        <>
+                                          <Link href={`/opportunities/${opp.id}`} className="hover:underline">
+                                            {opp.title || "Untitled Opportunity"}
+                                          </Link>
+                                          {opp.status && (
+                                            <span className="ml-2 px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-xs font-semibold uppercase">
+                                              {opp.status}
+                                            </span>
+                                          )}
+                                        </>
+                                      ) : (
+                                        <span>Opportunity ID: {bm.targetId}</span>
+                                      )}
+                                    </CardTitle>
+                                    {isProfileOwner && (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-red-500 hover:bg-red-100 ml-2 self-start"
+                                        title="Remove bookmark"
+                                        onClick={() => handleDelete(bm, type)}
+                                      >
+                                        <Trash2 />
+                                      </Button>
+                                    )}
+                                  </CardHeader>
+                                </Card>
+                              );
+                            })}
                   </div>
                 ) : (
                   <p className="text-gray-500">No bookmarks in this category.</p>
@@ -437,6 +497,9 @@ export default function ProfileActivityPage() {
     } else if (type === "posts") {
       url += "post";
       body = { targetPostId: bm.targetId };
+    } else if (type === "opportunities") {
+      url += "opportunity";
+      body = { targetOpportunityId: bm.targetId };
     } else {
       alert("Unbookmarking for this type is not implemented yet.");
       return;
@@ -462,9 +525,9 @@ export default function ProfileActivityPage() {
 
   if (notFound) return <NotFound />;
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 py-4">
       {/* Profile Header Card */}
-      <div className="mb-4">  {/* reduced bottom margin */}
+      <div className="mb-2">  {/* reduced bottom margin */}
         {profile && (
           <div className="rounded-xl border-2 border-blue-400 bg-white shadow p-4 flex items-center gap-4"> {/* reduced padding and gap */}
             <ProfileImage src={profile.profileImage} name={profile.firstName + ' ' + profile.lastName} className="h-20 w-20" alt={profile.firstName + ' ' + profile.lastName} /> {/* smaller image */}
@@ -489,10 +552,10 @@ export default function ProfileActivityPage() {
                       <Mail className="text-gray-500" size={14} aria-hidden />
                       <span className="truncate">{profile.email1 || profile.email || 'No email provided'}</span>
                     </div>
-                    {profile.phone && (
+                    {(profile.phone1 || profile.phone) && (
                       <div className="flex items-center gap-2 text-sm text-gray-600 min-w-0 truncate">
                         <Phone className="text-gray-500" size={14} aria-hidden />
-                        <span className="truncate">{profile.phone}</span>
+                        <span className="truncate">{profile.phone1 || profile.phone}</span>
                       </div>
                     )}
                   </div>
@@ -504,7 +567,7 @@ export default function ProfileActivityPage() {
       </div>
       {/* Activity Tabs */}
       <div>
-        <div className="flex gap-4 border-b mb-6">
+        <div className="flex gap-4 border-b mb-3">
           {tabs.map(t => (
             <button
               key={t.key}
@@ -518,7 +581,7 @@ export default function ProfileActivityPage() {
 
         {/* Post Type Filter (shown only when Posts tab is active) */}
         {tab === 'posts' && (
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-end mb-2">
             <div className="flex items-center gap-3">
               <label className="hidden sm:inline font-semibold text-blue-700">Type</label>
               <select
@@ -537,7 +600,7 @@ export default function ProfileActivityPage() {
 
         {/* Jobs Filter (shown only when Jobs tab is active) - styled like Posts filter */}
         {tab === 'jobs' && (
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-end mb-2">
             <div className="flex items-center gap-3">
               <label className="hidden sm:inline font-semibold text-blue-700">Type</label>
               <select
@@ -581,7 +644,7 @@ export default function ProfileActivityPage() {
 
         {/* Opportunities Filter (shown only when Opportunities tab is active) - styled like Posts filter */}
         {tab === 'opportunities' && (
-          <div className="flex justify-end mb-4">
+          <div className="flex justify-end mb-2">
             <div className="flex items-center gap-3">
               <label className="hidden sm:inline font-semibold text-blue-700">Type</label>
               <select
@@ -608,7 +671,7 @@ export default function ProfileActivityPage() {
           </div>
         )}
 
-        <div className="bg-white rounded-xl shadow p-6 min-h-[200px]">
+        <div className="bg-white rounded-xl shadow p-4 min-h-[200px]">
           {renderTabContent()}
         </div>
       </div>
