@@ -18,9 +18,14 @@ datasource db {
 
 // ===== ENUMS =====
 enum PersonType {
+  FELLOW
   ALUMNI
   STAFF
   ADMIN
+  STAFF_ADMIN
+  STAFF_ALUMNI
+  LEADERSHIP 
+  GENERAL
 }
 
 enum EduStatus {
@@ -33,6 +38,15 @@ enum EmpStatus {
   SEEKING
   EMPLOYED
   UNEMPLOYED
+}
+
+enum EducationType {
+  DEGREE
+  CERTIFICATION
+  COURSE
+  WORKSHOP
+  TRAINING
+  OTHER
 }
 
 enum SchoolType {
@@ -133,6 +147,7 @@ model Person {
   email1         String           @unique
   email2         String?
   linkedin       String?
+  website        String?
   profileImage   String?
   bio            String?
   
@@ -180,6 +195,7 @@ model Education {
   university  String?
   level       String   // "Bachelors", "Fellowship"
   name        String   // "Bachelor of Education"
+  type        EducationType @default(DEGREE)
   sector      String?
   start       DateTime
   end         DateTime?
@@ -363,6 +379,7 @@ enum BookmarkType {
   JOB_POSTING
   POST
   JOB_APPLICATION
+  OPPORTUNITY
 }
 
 model Bookmark {

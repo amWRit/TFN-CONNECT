@@ -32,6 +32,7 @@ export default function JobsPage() {
   const [jobs, setJobs] = useState<JobPosting[]>([])
   const [loading, setLoading] = useState(true)
   const { data: session, status } = useSession();
+  const [isAdminView, setIsAdminView] = useState(false);
   const [skillMap, setSkillMap] = useState<Record<string, string>>({});
   const [showOnlyMine, setShowOnlyMine] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>("");
@@ -59,6 +60,14 @@ export default function JobsPage() {
     fetchData();
   }, []);
 
+  // Determine admin view (NextAuth ADMIN or localStorage bypass admin)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const localAdmin = localStorage.getItem("adminAuth") === "true";
+    const sessionIsAdmin = !!(session && (session as any).user && (session as any).user.type === "ADMIN");
+    setIsAdminView(localAdmin || sessionIsAdmin);
+  }, [session]);
+
 
   if (loading) {
     return (
@@ -82,11 +91,12 @@ export default function JobsPage() {
           </div>
           <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="w-full flex justify-center">
-              <div className="bg-white/80 border border-blue-100 rounded-xl shadow-sm px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
-                <div>
-                  <label className="mr-2 font-semibold text-blue-700">Type</label>
+              {/* Filter container: allow wrap and make children full-width on small screens */}
+              <div className="bg-white/80 border border-blue-100 rounded-xl shadow-sm px-4 py-3 flex flex-row flex-wrap items-center gap-3 w-full">
+                <div className="w-full sm:w-auto">
+                  <label className="block sm:inline mr-2 font-semibold text-blue-700">Type</label>
                   <select
-                    className="border border-blue-200 rounded px-2 py-1 focus:ring-2 focus:ring-blue-300 outline-none transition"
+                    className="w-full sm:w-auto border border-blue-200 rounded px-2 py-1 focus:ring-2 focus:ring-blue-300 outline-none transition"
                     value={typeFilter}
                     onChange={e => setTypeFilter(e.target.value)}
                   >
@@ -102,10 +112,10 @@ export default function JobsPage() {
                     <option value="HYBRID">Hybrid</option>
                   </select>
                 </div>
-                <div>
-                  <label className="mr-2 font-semibold text-blue-700">Status</label>
+                <div className="w-full sm:w-auto">
+                  <label className="block sm:inline mr-2 font-semibold text-blue-700">Status</label>
                   <select
-                    className="border border-blue-200 rounded px-2 py-1 focus:ring-2 focus:ring-blue-300 outline-none transition"
+                    className="w-full sm:w-auto border border-blue-200 rounded px-2 py-1 focus:ring-2 focus:ring-blue-300 outline-none transition"
                     value={statusFilter}
                     onChange={e => setStatusFilter(e.target.value)}
                   >
@@ -117,9 +127,9 @@ export default function JobsPage() {
                     <option value="DRAFT">Draft</option>
                   </select>
                 </div>
-                <div className="min-w-[180px] flex items-center gap-2">
-                  <label className="font-semibold text-blue-700 whitespace-nowrap">Skills</label>
-                  <div className="flex-1 min-w-[120px]">
+                <div className="flex-1 min-w-[220px] flex items-center gap-2">
+                  <label className="block sm:inline font-semibold text-blue-700 whitespace-nowrap">Skills</label>
+                  <div className="flex-1 min-w-0">
                     <Select
                       isMulti
                       options={allSkills}
@@ -127,14 +137,17 @@ export default function JobsPage() {
                       onChange={(newValue) => setSkillsFilter(Array.isArray(newValue) ? [...newValue] : [])}
                       classNamePrefix="react-select"
                       placeholder="All"
-                      styles={{ menu: base => ({ ...base, zIndex: 9999 }), control: base => ({ ...base, minHeight: '32px', borderColor: '#bfdbfe', boxShadow: 'none' }) }}
+                      styles={{
+                        menu: base => ({ ...base, zIndex: 9999 }),
+                        control: base => ({ ...base, minHeight: '32px', borderColor: '#bfdbfe', boxShadow: 'none', width: '100%' })
+                      }}
                     />
                   </div>
                 </div>
               </div>
             </div>
             {session?.user && (
-              <div className="flex-1 flex justify-end">
+              <div className="flex-1 flex justify-end mt-2 sm:mt-0">
                 <label className="flex items-center gap-2 select-none text-sm font-medium text-gray-700 whitespace-nowrap">
                   <input
                     type="checkbox"
@@ -176,6 +189,7 @@ export default function JobsPage() {
                     createdBy={job.createdBy}
                     deadline={job.deadline}
                     href={`/jobs/${job.id}`}
+                    adminView={isAdminView}
                   />
                 </div>
               );

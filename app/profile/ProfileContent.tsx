@@ -1,15 +1,17 @@
-
 "use client";
 export const dynamic = "force-dynamic";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, Edit2, Trash2, Save, X, Upload, Image as ImageIcon, Mail, Phone, Calendar, Linkedin, Info, Star, GraduationCap, Briefcase, Globe, User } from "lucide-react";
+import { Plus, Edit2, Trash2, Save, X, Upload, Image as ImageIcon, Mail, Phone, Calendar, Linkedin, Info, Star, GraduationCap, Briefcase, Globe, User, Users, Activity } from "lucide-react";
+
 import { ProfileImage } from "@/components/ProfileImage";
+import { ProfileHeaderCard } from "@/components/profile/ProfileHeaderCard";
 
 
 interface Fellowship {
@@ -32,6 +34,7 @@ interface Person {
   phone1?: string;
   phone2?: string;
   linkedin?: string;
+  website?: string;
   bio?: string;
   dob?: string;
   profileImage?: string;
@@ -49,6 +52,7 @@ interface Education {
   university?: string;
   level: string;
   name: string;
+  type?: string;
   sector?: string;
   start: string;
   end?: string;
@@ -67,19 +71,55 @@ interface Experience {
 }
 
 export default function ProfilePage() {
-      // ...existing code...
-    // ...existing code...
+  // --- Bookmark state and logic (must be at top level, before any return/conditional) ---
+  const [bookmarked, setBookmarked] = useState(false);
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const params = useParams();
   const [clientReady, setClientReady] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const isSessionAdmin = !!(session && (session as any).user && (session as any).user.type === "ADMIN");
+  const isEffectiveAdmin = isAdmin || isSessionAdmin;
   const [person, setPerson] = useState<Person | null>(null);
+  const [personTypes, setPersonTypes] = useState<string[]>([]);
   // Determine if the current session user is the profile owner
   // Use useMemo to ensure isProfileOwner updates when person or session changes
   const isProfileOwner = React.useMemo(() => {
     return session && person && session.user && session.user.id === person.id;
   }, [session, person]);
+
+  // Only show bookmark if signed in and not profile owner
+  const showBookmark = session && session.user && !isProfileOwner && !isEffectiveAdmin;
+
+  useEffect(() => {
+    if (!showBookmark || !person?.id) return;
+    setBookmarkLoading(true);
+    fetch(`/api/bookmarks/person?targetPersonId=${person.id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setBookmarked(!!data.bookmarked);
+        setBookmarkLoading(false);
+      })
+      .catch(() => setBookmarkLoading(false));
+  }, [showBookmark, person?.id]);
+
+  const handleBookmarkToggle = async () => {
+    if (!person?.id) return;
+    setBookmarkLoading(true);
+    try {
+      const res = await fetch("/api/bookmarks/person", {
+        method: bookmarked ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetPersonId: person.id }),
+      });
+      if (res.ok) {
+        setBookmarked((b) => !b);
+      }
+    } finally {
+      setBookmarkLoading(false);
+    }
+  };
   const [showFellowshipForm, setShowFellowshipForm] = useState(false);
   const [editingFellowship, setEditingFellowship] = useState<string | null>(null);
   const [fellowshipForm, setFellowshipForm] = useState<{
@@ -110,14 +150,34 @@ export default function ProfilePage() {
     }
   }, []);
 
+  useEffect(() => {
+    const loadPersonTypes = async () => {
+      try {
+        const res = await fetch("/api/meta/person-types");
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.types)) {
+            setPersonTypes(data.types);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching person types", err);
+      }
+    };
+
+    loadPersonTypes();
+  }, []);
+
   // Form states
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
+    type: "",
     email2: "",
     phone1: "",
     phone2: "",
     linkedin: "",
+    website: "",
     bio: "",
     dob: "",
     eduStatus: "COMPLETED",
@@ -129,6 +189,7 @@ export default function ProfilePage() {
     university: "",
     level: "",
     name: "",
+    type: "DEGREE",
     sector: "",
     start: "",
     end: "",
@@ -185,10 +246,12 @@ export default function ProfilePage() {
         setFormData({
           firstName: data.firstName || "",
           lastName: data.lastName || "",
+          type: data.type || "",
           email2: data.email2 || "",
           phone1: data.phone1 || "",
           phone2: data.phone2 || "",
           linkedin: data.linkedin || "",
+          website: data.website || "",
           bio: data.bio || "",
           dob: data.dob ? new Date(data.dob).toISOString().split("T")[0] : "",
           eduStatus: data.eduStatus || "COMPLETED",
@@ -211,10 +274,12 @@ export default function ProfilePage() {
         setFormData({
           firstName: data.firstName || "",
           lastName: data.lastName || "",
+          type: data.type || "",
           email2: data.email2 || "",
           phone1: data.phone1 || "",
           phone2: data.phone2 || "",
           linkedin: data.linkedin || "",
+          website: data.website || "",
           bio: data.bio || "",
           dob: data.dob ? new Date(data.dob).toISOString().split("T")[0] : "",
           eduStatus: data.eduStatus || "COMPLETED",
@@ -307,7 +372,7 @@ export default function ProfilePage() {
   const handleSaveEducation = async () => {
     // Validate required fields
     if (!educationForm.institution || !educationForm.level || !educationForm.name || !educationForm.start) {
-      alert("Please fill in all required fields: Institution, Level, Degree Name, and Start Date");
+      alert("Please fill in all required fields: Institution, Level, Program/Course/Certification, and Start Date");
       return;
     }
 
@@ -347,6 +412,7 @@ export default function ProfilePage() {
           university: "",
           level: "",
           name: "",
+          type: "DEGREE",
           sector: "",
           start: "",
           end: "",
@@ -507,330 +573,50 @@ export default function ProfilePage() {
   };
 
 
-  if (!person) {
-    return <div className="text-center py-12">Profile not found.</div>;
-  }
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">My Profile</h1>
-        {/* Only show edit button if signed in as user or admin and viewing own profile or as admin */}
-        {!editing && (isProfileOwner || isAdmin) && (
-            <Button onClick={() => setEditing(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
-              <Edit2 size={16} className="mr-2" />
-              Edit Profile
-            </Button>
-        )}
+    <div className="max-w-4xl mx-auto px-4 pt-4">
+      {/* New ProfileHeaderCard for reference */}
+      <div className="mb-4">
+        <ProfileHeaderCard
+          person={{
+            ...person,
+            type: person.type ?? ""
+          }}
+          personTypes={personTypes}
+          isAdminUser={isEffectiveAdmin}
+          isProfileOwner={!!isProfileOwner || isEffectiveAdmin}
+          showBookmark={!!showBookmark}
+          bookmarked={bookmarked}
+          bookmarkLoading={bookmarkLoading}
+          onBookmarkToggle={handleBookmarkToggle}
+          onEdit={() => setEditing(true)}
+          editing={editing}
+          formData={formData}
+          onFormChange={e => setFormData({ ...formData, [e.target.name]: e.target.value })}
+          onSave={async () => {
+            await handleUpdateProfile();
+            setEditing(false);
+          }}
+          onCancel={() => setEditing(false)}
+          canViewPhones={!!session || isEffectiveAdmin}
+        />
       </div>
+      {/* Show floating ViewActivity button for any signed-in user, profile owners, or admins */}
+      {(isEffectiveAdmin || isProfileOwner || !!session) && person?.id && (
+        <ViewActivityButton personId={person.id} />
+      )}
 
-      {/* Basic Information */}
-      <Card className="relative p-6 mb-6 border-2 border-blue-400 rounded-xl shadow-sm">
-        <h2 className="text-xl font-semibold mb-4 text-blue-600">Basic Information</h2>
-        {/* Alumni Type Label in Top Right of Card */}
-        {person.type && (
-          <div className="absolute top-0 right-0 mt-2 mr-2 z-20">
-            <span className="inline-flex items-center gap-1 bg-yellow-400 text-yellow-900 text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wide shadow-lg border-2 border-yellow-500" style={{ boxShadow: '0 0 8px 2px #facc15, 0 0 16px 4px #fde68a' }}>
-              <Star size={16} className="text-yellow-700 drop-shadow" fill="#facc15" stroke="#b45309" />
-              {person.type}
-            </span>
-          </div>
-        )}
-        
-        {/* Profile Image Section */}
-        <div className="mb-6 flex items-center gap-6">
-          <div className="flex-shrink-0">
-            <ProfileImage
-              key={person.profileImage || 'no-image'}
-              src={person.profileImage}
-              name={`${person.firstName} ${person.lastName}`}
-              className="h-24 w-24 rounded-full border-4 border-blue-200 object-cover"
-              alt={`${person.firstName} ${person.lastName}`}
-            />
-          </div>
-          {/* Only show label and upload if signed in as user or admin and viewing own profile or as admin */}
-          {(isProfileOwner || isAdmin) && (
-            <div>
-              <h3 className="font-semibold mb-2">Profile Picture</h3>
-              <input
-                type="file"
-                ref={fileInputRef}
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageUpload}
-              />
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingImage}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-                size="sm"
-              >
-                {uploadingImage ? (
-                  <>
-                    <Upload size={16} className="mr-2 animate-spin" />
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    <ImageIcon size={16} className="mr-2" />
-                    {person.profileImage ? "Change Image" : "Upload Image"}
-                  </>
-                )}
-              </Button>
-              {person.profileImage && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="ml-2 border-red-600 text-red-600 hover:bg-red-50"
-                  onClick={handleRemoveImage}
-                >
-                  Remove
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
-
-        {editing && (isProfileOwner || isAdmin) ? (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">First Name</label>
-                <input
-                  type="text"
-                  className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={formData.firstName}
-                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Last Name</label>
-                <input
-                  type="text"
-                  className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={formData.lastName}
-                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Primary Email</label>
-              <input
-                type="email"
-                className="w-full border rounded p-2 bg-gray-100"
-                value={person.email1}
-                disabled
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Secondary Email</label>
-              <input
-                type="email"
-                className="w-full border rounded p-2"
-                value={formData.email2}
-                onChange={(e) => setFormData({ ...formData, email2: e.target.value })}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Phone 1</label>
-                <input
-                  type="tel"
-                  className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={formData.phone1}
-                  onChange={(e) => setFormData({ ...formData, phone1: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Phone 2</label>
-                <input
-                  type="tel"
-                  className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={formData.phone2}
-                  onChange={(e) => setFormData({ ...formData, phone2: e.target.value })}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">LinkedIn</label>
-              <input
-                type="url"
-                className="w-full border rounded p-2"
-                value={formData.linkedin}
-                onChange={(e) => setFormData({ ...formData, linkedin: e.target.value })}
-                placeholder="https://linkedin.com/in/yourprofile"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Date of Birth</label>
-              <input
-                type="date"
-                className="w-full border rounded p-2"
-                value={formData.dob}
-                onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Education Status</label>
-                <select
-                  className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={formData.eduStatus}
-                  onChange={(e) => setFormData({ ...formData, eduStatus: e.target.value })}
-                >
-                  <option value="COMPLETED">Completed</option>
-                  <option value="ENROLLED">Enrolled</option>
-                  <option value="NOT_ENROLLED">Not Enrolled</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Employment Status</label>
-                <select
-                  className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={formData.empStatus}
-                  onChange={(e) => setFormData({ ...formData, empStatus: e.target.value })}
-                >
-                  <option value="SEEKING">Seeking</option>
-                  <option value="EMPLOYED">Employed</option>
-                  <option value="UNEMPLOYED">Unemployed</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Bio</label>
-              <textarea
-                className="w-full border rounded p-2"
-                rows={4}
-                value={formData.bio}
-                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={handleUpdateProfile} className="bg-blue-600 hover:bg-blue-700 text-white">
-                <Save size={16} className="mr-2" />
-                Save
-              </Button>
-              <Button variant="outline" onClick={() => setEditing(false)} className="border-blue-600 text-blue-600 hover:bg-blue-50">
-                <X size={16} className="mr-2" />
-                Cancel
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 text-left">
-            {/* Name | DOB (DOB only for admin or profile owner) */}
-            <div className="flex items-center gap-2 text-lg font-semibold">
-              <User size={22} className="text-blue-500" />
-              <span>{person.firstName} {person.lastName}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              {(isProfileOwner || isAdmin) && person.dob && (
-                <span className="inline-flex items-center gap-2 text-base font-normal text-gray-700 bg-purple-50 py-1 rounded"><Calendar size={16} className="text-purple-500" />{new Date(person.dob).toLocaleDateString()}</span>
-              )}
-            </div>
-            {/* Email/Phone: Only show if signed in as user or admin, else show connect message */}
-            {(session || isAdmin) ? (
-              <>
-                <div className="flex items-center gap-2">
-                  <Mail size={18} className="text-blue-500" />
-                  <span>{person.email1}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {person.email2 && (<><Mail size={18} className="text-blue-500" /><span>{person.email2}</span></>)}
-                </div>
-                <div className="flex items-center gap-2">
-                  {person.phone1 && (<><Phone size={18} className="text-green-500" /><span>{person.phone1}</span></>)}
-                </div>
-                <div className="flex items-center gap-2">
-                  {person.phone2 && (<><Phone size={18} className="text-green-500" /><span>{person.phone2}</span></>)}
-                </div>
-              </>
-            ) : (
-              <div className="flex items-center gap-2 text-base font-normal text-gray-700 py-2 col-span-1 sm:col-span-2">
-                <Mail size={18} className="text-blue-500" />
-                <span>
-                  Email <a href="mailto:connect@teachfornepal.org" className="text-blue-700 underline font-semibold">connect@teachfornepal.org</a> to connect with this person
-                </span>
-              </div>
-            )}
-            {/* LinkedIn and Website (two columns) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2 col-span-1 sm:col-span-2">
-              <div className="flex items-center gap-2">
-                <Linkedin size={18} className="text-blue-700" />
-                {person.linkedin ? (
-                  <a href={person.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">{person.linkedin}</a>
-                ) : (
-                  <span className="text-gray-400">---</span>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <Globe size={18} className="text-blue-700" />
-                <a href="https://www.teachfornepal.org" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">www.teachfornepal.org</a>
-              </div>
-            </div>
-            {/* Statuses */}
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <GraduationCap size={18} className="text-blue-500" />
-                <span className="font-medium text-gray-700">Education Status:</span>
-                <span className="font-normal">{person.eduStatus}</span>
-              </div>
-              {(person.eduStatus === "ENROLLED" || person.eduStatus === "COMPLETED") && person.educations && person.educations.length > 0 && (
-                (() => {
-                  // Find most recent education by start date (or end date if available)
-                  const recentEdu = [...person.educations].sort((a, b) => {
-                    const aDate = new Date(a.end || a.start).getTime();
-                    const bDate = new Date(b.end || b.start).getTime();
-                    return bDate - aDate;
-                  })[0];
-                  return recentEdu ? (
-                    <div className="flex items-center gap-2 text-sm text-blue-800 pl-7">
-                      <span className="font-semibold">Recent:</span>
-                      <span>{recentEdu.name}</span>
-                    </div>
-                  ) : null;
-                })()
-              )}
-            </div>
-            <div className="flex flex-col gap-1 justify-start">
-              <div className="flex items-center gap-2">
-                <Briefcase size={18} className="text-green-600" />
-                <span className="font-medium text-gray-700">Employment Status:</span>
-                <span className="font-normal">{person.empStatus}</span>
-              </div>
-              {person.empStatus === "EMPLOYED" && person.experiences && person.experiences.length > 0 && (
-                (() => {
-                  // Find most recent experience by start date (or end date if available)
-                  const recentExp = [...person.experiences].sort((a, b) => {
-                    const aDate = new Date(a.end || a.start).getTime();
-                    const bDate = new Date(b.end || b.start).getTime();
-                    return bDate - aDate;
-                  })[0];
-                  return recentExp ? (
-                    <div className="flex items-center gap-2 text-sm text-green-800 pl-7">
-                      <span className="font-semibold">Recent:</span>
-                      <span>{recentExp.type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())} at {recentExp.orgName}</span>
-                    </div>
-                  ) : null;
-                })()
-              )}
-            </div>
-            {/* Bio (full width) */}
-            {person.bio && (
-              <blockquote className="col-span-1 sm:col-span-2 border-l-4 border-yellow-400 bg-yellow-50/60 px-4 py-3 my-2 italic text-yellow-900 relative">
-                <span className="pl-6 block">{person.bio}</span>
-              </blockquote>
-            )}
-          </div>
-        )}
-      </Card>
+      {/* Existing header UI and Basic Information card removed; all editing is now in ProfileHeaderCard */}
 
 
-      {/* Fellowship (only for alumni) */}
-      {person.type && person.type.toLowerCase() === "alumni" && (
-          <Card className="p-6 mb-6 border-2 border-purple-400 rounded-xl shadow-sm">
+        {/* Fellowship (for fellows and alumni-type people, including STAFF_ALUMNI) */}
+        {person.type && (person.type === "FELLOW" || person.type.toUpperCase().includes("ALUMNI")) && (
+          <Card className="p-5 mb-4 border-2 border-purple-400 rounded-xl shadow-sm">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-blue-600">Fellowships</h2>
+              <h2 className="text-xl font-semibold text-blue-600 flex items-center">
+                <Users className="w-6 h-6 mr-2 text-blue-600" /> Fellowships
+              </h2>
               {/* Only show add button if signed in as user or admin and viewing own profile or as admin */}
               {!showFellowshipForm && (isProfileOwner || isAdmin) && (
                 <Button onClick={() => setShowFellowshipForm(true)} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
@@ -904,7 +690,7 @@ export default function ProfilePage() {
                     } else {
                       alert("Failed to save fellowship");
                     }
-                  }} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                  }} size="sm" className="bg-white border-blue-600 text-blue-600 hover:bg-blue-50 border">
                     <Save size={16} className="mr-2" />
                     Save
                   </Button>
@@ -985,9 +771,11 @@ export default function ProfilePage() {
       )}
       
       {/* Education */}
-      <Card className="p-6 mb-6 border-2 border-green-400 rounded-xl shadow-sm">
+      <Card className="p-5 mb-4 border-2 border-green-400 rounded-xl shadow-sm">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-blue-600">Education</h2>
+          <h2 className="text-xl font-semibold text-blue-600 flex items-center">
+            <GraduationCap className="w-6 h-6 mr-2 text-blue-600" /> Education & Certifications
+          </h2>
           {/* Only show add button if signed in as user or admin and viewing own profile or as admin */}
           {!showEducationForm && (isProfileOwner || isAdmin) && (
             <Button onClick={() => setShowEducationForm(true)} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
@@ -1031,7 +819,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Degree Name</label>
+                <label className="block text-sm font-medium mb-1">Program / Course / Certification</label>
                 <input
                   type="text"
                   className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -1039,6 +827,21 @@ export default function ProfilePage() {
                   onChange={(e) => setEducationForm({ ...educationForm, name: e.target.value })}
                 />
               </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Type</label>
+              <select
+                className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                value={educationForm.type}
+                onChange={(e) => setEducationForm({ ...educationForm, type: e.target.value })}
+              >
+                <option value="DEGREE">Degree</option>
+                <option value="CERTIFICATION">Certification</option>
+                <option value="COURSE">Course</option>
+                <option value="WORKSHOP">Workshop</option>
+                <option value="TRAINING">Training</option>
+                <option value="OTHER">Other</option>
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Sector</label>
@@ -1086,6 +889,7 @@ export default function ProfilePage() {
                     university: "",
                     level: "",
                     name: "",
+                    type: "DEGREE",
                     sector: "",
                     start: "",
                     end: "",
@@ -1135,7 +939,7 @@ export default function ProfilePage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-1">Degree Name</label>
+                      <label className="block text-sm font-medium mb-1">Program / Course / Certification</label>
                       <input
                         type="text"
                         className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -1143,6 +947,21 @@ export default function ProfilePage() {
                         onChange={(e) => setEducationForm({ ...educationForm, name: e.target.value })}
                       />
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Type</label>
+                    <select
+                      className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      value={educationForm.type}
+                      onChange={(e) => setEducationForm({ ...educationForm, type: e.target.value })}
+                    >
+                      <option value="DEGREE">Degree</option>
+                      <option value="CERTIFICATION">Certification</option>
+                      <option value="COURSE">Course</option>
+                      <option value="WORKSHOP">Workshop</option>
+                      <option value="TRAINING">Training</option>
+                      <option value="OTHER">Other</option>
+                    </select>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -1180,6 +999,7 @@ export default function ProfilePage() {
                           university: "",
                           level: "",
                           name: "",
+                          type: "DEGREE",
                           sector: "",
                           start: "",
                           end: "",
@@ -1195,6 +1015,13 @@ export default function ProfilePage() {
                 <div className="flex justify-between items-start">
                   <div>
                     <div className="font-semibold">{edu.name}</div>
+                    {edu.type && (
+                      <div className="mt-1 mb-1">
+                        <span className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-800">
+                          {edu.type.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                        </span>
+                      </div>
+                    )}
                     <div className="text-sm text-gray-600">{edu.institution}</div>
                     {edu.university && <div className="text-sm text-gray-600">{edu.university}</div>}
                     <div className="text-sm text-gray-500">
@@ -1214,6 +1041,7 @@ export default function ProfilePage() {
                             university: edu.university || "",
                             level: edu.level,
                             name: edu.name,
+                            type: edu.type || "DEGREE",
                             sector: edu.sector || "",
                             start: new Date(edu.start).toISOString().split("T")[0],
                             end: edu.end ? new Date(edu.end).toISOString().split("T")[0] : "",
@@ -1243,9 +1071,11 @@ export default function ProfilePage() {
       </Card>
 
       {/* Experience */}
-      <Card className="p-6 border-2 border-orange-400 rounded-xl shadow-sm">
+      <Card className="p-5 border-2 border-orange-400 rounded-xl shadow-sm mt-4">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold text-blue-600">Experience</h2>
+          <h2 className="text-xl font-semibold text-blue-600 flex items-center">
+            <Briefcase className="w-6 h-6 mr-2 text-blue-600" /> Experience
+          </h2>
           {/* Only show add button if signed in as user or admin and viewing own profile or as admin */}
           {!showExperienceForm && (isProfileOwner || isAdmin) && (
             <Button onClick={() => setShowExperienceForm(true)} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
@@ -1517,5 +1347,21 @@ export default function ProfilePage() {
         </div>
       </Card>
     </div>
+  );
+}
+
+// Floating View Activity Button component
+function ViewActivityButton({ personId }: { personId: string }) {
+  const router = useRouter();
+  return (
+    <button
+      aria-label="View Activity"
+      onClick={() => router.push(`/profile/${personId}/activity`)}
+      className="fixed bottom-8 right-8 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"
+      title="View Activity"
+    >
+      <Activity size={28} strokeWidth={2.5} className="text-white" />
+      <span className="hidden sm:inline">View Activity</span>
+    </button>
   );
 }

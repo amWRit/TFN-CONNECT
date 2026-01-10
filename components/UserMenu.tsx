@@ -1,7 +1,7 @@
 "use client";
 import { useSession, signIn, signOut } from "next-auth/react";
-import { useState, useEffect } from "react";
-import { UserCircle, LogOut, User } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { UserCircle, LogOut, User, Activity } from "lucide-react";
 import Link from "next/link";
 import { ProfileImage } from "./ProfileImage";
 
@@ -10,6 +10,7 @@ export default function UserMenu() {
   const [open, setOpen] = useState(false);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     // Check admin login from localStorage
@@ -23,6 +24,20 @@ export default function UserMenu() {
       fetchProfileImage();
     }
   }, [session]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const fetchProfileImage = async () => {
     try {
@@ -41,7 +56,7 @@ export default function UserMenu() {
   // Admin session: show admin info
   if (isAdmin) {
     return (
-      <div className="relative">
+      <div className="relative" ref={menuRef}>
         <button
           onClick={() => setOpen((v) => !v)}
           className="flex items-center gap-2 px-2 py-1 rounded hover:bg-blue-100 transition"
@@ -85,7 +100,7 @@ export default function UserMenu() {
   const displayName = session.user?.name || session.user?.email || "User";
 
   return (
-    <div className="relative">
+    <div className="relative" ref={menuRef}>
       <button
         onClick={() => setOpen((v) => !v)}
         className="flex items-center gap-2 px-2 py-1 rounded hover:bg-blue-100 transition"
@@ -116,6 +131,13 @@ export default function UserMenu() {
             <User size={16} /> Profile
           </Link>
           <Link
+            href={`/profile/${session.user?.id}/activity`}
+            className="flex items-center gap-2 px-4 py-2 hover:bg-blue-50 text-gray-700 text-sm"
+            onClick={() => setOpen(false)}
+          >
+            <Activity size={16} /> My Activity
+          </Link>
+          <Link
             href="/profile/bookmarks"
             className="flex items-center gap-2 px-4 py-2 hover:bg-blue-50 text-gray-700 text-sm"
             onClick={() => setOpen(false)}
@@ -123,7 +145,7 @@ export default function UserMenu() {
             <span role="img" aria-label="Bookmarks">🔖</span> My Bookmarks
           </Link>
           <button
-            onClick={() => { setOpen(false); signOut(); }}
+            onClick={() => { setOpen(false); signOut({ callbackUrl: "/" }); }}
             className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-blue-50 text-gray-700 text-sm"
           >
             <LogOut size={16} /> Logout

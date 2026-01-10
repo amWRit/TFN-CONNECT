@@ -22,13 +22,14 @@ interface Opportunity {
 }
 
 export default function OpportunitiesPage() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [showMine, setShowMine] = useState(false);
+  const [isAdminView, setIsAdminView] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -49,6 +50,14 @@ export default function OpportunitiesPage() {
         setLoading(false);
       });
   }, [typeFilter, statusFilter, showMine]);
+
+  // Determine admin view (NextAuth ADMIN or localStorage bypass admin)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const localAdmin = localStorage.getItem("adminAuth") === "true";
+    const sessionIsAdmin = !!(session && (session as any).user && (session as any).user.type === "ADMIN");
+    setIsAdminView(localAdmin || sessionIsAdmin);
+  }, [session]);
 
   // Example types for filter dropdown
   const opportunityTypes = [
@@ -133,6 +142,7 @@ export default function OpportunitiesPage() {
                     status={opp.status}
                     createdById={opp.createdById}
                     showOverviewOnly={true}
+                    adminView={isAdminView}
                   />
                 ))
               )}

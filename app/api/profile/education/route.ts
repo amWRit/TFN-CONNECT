@@ -89,6 +89,7 @@ export async function POST(request: NextRequest) {
         university: body.university || null,
         level: body.level,
         name: body.name,
+        // type: body.type || "DEGREE", // Removed because 'type' is not a valid property
         sector: body.sector || null,
         start: startDate,
         end: endDate,
