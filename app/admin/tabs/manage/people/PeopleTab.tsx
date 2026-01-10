@@ -9,6 +9,7 @@ import { User as UserIcon } from 'lucide-react';
 interface Person {
 	id: string;
 	firstName: string;
+	middleName?: string;
 	lastName: string;
 	email1: string;
 	type: string;
@@ -39,6 +40,7 @@ export default function PeopleTab() {
 
 	const [basicForm, setBasicForm] = useState({
 		firstName: '',
+		middleName: '',
 		lastName: '',
 		email1: '',
 		dob: '',
@@ -135,7 +137,7 @@ export default function PeopleTab() {
 			// Create fellowship if alumni (not implemented here for edit)
 
 			// Reset form
-			setBasicForm({ firstName: '', lastName: '', email1: '', dob: '', phone1: '', type: 'ALUMNI' });
+			setBasicForm({ firstName: '', middleName: '', lastName: '', email1: '', dob: '', phone1: '', type: 'ALUMNI' });
 			setEducations([{ institution: '', level: '', name: '', start: '', end: '' }]);
 			setExperiences([{ orgName: '', title: '', sector: '', type: 'full_time', start: '', end: '' }]);
 			setFellowship({ cohortId: '', placementId: '', subjects: [] });
@@ -165,7 +167,7 @@ export default function PeopleTab() {
 						{formStep === 1 && (
 							<>
 								<h3 className="font-bold">Basic Information</h3>
-								<div className="grid grid-cols-2 gap-4">
+								<div className="grid grid-cols-3 gap-4">
 									<input
 										type="text"
 										placeholder="First Name *"
@@ -173,6 +175,13 @@ export default function PeopleTab() {
 										onChange={(e) => setBasicForm({ ...basicForm, firstName: e.target.value })}
 										className="px-3 py-2 border rounded"
 										required
+									/>
+									<input
+										type="text"
+										placeholder="Middle Name"
+										value={basicForm.middleName}
+										onChange={(e) => setBasicForm({ ...basicForm, middleName: e.target.value })}
+										className="px-3 py-2 border rounded"
 									/>
 									<input
 										type="text"
@@ -389,7 +398,9 @@ export default function PeopleTab() {
 				{people.slice(0, 10).map((p) => (
 					<Card key={p.id} className="p-4 flex justify-between items-center border-2 border-blue-500/70 shadow-sm rounded-xl">
 						<div>
-							<h3 className="font-bold">{p.firstName} {p.lastName}</h3>
+							<h3 className="font-bold">
+								{[p.firstName, p.middleName, p.lastName].filter(Boolean).join(' ')}
+							</h3>
 							<p className="text-sm text-gray-600">{p.email1}</p>
 							<p className="text-xs text-gray-500">{p.type}</p>
 						</div>

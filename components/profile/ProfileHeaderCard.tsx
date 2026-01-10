@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProfileImage } from "@/components/ProfileImage";
-import { Bookmark, BookmarkCheck, Edit2, Info } from "lucide-react";
+import { Bookmark, BookmarkCheck, Edit2, Info, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import React from "react";
 
@@ -35,7 +35,9 @@ interface ProfileHeaderCardProps {
   person: {
     id: string;
     firstName: string;
+    middleName?: string;
     lastName: string;
+    pronouns?: string;
     profileImage?: string;
     bio?: string;
     type: string;
@@ -112,28 +114,44 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
             <div className="flex-shrink-0">
               <ProfileImage
                 src={person.profileImage}
-                name={`${formData.firstName} ${formData.lastName}`}
+                name={[formData.firstName, formData.middleName, formData.lastName].filter(Boolean).join(" ")}
                 className="h-28 w-28 rounded-2xl border-4 border-indigo-200 shadow-md object-cover"
-                alt={`${formData.firstName} ${formData.lastName}`}
+                alt={[formData.firstName, formData.middleName, formData.lastName].filter(Boolean).join(" ")}
               />
             </div>
             <div className="flex flex-col justify-end pb-2 flex-1">
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap items-end">
                 <input
                   type="text"
                   name="firstName"
                   value={formData.firstName}
                   onChange={onFormChange}
-                  className="text-3xl sm:text-4xl font-bold text-indigo-900 mb-2 bg-white border-b-2 border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-32 sm:w-40"
+                  className="text-sm text-gray-700 mb-1 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-32 sm:w-36 placeholder:text-gray-400"
                   placeholder="First Name"
+                />
+                <input
+                  type="text"
+                  name="middleName"
+                  value={formData.middleName}
+                  onChange={onFormChange}
+                  className="text-sm text-gray-700 mb-1 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-28 sm:w-32 placeholder:text-gray-400"
+                  placeholder="Middle Name"
                 />
                 <input
                   type="text"
                   name="lastName"
                   value={formData.lastName}
                   onChange={onFormChange}
-                  className="text-3xl sm:text-4xl font-bold text-indigo-900 mb-2 bg-white border-b-2 border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-32 sm:w-40"
+                  className="text-sm text-gray-700 mb-1 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-32 sm:w-36 placeholder:text-gray-400"
                   placeholder="Last Name"
+                />
+                <input
+                  type="text"
+                  name="pronouns"
+                  value={formData.pronouns}
+                  onChange={onFormChange}
+                  className="text-sm text-gray-700 mb-1 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-40 sm:w-48 placeholder:text-gray-400"
+                  placeholder="Pronouns (e.g., she/her)"
                 />
               </div>
             </div>
@@ -289,7 +307,7 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
 
   // View mode UI (default)
   return (
-    <Card className="bg-white border-2 border-indigo-500 shadow-lg rounded-3xl overflow-hidden mb-4 relative">
+    <Card className="bg-white border-2 border-indigo-500 shadow-lg rounded-xl overflow-hidden mb-4 relative">
       {/* Edit Button if profile owner, else Bookmark Button */}
       {isProfileOwner ? (
         <div className="group absolute top-4 right-4 z-10">
@@ -321,15 +339,21 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
           <div className="flex-shrink-0">
             <ProfileImage
               src={person.profileImage}
-              name={`${person.firstName} ${person.lastName}`}
+              name={[person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ")}
               className="h-28 w-28 rounded-2xl border-4 border-indigo-200 shadow-md object-cover"
-              alt={`${person.firstName} ${person.lastName}`}
+              alt={[person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ")}
             />
           </div>
           <div className="flex flex-col justify-end pb-2 flex-1">
             <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
-              {person.firstName} {person.lastName}
+              {[person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ")}
             </h1>
+            {person.pronouns && (
+              <div className="text-sm font-semibold text-indigo-100 mb-1 flex items-center gap-1">
+                <User size={16} className="text-indigo-100/80" />
+                <span>{person.pronouns}</span>
+              </div>
+            )}
             <div className="flex items-center gap-2 flex-wrap">
             {person.type && person.type.split("_").map((part, index) => {
               const meta = TYPE_META[part] || {

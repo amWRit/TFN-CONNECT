@@ -117,11 +117,11 @@ model Cohort {
   createdAt   DateTime     @default(now())
 }
 
-// ===== PLACEMENT (Core Entity - Replaces LDC) =====
+// ===== PLACEMENT =====
 model Placement {
   id             String      @id @default(cuid())
   name           String?     // "Kushmawati Placement", "Dang Group Placement"
-  schoolId       String
+  schoolId       String      @unique
   schoolGroupId  String?
   managerId      String      // Person managing this placement
   fellowCount    Int         @default(0)
@@ -140,7 +140,9 @@ model Placement {
 model Person {
   id             String           @id @default(cuid())
   firstName      String
+  middleName     String?
   lastName       String
+  pronouns       String?
   dob            DateTime?
   phone1         String?
   phone2         String?

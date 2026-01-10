@@ -12,6 +12,7 @@ import { Bookmark, BookmarkCheck, Users } from "lucide-react"
 interface Person {
 	id: string
 	firstName: string
+	middleName?: string
 	lastName: string
 	profileImage?: string
 	bio?: string
@@ -137,7 +138,10 @@ export default function PeoplePage() {
 			}
 		}
 		if (nameFilter) {
-			filtered = filtered.filter((person) => (person.firstName + ' ' + person.lastName).toLowerCase().includes(nameFilter.toLowerCase()));
+			filtered = filtered.filter((person) => {
+				const fullName = [person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ');
+				return fullName.toLowerCase().includes(nameFilter.toLowerCase());
+			});
 		}
 		return filtered;
 	}, [people, tab, cohortFilter, empStatusFilter, nameFilter]);
@@ -255,9 +259,9 @@ export default function PeoplePage() {
 													<div className="h-16 w-16 rounded-full border-3 border-blue-100 overflow-hidden group-hover:border-blue-300 transition shadow-md">
 														<ProfileImage
 															src={person.profileImage}
-															name={`${person.firstName} ${person.lastName}`}
+															name={[person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ")}
 															className="h-full w-full object-cover"
-															alt={`${person.firstName} ${person.lastName}`}
+															alt={[person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ")}
 														/>
 													</div>
 													<div className="flex-1">
@@ -324,7 +328,7 @@ export default function PeoplePage() {
 												)}
 											</div>
 											<CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition">
-												{person.firstName} {person.lastName}
+												{[person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ")}
 											</CardTitle>
 											{person.experiences && person.experiences[0] && (
 												<div className="text-sm text-gray-600 font-medium mt-2">
