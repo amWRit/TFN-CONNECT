@@ -49,6 +49,7 @@ export default function PeoplePage() {
 	const [personTypes, setPersonTypes] = useState<string[]>([]);
 	const { data: session } = useSession();
 	const [bookmarkStates, setBookmarkStates] = useState<Record<string, { bookmarked: boolean; loading: boolean }>>({});
+	const [isAdmin, setIsAdmin] = useState(false);
 
 	useEffect(() => {
 		fetch("/api/people")
@@ -87,9 +88,18 @@ export default function PeoplePage() {
 		loadPersonTypes();
 	}, []);
 
+	// Determine admin status (NextAuth admin or localStorage adminAuth bypass)
+	useEffect(() => {
+		if (typeof window === "undefined") return;
+		const localAdmin = localStorage.getItem("adminAuth") === "true";
+		const sessionIsAdmin = !!(session && (session as any).user && (session as any).user.type === "ADMIN");
+		setIsAdmin(localAdmin || sessionIsAdmin);
+	}, [session]);
+
 	// Fetch bookmark state for each person when session is ready
 	useEffect(() => {
 		if (!session || !session.user) return;
+		if (isAdmin) return; // hide bookmarks and avoid extra calls for admins
 		const filtered = people.filter((p) => p.type === tab);
 		const fetchBookmarks = async () => {
 			const states: Record<string, { bookmarked: boolean; loading: boolean }> = {};
@@ -111,7 +121,7 @@ export default function PeoplePage() {
 			setBookmarkStates(states);
 		};
 		if (filtered.length > 0) fetchBookmarks();
-	}, [session, people, tab]);
+	}, [session, people, tab, isAdmin]);
 
 	// Filter logic
 	const filteredPeople = useMemo(() => {
@@ -226,7 +236,7 @@ export default function PeoplePage() {
 				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
 					{filteredPeople.map((person) => {
 						const isProfileOwner = session && session.user && session.user.id === person.id;
-						const showBookmark = session && session.user && !isProfileOwner;
+						const showBookmark = session && session.user && !isProfileOwner && !isAdmin;
 						const bookmarkState = bookmarkStates[person.id] || { bookmarked: false, loading: false };
 						return (
 							<div key={person.id} className="relative group">
