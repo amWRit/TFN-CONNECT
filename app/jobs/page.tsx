@@ -32,6 +32,7 @@ export default function JobsPage() {
   const [jobs, setJobs] = useState<JobPosting[]>([])
   const [loading, setLoading] = useState(true)
   const { data: session, status } = useSession();
+  const [isAdminView, setIsAdminView] = useState(false);
   const [skillMap, setSkillMap] = useState<Record<string, string>>({});
   const [showOnlyMine, setShowOnlyMine] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>("");
@@ -58,6 +59,14 @@ export default function JobsPage() {
     }
     fetchData();
   }, []);
+
+  // Determine admin view (NextAuth ADMIN or localStorage bypass admin)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const localAdmin = localStorage.getItem("adminAuth") === "true";
+    const sessionIsAdmin = !!(session && (session as any).user && (session as any).user.type === "ADMIN");
+    setIsAdminView(localAdmin || sessionIsAdmin);
+  }, [session]);
 
 
   if (loading) {
@@ -180,6 +189,7 @@ export default function JobsPage() {
                     createdBy={job.createdBy}
                     deadline={job.deadline}
                     href={`/jobs/${job.id}`}
+                    adminView={isAdminView}
                   />
                 </div>
               );

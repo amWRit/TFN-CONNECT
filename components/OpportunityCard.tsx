@@ -31,21 +31,27 @@ interface OpportunityCardProps {
   createdById?: string;
   createdByName?: string;
   showOverviewOnly?: boolean;
+  // When true, this card is being viewed in an admin context
+  // (e.g. localStorage bypass admin on activity page) and should
+  // show the edit icon instead of bookmark, and skip bookmark logic.
+  adminView?: boolean;
 }
 
-
-
-const OpportunityCard: React.FC<OpportunityCardProps> = ({ id, title, description, overview, types, status, location, createdById, createdByName, showOverviewOnly }) => {
+const OpportunityCard: React.FC<OpportunityCardProps> = ({ id, title, description, overview, types, status, location, createdById, createdByName, showOverviewOnly, adminView = false }) => {
   const { data: session } = useSession();
   const userId = session?.user?.id;
   const isOwner = userId && createdById && userId === createdById;
+  const isSessionAdmin = (session?.user as any)?.type === "ADMIN";
+  const isEffectiveAdmin = adminView || isSessionAdmin;
   const [bookmarkState, setBookmarkState] = useState({ bookmarked: false, loading: false });
   // Collapsible description state (should be inside component)
   const [descExpanded, setDescExpanded] = useState(false);
   const MAX_DESC_LINES = 8;
 
   useEffect(() => {
-    if (!userId || isOwner) return;
+    // Admin views (including localStorage bypass admins) don't use bookmarks,
+    // so skip bookmark fetch entirely for them.
+    if (!userId || isOwner || isEffectiveAdmin) return;
     let ignore = false;
     const fetchBookmark = async () => {
       try {
@@ -58,14 +64,14 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ id, title, descriptio
     };
     fetchBookmark();
     return () => { ignore = true; };
-  }, [userId, isOwner, id]);
+  }, [userId, isOwner, id, isEffectiveAdmin]);
 
   return (
     <Card className="relative border-2 border-purple-400 hover:border-purple-600 transition-all duration-300 rounded-xl overflow-hidden pt-5 px-6 pb-4 bg-white shadow-sm">
       {/* Top Status Bar - absolutely positioned */}
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-400 rounded-t-xl" />
       {/* Edit or Bookmark Button (top right) */}
-      {session?.user && isOwner ? (
+      {(((session?.user && isOwner) || isEffectiveAdmin)) ? (
         <button
           aria-label="Edit Opportunity"
           onClick={() => {
@@ -78,7 +84,7 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ id, title, descriptio
         >
           <PencilIcon className="h-6 w-6" />
         </button>
-      ) : session?.user && !isOwner && (
+      ) : (session?.user && !isOwner && !isEffectiveAdmin) && (
         <div className="group absolute top-4 right-4" style={{ zIndex: 20 }}>
           <button
             aria-label={bookmarkState.bookmarked ? "Remove Bookmark" : "Add Bookmark"}

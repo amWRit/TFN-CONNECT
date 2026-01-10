@@ -42,6 +42,7 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
   const [interestLoading, setInterestLoading] = useState(false);
   const [interestSuccess, setInterestSuccess] = useState(false);
   const [optimisticInterested, setOptimisticInterested] = useState(false);
+  const [isAdminView, setIsAdminView] = useState(false);
   const router = useRouter();
   const { id } = use(params);
   const { data: session, status: authStatus } = useSession();
@@ -61,6 +62,14 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
         setLoading(false);
       });
   }, [id]);
+
+  // Determine admin view (NextAuth ADMIN or localStorage bypass admin)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const localAdmin = localStorage.getItem("adminAuth") === "true";
+    const sessionIsAdmin = !!(session && (session as any).user && (session as any).user.type === "ADMIN");
+    setIsAdminView(localAdmin || sessionIsAdmin);
+  }, [session]);
 
   if (loading) {
     return (
@@ -96,6 +105,7 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
             createdById={opportunity.createdBy?.id}
             createdByName={opportunity.createdBy ? `${opportunity.createdBy.firstName} ${opportunity.createdBy.lastName}` : undefined}
             showOverviewOnly={false}
+              adminView={isAdminView}
           />
         </div>
         {/* People Interested (right column, only for owner) */}
@@ -142,8 +152,8 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
         )}
       </div>
 
-      {/* Floating Interest Button (if signed in and not owner) */}
-      {session?.user?.id && opportunity?.createdBy?.id !== session.user.id && Array.isArray(opportunity?.interests) && (
+      {/* Floating Interest Button (if signed in and not owner, and not in admin view) */}
+      {!isAdminView && session?.user?.id && opportunity?.createdBy?.id !== session.user.id && Array.isArray(opportunity?.interests) && (
         (() => {
           const alreadyInterested = optimisticInterested || opportunity.interests.some((i: { user?: { id: string } }) => i.user && i.user.id === session.user.id);
           if (!alreadyInterested) {

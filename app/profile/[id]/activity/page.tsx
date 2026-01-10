@@ -243,13 +243,17 @@ export default function ProfileActivityPage() {
             const skillNames = Array.isArray(job.requiredSkills)
               ? job.requiredSkills.map((id: string) => skillIdToName[id] || id)
               : [];
-            return <JobPostingCard key={job.id} {...job} requiredSkills={skillNames} />;
+            return <JobPostingCard key={job.id} {...job} requiredSkills={skillNames} adminView={isAdmin} />;
           })
         : <div className="text-gray-500">No jobs found.</div>;
     }
     if (tab === "opportunities") {
       const list = filteredOpps;
-      return list.length > 0 ? list.map((opp: any) => <OpportunityCard key={opp.id} {...opp} />) : <div className="text-gray-500">No opportunities found.</div>;
+      return list.length > 0
+        ? list.map((opp: any) => (
+            <OpportunityCard key={opp.id} {...opp} adminView={isAdmin} />
+          ))
+        : <div className="text-gray-500">No opportunities found.</div>;
     }
     if (tab === "posts") {
       const myPosts = posts.filter((post: any) => post.person?.id === profile?.id);

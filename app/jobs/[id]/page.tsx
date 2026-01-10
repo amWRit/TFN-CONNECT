@@ -40,6 +40,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
   const [interestSuccess, setInterestSuccess] = useState(false);
   const [optimisticInterested, setOptimisticInterested] = useState(false);
   const [interests, setInterests] = useState<any[]>([]);
+  const [isAdminView, setIsAdminView] = useState(false);
   const router = useRouter()
   const { id } = React.use(params)
   const { data: session } = useSession();
@@ -70,6 +71,14 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
     }
     fetchData();
   }, [id]);
+
+  // Determine admin view (NextAuth ADMIN or localStorage bypass admin)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const localAdmin = localStorage.getItem("adminAuth") === "true";
+    const sessionIsAdmin = !!(session && (session as any).user && (session as any).user.type === "ADMIN");
+    setIsAdminView(localAdmin || sessionIsAdmin);
+  }, [session]);
 
   if (loading) {
     return (
@@ -113,6 +122,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
               createdBy={job.createdBy && job.createdBy.id ? job.createdBy as { id: string; firstName: string; lastName: string } : undefined}
               hideViewButton={true}
               deadline={job.deadline}
+              adminView={isAdminView}
             />
           </div>
           {/* People Interested (right column, only for owner) */}

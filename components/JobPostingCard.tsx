@@ -34,6 +34,10 @@ interface JobPostingProps {
   };
   hideViewButton?: boolean;
   deadline?: string;
+  // When true, this card is being viewed in an admin context
+  // (e.g. localStorage bypass admin on activity page) and should
+  // show the edit icon instead of bookmark, and skip bookmark logic.
+  adminView?: boolean;
 }
 
 export function JobPostingCard({
@@ -51,12 +55,17 @@ export function JobPostingCard({
   createdBy,
   hideViewButton = false,
   deadline,
+  adminView = false,
 }: JobPostingProps) {
   const { data: session } = useSession();
+  const isSessionAdmin = (session?.user as any)?.type === "ADMIN";
+  const isEffectiveAdmin = adminView || isSessionAdmin;
   const [bookmarkState, setBookmarkState] = useState({ bookmarked: false, loading: false });
 
   useEffect(() => {
-    if (!session || !session.user) return;
+    // Admin views (including localStorage bypass admins) don't use bookmarks,
+    // so skip bookmark fetch entirely for them.
+    if (!session || !session.user || isEffectiveAdmin) return;
     let ignore = false;
     const fetchBookmark = async () => {
       try {
@@ -69,7 +78,7 @@ export function JobPostingCard({
     };
     fetchBookmark();
     return () => { ignore = true; };
-  }, [session, id]);
+  }, [session, id, isEffectiveAdmin]);
   // Map enums to user-friendly labels
   const jobTypeLabels: Record<string, string> = {
     FULL_TIME: '💼 Full-time',
@@ -116,9 +125,11 @@ export function JobPostingCard({
   if (typeof window !== "undefined") {
     // For debugging, log ids to console
     // Remove this after confirming
-    console.log("JobPostingCard: userId", userId, "ownerId", ownerId);
+    console.log("JobPostingCard: userId", userId, "ownerId", ownerId, "isSessionAdmin", isSessionAdmin, "adminView", adminView);
   }
   const isJobOwner = !!userId && !!ownerId && userId === ownerId;
+  const showEdit = (session?.user && isJobOwner) || isEffectiveAdmin;
+  const showBookmark = session?.user && !isJobOwner && !isEffectiveAdmin;
 
   return (
     <Card className={`relative border-2 border-green-400 bg-white hover:shadow-xl hover:border-green-500 transition-all duration-300 rounded-2xl overflow-hidden group flex flex-col${isDetailPage ? ' min-h-[340px]' : ''}`}> 
@@ -126,7 +137,7 @@ export function JobPostingCard({
       <div className="h-1 w-full bg-gradient-to-r from-blue-500 to-cyan-500 group-hover:from-blue-600 group-hover:to-cyan-600 transition" />
       <CardHeader style={{ position: 'relative' }}>
         {/* Edit or Bookmark Button (top right) */}
-        {session?.user && isJobOwner ? (
+        {showEdit ? (
           <button
             aria-label="Edit Job"
             onClick={() => {
@@ -139,7 +150,7 @@ export function JobPostingCard({
           >
             <Pencil size={24} strokeWidth={2} className="text-blue-600" />
           </button>
-        ) : session?.user && !isJobOwner && (
+        ) : showBookmark && (
           <div className="group" style={{ position: 'absolute', top: 12, right: 12, zIndex: 20 }}>
             <button
               aria-label={bookmarkState.bookmarked ? "Remove Bookmark" : "Add Bookmark"}
