@@ -48,6 +48,8 @@ export default function PeoplePage() {
 	const [nameFilter, setNameFilter] = useState("");
 	const [allCohorts, setAllCohorts] = useState<string[]>([]);
 	const [personTypes, setPersonTypes] = useState<string[]>([]);
+	const [page, setPage] = useState(1);
+	const pageSize = 24;
 	const { data: session } = useSession();
 	const [bookmarkStates, setBookmarkStates] = useState<Record<string, { bookmarked: boolean; loading: boolean }>>({});
 	const [isAdmin, setIsAdmin] = useState(false);
@@ -146,6 +148,17 @@ export default function PeoplePage() {
 		return filtered;
 	}, [people, tab, cohortFilter, empStatusFilter, nameFilter]);
 
+	// Reset to first page whenever filters or tab change
+	useEffect(() => {
+		setPage(1);
+	}, [tab, cohortFilter, empStatusFilter, nameFilter]);
+
+	const totalPages = Math.max(1, Math.ceil(filteredPeople.length / pageSize));
+	const paginatedPeople = useMemo(() => {
+		const start = (page - 1) * pageSize;
+		return filteredPeople.slice(start, start + pageSize);
+	}, [filteredPeople, page, pageSize]);
+
 	if (loading) {
 		return (
 			<div className="max-w-7xl mx-auto px-4 py-12">
@@ -156,9 +169,9 @@ export default function PeoplePage() {
 
 	return (
 		<div className="w-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 min-h-screen">
-			<div className="max-w-7xl mx-auto px-4 py-4 sm:py-8">
+			<div className="max-w-7xl mx-auto px-4 pt-2 pb-8 sm:pt-4 sm:pb-10">
 				{/* Filters */}
-				<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+				<div className="sticky top-16 z-20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200/60 py-3">
 					<div className="flex-1 flex items-center sm:justify-start justify-center">
 						<div className="flex items-center gap-4">
 							<span>
@@ -233,12 +246,44 @@ export default function PeoplePage() {
 							</div>
 						</div>
 					</div>
-					<div className="flex-1 flex items-center sm:justify-end justify-center"></div>
+					<div className="flex-1 flex items-center sm:justify-end justify-center">
+						{filteredPeople.length > 0 && (
+							<div className="flex items-center gap-2 text-xs text-gray-600">
+								<span className="hidden sm:inline">
+									Page {page} of {totalPages}
+								</span>
+								<button
+									type="button"
+									disabled={page === 1}
+									onClick={() => setPage((p) => Math.max(1, p - 1))}
+									className={`px-3 py-1 rounded border text-xs font-medium transition-colors ${
+										page === 1
+											? "border-gray-200 text-gray-300 cursor-not-allowed"
+											: "border-blue-300 text-blue-700 hover:bg-blue-50"
+										}`}
+								>
+									Prev
+								</button>
+								<button
+									type="button"
+									disabled={page >= totalPages}
+									onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+									className={`px-3 py-1 rounded border text-xs font-medium transition-colors ${
+										page >= totalPages
+											? "border-gray-200 text-gray-300 cursor-not-allowed"
+											: "border-blue-300 text-blue-700 hover:bg-blue-50"
+										}`}
+								>
+									Next
+								</button>
+							</div>
+						)}
+					</div>
 				</div>
 
 				{/* People Cards */}
 				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
-					{filteredPeople.map((person) => {
+					{paginatedPeople.map((person) => {
 						const isProfileOwner = session && session.user && session.user.id === person.id;
 						const showBookmark = session && session.user && !isProfileOwner && !isAdmin;
 						const bookmarkState = bookmarkStates[person.id] || { bookmarked: false, loading: false };
@@ -363,6 +408,45 @@ export default function PeoplePage() {
 						);
 					})}
 				</div>
+
+				{/* Pagination Controls */}
+				{filteredPeople.length > 0 && (
+					<div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-700">
+						<span>
+							Showing {Math.min((page - 1) * pageSize + 1, filteredPeople.length)}–
+							{Math.min(page * pageSize, filteredPeople.length)} of {filteredPeople.length}
+						</span>
+						<div className="flex items-center gap-2">
+							<button
+								type="button"
+								disabled={page === 1}
+								onClick={() => setPage((p) => Math.max(1, p - 1))}
+								className={`px-3 py-1 rounded border text-xs font-medium transition-colors ${
+									page === 1
+										? "border-gray-200 text-gray-300 cursor-not-allowed"
+										: "border-blue-300 text-blue-700 hover:bg-blue-50"
+								}`}
+							>
+								Prev
+							</button>
+							<span className="text-xs text-gray-500">
+								Page {page} of {totalPages}
+							</span>
+							<button
+								type="button"
+								disabled={page >= totalPages}
+								onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+								className={`px-3 py-1 rounded border text-xs font-medium transition-colors ${
+									page >= totalPages
+										? "border-gray-200 text-gray-300 cursor-not-allowed"
+										: "border-blue-300 text-blue-700 hover:bg-blue-50"
+								}`}
+							>
+								Next
+							</button>
+						</div>
+					</div>
+				)}
 			</div>
 		</div>
 	);
