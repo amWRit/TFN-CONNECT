@@ -9,7 +9,7 @@ import NotFound from "@/components/NotFound";
 import { ProfileImage } from "@/components/ProfileImage";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Mail, Phone } from "lucide-react";
+import { Trash2, Mail, Phone, Briefcase, Rocket, MessageSquare, Bookmark as BookmarkIcon, Heart, Users } from "lucide-react";
 import { JobPostingCard } from "@/components/JobPostingCard";
 import OpportunityCard from "@/components/OpportunityCard";
 import { PostCard } from "@/components/PostCard";
@@ -50,6 +50,7 @@ export default function ProfileActivityPage() {
   const [jobStatusFilter, setJobStatusFilter] = useState<string>("");
   const [jobSkillsFilter, setJobSkillsFilter] = useState<{value:string;label:string}[]>([]);
   const [bookmarks, setBookmarks] = useState<Record<string, any[]>>({});
+  const [interestGroups, setInterestGroups] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
   const [skills, setSkills] = useState<any[]>([]); // All skills for mapping
   const allSkillsOptions = useMemo(() => skills.map((s:any) => ({ value: s.id, label: s.name })), [skills]);
@@ -59,6 +60,10 @@ export default function ProfileActivityPage() {
   const [opportunityDetails, setOpportunityDetails] = useState<Record<string, any>>({});
   const [bmLoading, setBmLoading] = useState(false);
   const [bmError, setBmError] = useState<string | null>(null);
+  const [intLoading, setIntLoading] = useState(false);
+  const [intError, setIntError] = useState<string | null>(null);
+  const [interestJobDetails, setInterestJobDetails] = useState<Record<string, any>>({});
+  const [interestOppDetails, setInterestOppDetails] = useState<Record<string, any>>({});
   // Post edit modal state (reuse logic from feed page)
   const [editPost, setEditPost] = useState<any | null>(null);
   const [editContent, setEditContent] = useState("");
@@ -261,12 +266,89 @@ export default function ProfileActivityPage() {
     fetchBookmarksAndDetails();
   }, [isProfileOwner, isAdmin, id, loading]);
 
+  // Fetch interests and related job/opportunity details when profile owner or admin
+  useEffect(() => {
+    if (loading) return;
+    if (!isProfileOwner && !isAdmin) return;
+    setIntLoading(true);
+    setIntError(null);
+    async function fetchInterestsAndDetails() {
+      try {
+        let intUrl = "/api/interests/all";
+        let fetchOptions: any = {};
+        if (isAdmin && !isProfileOwner && id) {
+          intUrl += `?personId=${encodeURIComponent(id)}`;
+          if (typeof window !== "undefined" && localStorage.getItem("adminAuth") === "true") {
+            fetchOptions = { headers: { "x-admin-bypass": "true" } };
+          }
+        }
+        const intRes = await fetch(intUrl, fetchOptions);
+        if (intRes.ok) {
+          const data = await intRes.json();
+          setInterestGroups(data || {});
+          // Fetch job details for interested jobs
+          if (data.jobs && Array.isArray(data.jobs) && data.jobs.length > 0) {
+            const jobIds: string[] = Array.from(new Set(data.jobs.map((i: any) => i.targetId)));
+            const jobsRes = await fetch(`/api/jobs/details?ids=${jobIds.join(",")}`);
+            if (jobsRes.ok) {
+              const jobs = await jobsRes.json();
+              const map: Record<string, any> = {};
+              jobs.forEach((j: any) => {
+                map[j.id] = j;
+              });
+              setInterestJobDetails(map);
+            } else {
+              setInterestJobDetails({});
+            }
+          } else {
+            setInterestJobDetails({});
+          }
+          // Fetch opportunity details for interested opportunities
+          if (data.opportunities && Array.isArray(data.opportunities) && data.opportunities.length > 0) {
+            const oppIds: string[] = Array.from(new Set(data.opportunities.map((i: any) => i.targetId)));
+            try {
+              const results = await Promise.all(
+                oppIds.map(async (oid) => {
+                  const res = await fetch(`/api/opportunities/${oid}`);
+                  if (!res.ok) return null;
+                  const opp = await res.json();
+                  return opp && opp.id ? opp : null;
+                })
+              );
+              const map: Record<string, any> = {};
+              results.forEach((opp) => {
+                if (opp && opp.id) map[opp.id] = opp;
+              });
+              setInterestOppDetails(map);
+            } catch {
+              setInterestOppDetails({});
+            }
+          } else {
+            setInterestOppDetails({});
+          }
+        } else {
+          setIntError("Failed to load interests");
+        }
+      } catch (err: any) {
+        setIntError(err.message || "Unknown error");
+      } finally {
+        setIntLoading(false);
+      }
+    }
+    fetchInterestsAndDetails();
+  }, [isProfileOwner, isAdmin, id, loading]);
+
   // Tab definitions
   const tabs = [
-    { key: "jobs", label: "Jobs" },
-    { key: "opportunities", label: "Opportunities" },
-    { key: "posts", label: "Posts" },
-    ...((isProfileOwner || isAdmin) ? [{ key: "bookmarks", label: "Bookmarks" }] : []),
+    { key: "jobs", label: "Jobs", icon: Briefcase },
+    { key: "opportunities", label: "Opportunities", icon: Rocket },
+    { key: "posts", label: "Posts", icon: MessageSquare },
+    ...((isProfileOwner || isAdmin)
+      ? [
+          { key: "bookmarks", label: "Bookmarks", icon: BookmarkIcon },
+          { key: "interests", label: "Interests", icon: Heart },
+        ]
+      : []),
   ];
 
   // Handlers for editing posts (similar to feed page)
@@ -383,9 +465,27 @@ export default function ProfileActivityPage() {
             if (type === "jobs") { border = "border-green-400"; label = "text-green-700"; }
             if (type === "posts") { border = "border-purple-400"; label = "text-purple-700"; }
             if (type === "opportunities") { border = "border-orange-400"; label = "text-orange-700"; }
+            let IconComp: React.ComponentType<any> | null = null;
+            let headingText = "";
+            if (type === "people") {
+              IconComp = Users;
+              headingText = "People";
+            } else if (type === "jobs") {
+              IconComp = Briefcase;
+              headingText = "Jobs";
+            } else if (type === "posts") {
+              IconComp = MessageSquare;
+              headingText = "Posts";
+            } else if (type === "opportunities") {
+              IconComp = Rocket;
+              headingText = "Opportunities";
+            }
             return (
               <section key={type} className={`rounded-xl border-2 ${border} bg-blue-50 px-4 py-4 shadow-sm`}>
-                <h2 className={`text-lg font-semibold mb-3 capitalize ${border} ${label}`}>{type.replace(/([A-Z])/g, ' $1')}</h2>
+                <h2 className={`text-lg font-semibold mb-3 capitalize flex items-center gap-2 ${border} ${label}`}>
+                  {IconComp && <IconComp className="w-5 h-5" aria-hidden />}
+                  <span>{headingText || type.replace(/([A-Z])/g, ' $1')}</span>
+                </h2>
                 {Array.isArray(items) && items.length > 0 ? (
                   <div className="grid gap-3">
                     {type === "people"
@@ -568,6 +668,133 @@ export default function ProfileActivityPage() {
         </div>
       ) : <div className="text-gray-500">No bookmarks found.</div>;
     }
+    if (tab === "interests" && (isProfileOwner || isAdmin)) {
+      if (intLoading) return <div className="text-center text-gray-500">Loading interests...</div>;
+      if (intError) return <div className="text-center text-red-500">{intError}</div>;
+      return interestGroups && (interestGroups.jobs?.length || interestGroups.opportunities?.length) ? (
+        <div className="space-y-6">
+          {(["jobs", "opportunities"] as const)
+            .filter((type) => (interestGroups as any)[type]?.length > 0)
+            .map((type) => {
+              const items = (interestGroups as any)[type];
+              let border = "border-green-400";
+              let label = "text-green-700";
+              if (type === "opportunities") {
+                border = "border-orange-400";
+                label = "text-orange-700";
+              }
+              let IconComp: React.ComponentType<any> | null = null;
+              let headingText = "";
+              if (type === "jobs") {
+                IconComp = Briefcase;
+                headingText = "Jobs";
+              } else if (type === "opportunities") {
+                IconComp = Rocket;
+                headingText = "Opportunities";
+              }
+              return (
+                <section
+                  key={type}
+                  className={`rounded-xl border-2 ${border} bg-blue-50 px-4 py-4 shadow-sm`}
+                >
+                  <h2 className={`text-lg font-semibold mb-3 capitalize flex items-center gap-2 ${border} ${label}`}>
+                    {IconComp && <IconComp className="w-5 h-5" aria-hidden />}
+                    <span>{headingText || (type === "jobs" ? "Jobs" : "Opportunities")}</span>
+                  </h2>
+                  {Array.isArray(items) && items.length > 0 ? (
+                    <div className="grid gap-3">
+                      {type === "jobs"
+                        ? items.map((interest: any) => {
+                            const job = interestJobDetails[interest.targetId];
+                            return (
+                              <Card
+                                key={interest.id}
+                                className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-green-300"
+                              >
+                                <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
+                                  <CardTitle className="text-lg font-semibold text-green-700 flex-1 flex items-center gap-2">
+                                    {job ? (
+                                      <>
+                                        <Link href={`/jobs/${job.id}`} className="hover:underline">
+                                          {job.title}
+                                        </Link>
+                                        <span className="ml-2 px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold uppercase">
+                                          {job.jobType.replace(/_/g, " ")}
+                                        </span>
+                                      </>
+                                    ) : (
+                                      <span>Job ID: {interest.targetId}</span>
+                                    )}
+                                  </CardTitle>
+                                  {isProfileOwner && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="text-red-500 hover:bg-red-100 ml-2 self-start"
+                                      title="Remove interest"
+                                      onClick={() => handleInterestDelete(interest, type)}
+                                    >
+                                      <Trash2 />
+                                    </Button>
+                                  )}
+                                </CardHeader>
+                              </Card>
+                            );
+                          })
+                        : items.map((interest: any) => {
+                            const opp = interestOppDetails[interest.targetId];
+                            return (
+                              <Card
+                                key={interest.id}
+                                className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-orange-300"
+                              >
+                                <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
+                                  <CardTitle className="text-lg font-semibold text-orange-700 flex-1 flex items-center gap-2">
+                                    {opp ? (
+                                      <>
+                                        <Link
+                                          href={`/opportunities/${opp.id}`}
+                                          className="hover:underline"
+                                        >
+                                          {opp.title || "Untitled Opportunity"}
+                                        </Link>
+                                        {opp.status && (
+                                          <span className="ml-2 px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-xs font-semibold uppercase">
+                                            {opp.status}
+                                          </span>
+                                        )}
+                                      </>
+                                    ) : (
+                                      <span>Opportunity ID: {interest.targetId}</span>
+                                    )}
+                                  </CardTitle>
+                                  {isProfileOwner && (
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="text-red-500 hover:bg-red-100 ml-2 self-start"
+                                      title="Remove interest"
+                                      onClick={() => handleInterestDelete(interest, type)}
+                                    >
+                                      <Trash2 />
+                                    </Button>
+                                  )}
+                                </CardHeader>
+                              </Card>
+                            );
+                          })}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No interests in this category.</p>
+                  )}
+                </section>
+              );
+            })}
+        </div>
+      ) : (
+        <div className="text-gray-500">No interests found.</div>
+      );
+    }
     return <div className="text-gray-500">No activity found.</div>;
   }
 
@@ -603,6 +830,28 @@ export default function ProfileActivityPage() {
           return {
             ...prev,
             [type]: items.filter((b: any) => b.id !== bm.id),
+          };
+        });
+      }
+    });
+  }
+
+  function handleInterestDelete(entry: any, type: string) {
+    const targetType = type === "jobs" ? "JOB" : type === "opportunities" ? "OPPORTUNITY" : null;
+    if (!targetType) return;
+    fetch("/api/interests", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ targetType, targetId: entry.targetId }),
+    }).then((res) => {
+      if (res.ok) {
+        setInterestGroups((prev: any) => {
+          if (!prev) return prev;
+          const items = prev[type];
+          if (!Array.isArray(items)) return prev;
+          return {
+            ...prev,
+            [type]: items.filter((i: any) => i.id !== entry.id),
           };
         });
       }
@@ -682,15 +931,47 @@ export default function ProfileActivityPage() {
       {/* Activity Tabs */}
       <div>
         <div className="flex gap-4 border-b mb-3">
-          {tabs.map(t => (
-            <button
-              key={t.key}
-              className={`px-4 py-2 font-semibold ${tab === t.key ? 'text-blue-700 border-b-2 border-blue-600' : 'text-gray-600 hover:text-blue-700'}`}
-              onClick={() => setTab(t.key)}
-            >
-              {t.label}
-            </button>
-          ))}
+          {tabs.map(t => {
+            const Icon = t.icon;
+            let activeText = "";
+            let activeBorder = "";
+            let hoverText = "";
+            if (t.key === "jobs") {
+              activeText = "text-blue-700";
+              activeBorder = "border-blue-600";
+              hoverText = "hover:text-blue-700";
+            } else if (t.key === "opportunities") {
+              activeText = "text-purple-700";
+              activeBorder = "border-purple-600";
+              hoverText = "hover:text-purple-700";
+            } else if (t.key === "posts") {
+              activeText = "text-pink-700";
+              activeBorder = "border-pink-600";
+              hoverText = "hover:text-pink-700";
+            } else if (t.key === "bookmarks") {
+              activeText = "text-yellow-700";
+              activeBorder = "border-yellow-500";
+              hoverText = "hover:text-yellow-700";
+            } else if (t.key === "interests") {
+              activeText = "text-red-700";
+              activeBorder = "border-red-600";
+              hoverText = "hover:text-red-700";
+            }
+            return (
+              <button
+                key={t.key}
+                className={`px-4 py-2 font-semibold inline-flex items-center gap-2 border-b-2 ${
+                  tab === t.key
+                    ? `${activeText} ${activeBorder}`
+                    : `text-gray-600 border-transparent ${hoverText}`
+                }`}
+                onClick={() => setTab(t.key)}
+              >
+                {Icon && <Icon className="w-4 h-4" aria-hidden />}
+                <span>{t.label}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Post Type Filter (shown only when Posts tab is active) */}
