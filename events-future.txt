@@ -105,3 +105,10 @@ model EventRsvp {
   
   @@unique([personId, eventId])
 }
+
+based on the new model for events and eventsrsvp, lets add the features for events
+- events link at the top, that takes to a events listing page
+- events will take the similar format to that of jobs and opportunities; listing page, detail page, new and edit page
+- keep the ui of events listing, detail page, neww and edit page, similar to that of jobs and opportunities
+- i am using blue for jobs, purple for opportuniites, for events maybe we can use a different color like pearl green type
+- 
