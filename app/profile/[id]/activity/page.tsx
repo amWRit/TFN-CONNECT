@@ -9,7 +9,7 @@ import NotFound from "@/components/NotFound";
 import { ProfileImage } from "@/components/ProfileImage";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Mail, Phone, Briefcase, Rocket, MessageSquare, Bookmark as BookmarkIcon, Heart, Users } from "lucide-react";
+import { Trash2, Mail, Phone, Briefcase, Rocket, MessageSquare, Bookmark as BookmarkIcon, Heart, Users, Calendar } from "lucide-react";
 import { JobPostingCard } from "@/components/JobPostingCard";
 import OpportunityCard from "@/components/OpportunityCard";
 import { PostCard } from "@/components/PostCard";
@@ -59,6 +59,7 @@ export default function ProfileActivityPage() {
   const [jobDetails, setJobDetails] = useState<Record<string, any>>({});
   const [postDetails, setPostDetails] = useState<Record<string, any>>({});
   const [opportunityDetails, setOpportunityDetails] = useState<Record<string, any>>({});
+  const [eventDetails, setEventDetails] = useState<Record<string, any>>({});
   const [bmLoading, setBmLoading] = useState(false);
   const [bmError, setBmError] = useState<string | null>(null);
   const [intLoading, setIntLoading] = useState(false);
@@ -253,6 +254,27 @@ export default function ProfileActivityPage() {
                 if (opp && opp.id) map[opp.id] = opp;
               });
               setOpportunityDetails(map);
+            } catch (e) {
+              // swallow errors here; bookmarks UI will fall back to IDs
+            }
+          }
+          // Fetch event details for event bookmarks
+          if (data.events && data.events.length > 0) {
+            const eventIds: string[] = Array.from(new Set(data.events.map((b: any) => b.targetId)));
+            try {
+              const results = await Promise.all(
+                eventIds.map(async (eid) => {
+                  const res = await fetch(`/api/events/${eid}`);
+                  if (!res.ok) return null;
+                  const evt = await res.json();
+                  return evt && evt.id ? evt : null;
+                })
+              );
+              const map: Record<string, any> = {};
+              results.forEach((evt) => {
+                if (evt && evt.id) map[evt.id] = evt;
+              });
+              setEventDetails(map);
             } catch (e) {
               // swallow errors here; bookmarks UI will fall back to IDs
             }
@@ -460,12 +482,13 @@ export default function ProfileActivityPage() {
       if (bmError) return <div className="text-center text-red-500">{bmError}</div>;
       return bookmarks && Object.keys(bookmarks).length > 0 ? (
         <div className="space-y-6">
-          {(["people", "jobs", "opportunities", "posts"] as const).filter(type => (bookmarks as any)[type]?.length > 0).map(type => {
+          {(["people", "jobs", "opportunities", "events", "posts"] as const).filter(type => (bookmarks as any)[type]?.length > 0).map(type => {
             const items = (bookmarks as any)[type];
             let border = "border-blue-400", label = "text-blue-700";
             if (type === "jobs") { border = "border-green-400"; label = "text-green-700"; }
             if (type === "posts") { border = "border-purple-400"; label = "text-purple-700"; }
             if (type === "opportunities") { border = "border-orange-400"; label = "text-orange-700"; }
+            if (type === "events") { border = "border-emerald-400"; label = "text-emerald-700"; }
             let IconComp: React.ComponentType<any> | null = null;
             let headingText = "";
             if (type === "people") {
@@ -480,6 +503,9 @@ export default function ProfileActivityPage() {
             } else if (type === "opportunities") {
               IconComp = Rocket;
               headingText = "Opportunities";
+            } else if (type === "events") {
+              IconComp = Calendar;
+              headingText = "Events";
             }
             return (
               <section key={type} className={`rounded-xl border-2 ${border} bg-blue-50 px-4 py-4 shadow-sm`}>
@@ -623,42 +649,79 @@ export default function ProfileActivityPage() {
                                 </Card>
                               );
                             })
-                          : items.map((bm: any) => {
-                              const opp = opportunityDetails[bm.targetId];
-                              return (
-                                <Card key={bm.id} className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-orange-300">
-                                  <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
-                                    <CardTitle className="text-lg font-semibold text-orange-700 flex-1 flex items-center gap-2">
-                                      {opp ? (
-                                        <>
-                                          <Link href={`/opportunities/${opp.id}`} className="hover:underline">
-                                            {opp.title || "Untitled Opportunity"}
-                                          </Link>
-                                          {opp.status && (
-                                            <span className="ml-2 px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-xs font-semibold uppercase">
-                                              {opp.status}
-                                            </span>
-                                          )}
-                                        </>
-                                      ) : (
-                                        <span>Opportunity ID: {bm.targetId}</span>
+                          : type === "opportunities"
+                            ? items.map((bm: any) => {
+                                const opp = opportunityDetails[bm.targetId];
+                                return (
+                                  <Card key={bm.id} className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-orange-300">
+                                    <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
+                                      <CardTitle className="text-lg font-semibold text-orange-700 flex-1 flex items-center gap-2">
+                                        {opp ? (
+                                          <>
+                                            <Link href={`/opportunities/${opp.id}`} className="hover:underline">
+                                              {opp.title || "Untitled Opportunity"}
+                                            </Link>
+                                            {opp.status && (
+                                              <span className="ml-2 px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-xs font-semibold uppercase">
+                                                {opp.status}
+                                              </span>
+                                            )}
+                                          </>
+                                        ) : (
+                                          <span>Opportunity ID: {bm.targetId}</span>
+                                        )}
+                                      </CardTitle>
+                                      {(isProfileOwner || isAdmin) && (
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="text-red-500 hover:bg-red-100 ml-2 self-start"
+                                          title="Remove bookmark"
+                                          onClick={() => handleDelete(bm, type)}
+                                        >
+                                          <Trash2 />
+                                        </Button>
                                       )}
-                                    </CardTitle>
-                                    {isProfileOwner && (
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="text-red-500 hover:bg-red-100 ml-2 self-start"
-                                        title="Remove bookmark"
-                                        onClick={() => handleDelete(bm, type)}
-                                      >
-                                        <Trash2 />
-                                      </Button>
-                                    )}
-                                  </CardHeader>
-                                </Card>
-                              );
-                            })}
+                                    </CardHeader>
+                                  </Card>
+                                );
+                              })
+                            : items.map((bm: any) => {
+                                const evt = eventDetails[bm.targetId];
+                                return (
+                                  <Card key={bm.id} className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-emerald-300">
+                                    <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
+                                      <CardTitle className="text-lg font-semibold text-emerald-700 flex-1 flex items-center gap-2">
+                                        {evt ? (
+                                          <>
+                                            <Link href={`/events/${evt.id}`} className="hover:underline">
+                                              {evt.title || "Untitled Event"}
+                                            </Link>
+                                            {evt.status && (
+                                              <span className="ml-2 px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase">
+                                                {evt.status}
+                                              </span>
+                                            )}
+                                          </>
+                                        ) : (
+                                          <span>Event ID: {bm.targetId}</span>
+                                        )}
+                                      </CardTitle>
+                                      {(isProfileOwner || isAdmin) && (
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="text-red-500 hover:bg-red-100 ml-2 self-start"
+                                          title="Remove bookmark"
+                                          onClick={() => handleDelete(bm, type)}
+                                        >
+                                          <Trash2 />
+                                        </Button>
+                                      )}
+                                    </CardHeader>
+                                  </Card>
+                                );
+                              })}
                   </div>
                 ) : (
                   <p className="text-gray-500">No bookmarks in this category.</p>
@@ -814,6 +877,9 @@ export default function ProfileActivityPage() {
     } else if (type === "opportunities") {
       url += "opportunity";
       body = { targetOpportunityId: bm.targetId };
+    } else if (type === "events") {
+      url += "event";
+      body = { targetEventId: bm.targetId };
     } else {
       alert("Unbookmarking for this type is not implemented yet.");
       return;

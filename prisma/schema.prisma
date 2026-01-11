@@ -387,6 +387,7 @@ enum BookmarkType {
   POST
   JOB_APPLICATION
   OPPORTUNITY
+  EVENT
 }
 
 model Bookmark {

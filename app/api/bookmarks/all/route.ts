@@ -50,6 +50,7 @@ export async function GET(request: Request) {
     people: bookmarks.filter(b => b.type === "PERSON"),
     jobs: bookmarks.filter(b => b.type === "JOB_POSTING"),
     opportunities: bookmarks.filter(b => b.type === "OPPORTUNITY"),
+    events: bookmarks.filter(b => b.type === "EVENT"),
     posts: bookmarks.filter(b => b.type === "POST"),
     jobApplications: bookmarks.filter(b => b.type === "JOB_APPLICATION"),
   };

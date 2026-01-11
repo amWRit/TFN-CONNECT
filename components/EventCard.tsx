@@ -117,10 +117,9 @@ export default function EventCard({
     let ignore = false;
     const fetchBookmark = async () => {
       try {
-        // TODO: Add event bookmark API when ready
-        // const res = await fetch(`/api/bookmarks/event?targetEventId=${id}`);
-        // const data = await res.json();
-        // if (!ignore) setBookmarkState({ bookmarked: !!data.bookmarked, loading: false });
+        const res = await fetch(`/api/bookmarks/event?targetEventId=${id}`);
+        const data = await res.json();
+        if (!ignore) setBookmarkState({ bookmarked: !!data.bookmarked, loading: false });
       } catch {
         if (!ignore) setBookmarkState({ bookmarked: false, loading: false });
       }
@@ -155,7 +154,26 @@ export default function EventCard({
             onClick={async (e) => {
               e.preventDefault();
               e.stopPropagation();
-              // TODO: Implement event bookmark toggle
+              setBookmarkState((prev) => ({ ...prev, loading: true }));
+              try {
+                if (bookmarkState.bookmarked) {
+                  await fetch("/api/bookmarks/event", {
+                    method: "DELETE",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ targetEventId: id }),
+                  });
+                  setBookmarkState({ bookmarked: false, loading: false });
+                } else {
+                  await fetch("/api/bookmarks/event", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ targetEventId: id }),
+                  });
+                  setBookmarkState({ bookmarked: true, loading: false });
+                }
+              } catch {
+                setBookmarkState((prev) => ({ ...prev, loading: false }));
+              }
             }}
             className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${bookmarkState.bookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110 disabled:opacity-60`}
           >
