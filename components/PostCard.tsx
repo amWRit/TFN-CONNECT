@@ -125,8 +125,10 @@ export function PostCard({
       window.removeEventListener('focus', syncAdmin);
     };
   }, []);
-  const isSessionAdmin = (session?.user as any)?.type === 'ADMIN';
-  const isEffectiveAdmin = adminView || isSessionAdmin || localAdmin;
+  const personType = (session?.user as any)?.type;
+  const isSessionAdmin = personType === 'ADMIN' || personType === 'STAFF_ADMIN';
+  // Only allow admin if adminView is true, or (type is ADMIN/STAFF_ADMIN AND localAdmin is true)
+  const isEffectiveAdmin = adminView || (isSessionAdmin && localAdmin);
 
   // Fetch initial bookmark state
   useEffect(() => {

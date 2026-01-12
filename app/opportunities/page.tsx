@@ -226,8 +226,8 @@ export default function OpportunitiesPage() {
           )}
         </div>
       </div>
-      {/* Floating Add New Opportunity Button (only if signed in) */}
-      {status === "authenticated" && (
+      {/* Floating Add New Opportunity Button (only if signed in and NOT admin view) */}
+      {status === "authenticated" && !isAdminView && (
         <button
           onClick={handleAddOpportunity}
           className="fixed bottom-8 right-8 z-50 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"

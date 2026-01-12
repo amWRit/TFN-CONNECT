@@ -39,8 +39,10 @@ export default function FeedPage() {
       window.removeEventListener('focus', syncAdmin);
     };
   }, []);
-  const isSessionAdmin = (session?.user as any)?.type === 'ADMIN';
-  const isAdmin = isSessionAdmin || localAdmin;
+  // Only allow admin if type is ADMIN or STAFF_ADMIN AND adminAuth is set
+  const personType = (session?.user as any)?.type;
+  const isSessionAdmin = personType === 'ADMIN' || personType === 'STAFF_ADMIN';
+  const isAdmin = isSessionAdmin && localAdmin;
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -325,8 +327,8 @@ export default function FeedPage() {
         )}
       </div>
 
-      {/* Floating Add New Post Button (only if signed in) */}
-      {session && (
+      {/* Floating Add New Post Button (only if signed in and NOT admin) */}
+      {session && !isAdmin && (
         <button
           onClick={() => setShowModal(true)}
           className="fixed bottom-8 right-8 z-50 bg-pink-500 hover:bg-pink-600 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"
