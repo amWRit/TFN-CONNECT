@@ -191,13 +191,14 @@ export default function ProfileActivityPage() {
     async function fetchBookmarksAndDetails() {
       try {
         let bmUrl = "/api/bookmarks/all";
-        let fetchOptions = {};
+        // Always include credentials and headers as needed
+        let fetchOptions: RequestInit = { credentials: 'include', headers: {} };
         // If signed-in admin is viewing someone else's profile, request their bookmarks
         if (isAdmin && !isProfileOwner && id) {
           bmUrl += `?personId=${encodeURIComponent(id)}`;
           // If bypass admin, send header
           if (typeof window !== 'undefined' && localStorage.getItem('adminAuth') === 'true') {
-            fetchOptions = { headers: { 'x-admin-bypass': 'true' } };
+            (fetchOptions.headers as Record<string, string>)['x-admin-bypass'] = 'true';
           }
         }
         const bmRes = await fetch(bmUrl, fetchOptions);

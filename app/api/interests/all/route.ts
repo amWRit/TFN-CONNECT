@@ -4,32 +4,38 @@ import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session || !session.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
 
-  const requesterId = session.user.id;
-
+  // Parse URL and headers
   const parsedUrl = new URL(request.url);
   const qPersonId = parsedUrl.searchParams.get("personId");
-  let targetPersonId = requesterId;
+  const bypassHeader = request.headers.get("x-admin-bypass");
 
-  if (qPersonId && qPersonId !== requesterId) {
-    // requester wants interests for another user; allow if NextAuth admin OR bypass header
-    let allowBypass = false;
-    try {
-      const bypassHeader = request.headers.get("x-admin-bypass");
-      if (bypassHeader && bypassHeader.toLowerCase() === "true") {
-        allowBypass = true;
-      }
-    } catch {}
-
-    const requester = await prisma.person.findUnique({ where: { id: requesterId } });
-    if (!allowBypass && (!requester || requester.type !== "ADMIN")) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+  let targetPersonId: string | null = null;
+  let allowBypass = false;
+  if (bypassHeader && bypassHeader.toLowerCase() === "true" && qPersonId) {
+    // Allow admin bypass if header is present and personId is provided
+    allowBypass = true;
     targetPersonId = qPersonId;
+  } else {
+    // Normal session-based access
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const requesterId = session.user.id;
+    targetPersonId = requesterId;
+    // If requesting another user's interests, check admin
+    if (qPersonId && qPersonId !== requesterId) {
+      const requester = await prisma.person.findUnique({ where: { id: requesterId } });
+      if (!requester || requester.type !== "ADMIN") {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      targetPersonId = qPersonId;
+    }
+  }
+
+  if (!targetPersonId) {
+    return NextResponse.json({ error: 'No personId specified' }, { status: 400 });
   }
 
   const interests = await prisma.interest.findMany({
