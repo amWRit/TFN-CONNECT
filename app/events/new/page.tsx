@@ -42,6 +42,7 @@ export default function NewEventPage() {
   const [address, setAddress] = useState("");
   const [externalLink, setExternalLink] = useState("");
   const [tags, setTags] = useState("");
+  const [tagError, setTagError] = useState<string | null>(null);
   const [sponsors, setSponsors] = useState("");
   const [startDateTime, setStartDateTime] = useState("");
   const [endDateTime, setEndDateTime] = useState("");
@@ -67,6 +68,14 @@ export default function NewEventPage() {
     setLoading(true);
     setError(null);
     setSuccess(false);
+    setTagError(null);
+
+    const tagList = tags ? tags.split(",").map((t) => t.trim()).filter(Boolean) : [];
+    if (tagList.length > 3) {
+      setTagError("You can add up to 3 tags only.");
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch("/api/events", {
@@ -80,7 +89,7 @@ export default function NewEventPage() {
           location,
           address,
           externalLink: externalLink || null,
-          tags: tags ? tags.split(",").map((t) => t.trim()).filter(Boolean) : [],
+          tags: tagList,
           sponsors: sponsors ? sponsors.split(",").map((s) => s.trim()).filter(Boolean) : [],
           startDateTime,
           endDateTime: endDateTime || null,
@@ -299,14 +308,20 @@ export default function NewEventPage() {
 
         {/* Tags */}
         <div>
-          <label className="block font-semibold mb-2 text-emerald-700">Tags</label>
+          <label className="block font-semibold mb-2 text-emerald-700">Tags <span className="text-xs text-gray-500">(max 3)</span></label>
           <input
             type="text"
             className="w-full border-2 border-emerald-300 focus:border-emerald-500 rounded-lg px-4 py-2 bg-white/80 focus:bg-emerald-50 transition-all duration-200 outline-none"
             value={tags}
-            onChange={(e) => setTags(e.target.value)}
+            onChange={(e) => {
+              setTags(e.target.value);
+              setTagError(null);
+            }}
             placeholder="leadership, education, youth (comma-separated)"
           />
+          {tagError && (
+            <div className="text-red-500 text-xs mt-1 font-semibold">{tagError}</div>
+          )}
         </div>
 
         {/* Sponsors */}
