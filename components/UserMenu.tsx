@@ -125,7 +125,9 @@ export default function UserMenu() {
           className="flex items-center gap-2 px-2 py-1 rounded hover:bg-blue-100 transition"
           aria-label="Admin menu"
         >
-          <UserCircle size={24} />
+          <span className="h-8 w-8 flex items-center justify-center rounded-full border-2 border-yellow-300 bg-yellow-50">
+            <Shield size={22} className="text-yellow-700" />
+          </span>
         </button>
         {open && (
           <div className="absolute right-0 mt-2 w-56 bg-white border rounded-lg shadow-lg z-50">
@@ -220,7 +222,9 @@ export default function UserMenu() {
         className="flex items-center gap-2 px-2 py-1 rounded hover:bg-blue-100 transition"
         aria-label="User menu"
       >
-        {profileImage ? (
+        {isAdmin ? (
+          <Shield size={28} className="text-yellow-700" />
+        ) : profileImage ? (
           <ProfileImage
             src={profileImage}
             name={displayName}
