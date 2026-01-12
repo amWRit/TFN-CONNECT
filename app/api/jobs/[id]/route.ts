@@ -54,6 +54,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
       where: { id },
       data: {
         title: body.title,
+        overview: body.overview,
         description: body.description,
         location: body.location,
         jobType: body.jobType,

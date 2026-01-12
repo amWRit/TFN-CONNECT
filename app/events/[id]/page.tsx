@@ -156,7 +156,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
         {/* People Interested Sidebar (right column, only for owner/admin) */}
         {canEdit && (
           <div className="w-full md:w-64 flex-shrink-0">
-            <h2 className="text-lg font-semibold mb-4 bg-gradient-to-r from-pink-600 to-purple-500 bg-clip-text text-transparent">
+            <h2 className="text-lg font-semibold mb-4 bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
               People Interested
             </h2>
             {event.interests && event.interests.length > 0 ? (
@@ -171,15 +171,15 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
                           href={`/profile/${interest.user!.id}`}
                           className="block"
                         >
-                          <div className="flex items-center gap-4 p-4 bg-white rounded-xl shadow border-2 border-pink-400 hover:shadow-lg transition-all duration-150">
+                          <div className="flex items-center gap-4 p-4 bg-white rounded-xl shadow border-2 border-emerald-400 hover:shadow-lg transition-all duration-150">
                             <ProfileImage
                               src={interest.user!.profileImage}
                               name={`${interest.user!.firstName} ${interest.user!.lastName}`}
-                              className="h-12 w-12 rounded-full border-2 border-pink-200 object-cover"
+                              className="h-12 w-12 rounded-full border-2 border-emerald-200 object-cover"
                               alt={`${interest.user!.firstName} ${interest.user!.lastName}`}
                             />
                             <div className="flex flex-col">
-                              <span className="font-semibold text-pink-700 text-base">
+                              <span className="font-semibold text-emerald-700 text-base">
                                 {interest.user!.firstName} {interest.user!.lastName}
                               </span>
                             </div>

@@ -250,9 +250,11 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Detailed description of the event..."
           />
-          <p className="text-xs text-gray-500 mt-1 italic">
-            Tip: You can use Markdown for formatting.
-          </p>
+          <div className="text-xs text-gray-500 mt-1 italic">
+            Tip: You can use Markdown to format your description.<br />
+            Supports **bold**, _italics_, headings, ordered and unordered lists.<br />
+            Try <a href="https://markdownlivepreview.com/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Live Preview</a> or the <a href="https://www.markdownguide.org/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Guide</a> for syntax and examples.
+          </div>
         </div>
 
         {/* Event Type */}
@@ -450,7 +452,7 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
           </button>
           <button
             type="button"
-            className="flex-1 bg-white border-2 border-gray-400 text-gray-600 font-bold px-8 py-3 rounded-xl shadow transition-all duration-200 text-lg tracking-wide hover:bg-gray-50 hover:border-gray-600"
+            className="flex-1 bg-red-100 border-2 border-red-300 text-red-700 font-bold px-8 py-3 rounded-xl shadow transition-all duration-200 text-lg tracking-wide hover:bg-red-200 hover:border-red-400"
             onClick={() => router.push(`/events/${id}`)}
             disabled={saving}
           >

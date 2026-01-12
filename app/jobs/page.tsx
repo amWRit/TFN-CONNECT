@@ -233,6 +233,7 @@ export default function JobsPage() {
                     location={job.location}
                     jobType={job.jobType}
                     status={job.status}
+                    overview={(job as any).overview}
                     description={job.description}
                     requiredSkills={requiredSkills}
                     createdBy={job.createdBy}

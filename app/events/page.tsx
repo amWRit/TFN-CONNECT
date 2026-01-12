@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { EventType } from "@prisma/client";
+import { EventType, EventStatus } from "@prisma/client";
 import EventCard from "@/components/EventCard";
 import { Badge } from "@/components/ui/badge";
 
@@ -25,8 +25,7 @@ interface Event {
 }
 
 const eventTypes: string[] = Object.values(EventType);
-// Define available event statuses manually since EventStatus is not exported from @prisma/client
-const eventStatuses: string[] = ["DRAFT", "PUBLISHED", "CANCELLED"];
+const eventStatuses: string[] = Object.values(EventStatus);
 
 export default function EventsPage() {
   const { data: session, status } = useSession();

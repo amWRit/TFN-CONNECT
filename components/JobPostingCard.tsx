@@ -10,7 +10,7 @@ import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Info, Users, Bookmark, BookmarkCheck, Pencil } from "lucide-react";
+import { MapPin, Info, Users, Bookmark, BookmarkCheck, Pencil, Eye } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -22,6 +22,7 @@ interface JobPostingProps {
   location?: string;
   jobType: string;
   status?: string;
+  overview?: string;
   description: string;
   requiredSkills?: string[];
   applicants?: number;
@@ -55,6 +56,7 @@ export function JobPostingCard({
   createdBy,
   hideViewButton = false,
   deadline,
+  overview,
   adminView = false,
 }: JobPostingProps) {
   const { data: session } = useSession();
@@ -251,6 +253,17 @@ export function JobPostingCard({
         {/* Only show description and required skills if detail page */}
         {isDetailPage && (
           <>
+            {/* Overview panel */}
+            {isDetailPage && overview && (
+              <div className="mb-2 text-sm text-gray-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+                <div className="flex items-center gap-2 mb-1">
+                  <Eye className="h-5 w-5 text-blue-400 flex-shrink-0" />
+                  <span className="font-semibold text-blue-700">Overview</span>
+                </div>
+                <div className="text-sm text-gray-800">{overview}</div>
+              </div>
+            )}
+
             {/* Collapsible markdown description section */}
             {description && description.trim() !== '' ? (() => {
               // Helper to count lines in markdown string

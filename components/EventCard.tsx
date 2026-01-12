@@ -4,9 +4,20 @@ import React from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { MapPin, Calendar, Clock, Users, Pencil, Bookmark, BookmarkCheck } from "lucide-react";
+import { MapPin, Calendar, Clock, Users, Pencil, Bookmark, BookmarkCheck, Eye } from "lucide-react";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+
+// Linkify function to convert URLs to markdown links
+function linkify(text: string) {
+  const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/gi;
+  return text.replace(urlRegex, (url) => {
+    const href = url.startsWith("http") ? url : `https://${url}`;
+    return `[${url}](${href})`;
+  });
+}
 
 interface EventCardProps {
   id: string;
@@ -110,6 +121,7 @@ export default function EventCard({
   const showBookmark = session?.user && !isOwner && !isEffectiveAdmin;
 
   const [bookmarkState, setBookmarkState] = useState({ bookmarked: false, loading: false });
+  const [descExpanded, setDescExpanded] = useState(false);
 
   useEffect(() => {
     // Skip bookmark fetch for owners and admins
@@ -241,15 +253,60 @@ export default function EventCard({
       {/* Overview */}
       {overview && (
         <div className="mb-3 text-sm text-gray-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+          <div className="flex items-center gap-2 mb-1">
+            <Eye className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+            <span className="font-semibold text-emerald-700">Overview</span>
+          </div>
           <p className={showOverviewOnly ? "line-clamp-2" : ""}>{overview}</p>
         </div>
       )}
 
-      {/* Description (full view only) */}
+      {/* Description (full view only, markdown) */}
       {!showOverviewOnly && description && (
-        <div className="mb-3">
-          <h3 className="text-sm font-semibold text-gray-500 uppercase mb-1">Description</h3>
-          <p className="text-sm text-gray-700 whitespace-pre-wrap">{description}</p>
+        <div className="mb-3 text-sm text-gray-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+          <div className="flex items-center gap-2 mb-1">
+            <InformationCircleIcon className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+            <span className="font-semibold text-emerald-700">Description</span>
+          </div>
+          <div className="markdown-content w-full relative">
+            <div style={{
+              maxHeight: !descExpanded && (description.match(/\n/g) || []).length + 1 > 8 ? `${1.6 * 8}em` : undefined,
+              overflow: !descExpanded && (description.match(/\n/g) || []).length + 1 > 8 ? 'hidden' : undefined,
+              position: 'relative',
+              transition: 'max-height 0.3s',
+            }}>
+              <ReactMarkdown
+                components={{
+                  h1: ({node, ...props}) => <h1 {...props} className="text-2xl font-bold mt-4 mb-2 text-emerald-900" />,
+                  h2: ({node, ...props}) => <h2 {...props} className="text-xl font-bold mt-3 mb-2 text-emerald-800" />,
+                  h3: ({node, ...props}) => <h3 {...props} className="text-lg font-semibold mt-3 mb-1 text-emerald-700" />,
+                  h4: ({node, ...props}) => <h4 {...props} className="text-base font-semibold mt-2 mb-1 text-emerald-600" />,
+                  h5: ({node, ...props}) => <h5 {...props} className="text-sm font-semibold mt-2 mb-1 text-emerald-500" />,
+                  h6: ({node, ...props}) => <h6 {...props} className="text-xs font-semibold mt-2 mb-1 text-emerald-400" />,
+                  a: ({node, ...props}) => <a {...props} className="text-emerald-600 underline break-all" target="_blank" rel="noopener noreferrer" />,
+                  strong: ({node, ...props}) => <strong {...props} className="font-bold" />,
+                  em: ({node, ...props}) => <em {...props} className="italic" />,
+                  ul: ({node, ...props}) => <ul {...props} className="list-disc ml-6" />,
+                  ol: ({node, ...props}) => <ol {...props} className="list-decimal ml-6" />,
+                  li: ({node, ...props}) => <li {...props} className="mb-1" />,
+                }}
+              >
+                {linkify(description || "")}
+              </ReactMarkdown>
+            </div>
+            {((description.match(/\n/g) || []).length + 1) > 8 && (
+              <div className="absolute bottom-0 left-0 w-full h-8 bg-gradient-to-t from-emerald-50 to-transparent flex items-end justify-center pointer-events-none" style={{display: descExpanded ? 'none' : 'flex'}} />
+            )}
+          </div>
+          {((description.match(/\n/g) || []).length + 1) > 8 && (
+            <button
+              className="mt-2 text-xs text-emerald-600 underline font-semibold focus:outline-none"
+              onClick={() => setDescExpanded(v => !v)}
+              type="button"
+            >
+              {descExpanded ? 'Show less' : 'Show more'}
+            </button>
+          )}
         </div>
       )}
 

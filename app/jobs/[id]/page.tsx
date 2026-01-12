@@ -117,6 +117,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
               location={job.location}
               jobType={job.jobType}
               status={job.status}
+              overview={(job as any).overview}
               description={job.description}
               requiredSkills={requiredSkills}
               createdBy={job.createdBy && job.createdBy.id ? job.createdBy as { id: string; firstName: string; lastName: string } : undefined}

@@ -46,7 +46,7 @@ export default function PeoplePage() {
 	const [cohortFilter, setCohortFilter] = useState("");
 	const [empStatusFilter, setEmpStatusFilter] = useState("");
 	const [nameFilter, setNameFilter] = useState("");
-	const [allCohorts, setAllCohorts] = useState<string[]>([]);
+	const [allCohorts, setAllCohorts] = useState<{id: string; name: string}[]>([]);
 	const [personTypes, setPersonTypes] = useState<string[]>([]);
 	const [page, setPage] = useState(1);
 	const pageSize = 24;
@@ -59,17 +59,24 @@ export default function PeoplePage() {
 			.then((res) => res.json())
 			.then((data) => {
 				setPeople(data);
-				// Extract all unique cohorts from fellowships (for alumni only)
-				const cohortSet = new Set<string>();
-				data.filter((p: Person) => p.type === "ALUMNI").forEach((p: any) => {
-					if (p.fellowships && Array.isArray(p.fellowships)) {
-						p.fellowships.forEach((f: any) => {
-							if (f.cohort && f.cohort.name) cohortSet.add(f.cohort.name);
-						});
-					}
-				});
-				setAllCohorts(Array.from(cohortSet));
 				setLoading(false);
+			});
+	}, []);
+
+	// Fetch cohorts from the cohorts API
+	useEffect(() => {
+		fetch("/api/cohorts")
+			.then((res) => res.json())
+			.then((data) => {
+				if (Array.isArray(data)) {
+					const cohorts = data
+						.filter((c: any) => c.id && c.name)
+						.map((c: any) => ({ id: String(c.id), name: String(c.name) }));
+					setAllCohorts(cohorts);
+				}
+			})
+			.catch((err) => {
+				console.error("Error fetching cohorts", err);
 			});
 	}, []);
 
@@ -128,11 +135,24 @@ export default function PeoplePage() {
 
 	// Filter logic
 	const filteredPeople = useMemo(() => {
-		let filtered = tab === "ALL" ? people : people.filter((person) => person.type === tab);
+		let filtered = people;
+		if (tab === "ALL") {
+			// Show all
+		} else if (tab === "ALUMNI") {
+			// Include both ALUMNI and STAFF_ALUMNI
+			filtered = filtered.filter((person) => person.type === "ALUMNI" || person.type === "STAFF_ALUMNI");
+		} else if (tab === "STAFF") {
+			// Include both STAFF and STAFF_ALUMNI and STAFF_ADMIN
+			filtered = filtered.filter((person) => person.type === "STAFF" || person.type === "STAFF_ALUMNI" || person.type === "STAFF_ADMIN");
+		} else {
+			filtered = filtered.filter((person) => person.type === tab);
+		}
 		if (tab === "ALUMNI") {
 			if (cohortFilter) {
 				filtered = filtered.filter((person: any) => {
-					return person.fellowships && person.fellowships.some((f: any) => f.cohort && f.cohort.name === cohortFilter);
+					return person.fellowships && person.fellowships.some((f: any) => 
+						f.cohortId === cohortFilter || (f.cohort && f.cohort.id === cohortFilter)
+					);
 				});
 			}
 			if (empStatusFilter) {
@@ -145,6 +165,12 @@ export default function PeoplePage() {
 				return fullName.toLowerCase().includes(nameFilter.toLowerCase());
 			});
 		}
+		// Sort by name ascending
+		filtered = [...filtered].sort((a, b) => {
+			const nameA = [a.firstName, a.middleName, a.lastName].filter(Boolean).join(' ').toLowerCase();
+			const nameB = [b.firstName, b.middleName, b.lastName].filter(Boolean).join(' ').toLowerCase();
+			return nameA.localeCompare(nameB);
+		});
 		return filtered;
 	}, [people, tab, cohortFilter, empStatusFilter, nameFilter]);
 
@@ -209,14 +235,18 @@ export default function PeoplePage() {
 									<div className="flex items-center gap-2 w-full sm:w-auto">
 										<label className="font-semibold text-purple-700">Cohort</label>
 										<select
-											className="border border-purple-200 rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition"
+											className="border border-purple-200 rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition min-w-[140px]"
 											value={cohortFilter}
 											onChange={e => setCohortFilter(e.target.value)}
 										>
 											<option value="">All</option>
-											{allCohorts.map((c) => (
-												<option key={c} value={c}>{c}</option>
-											))}
+											{allCohorts.map((c) => {
+												return (
+													<option key={c.id} value={c.id}>
+														{c.name}
+													</option>
+												);
+											})}
 										</select>
 									</div>
 									<div className="flex items-center gap-2 w-full sm:w-auto">
@@ -249,9 +279,6 @@ export default function PeoplePage() {
 					<div className="flex-1 flex items-center sm:justify-end justify-center">
 						{filteredPeople.length > 0 && (
 							<div className="flex items-center gap-2 text-xs text-gray-600">
-								<span className="hidden sm:inline">
-									Page {page} of {totalPages}
-								</span>
 								<button
 									type="button"
 									disabled={page === 1}
