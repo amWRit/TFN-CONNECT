@@ -1,6 +1,7 @@
 
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { Group } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2 } from 'lucide-react';
@@ -23,6 +24,21 @@ export default function SchoolGroupsTab() {
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: '', localGovId: '' });
   const [loading, setLoading] = useState(false);
+
+  // Filters
+  const [localGovFilter, setLocalGovFilter] = useState('');
+  const [nameFilter, setNameFilter] = useState('');
+  // Filtered school groups
+  const filteredSchoolGroups = useMemo(() => {
+    let filtered = schoolGroups;
+    if (localGovFilter) {
+      filtered = filtered.filter((sg) => sg.localGovId === localGovFilter);
+    }
+    if (nameFilter) {
+      filtered = filtered.filter((sg) => sg.name.toLowerCase().includes(nameFilter.toLowerCase()));
+    }
+    return filtered;
+  }, [schoolGroups, localGovFilter, nameFilter]);
 
   useEffect(() => {
     fetchData();
@@ -156,8 +172,48 @@ export default function SchoolGroupsTab() {
           </Card>
         )}
 
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200/60 py-3">
+          <div className="flex-1 flex items-center sm:justify-start justify-center">
+            <div className="flex items-center gap-4">
+              <div className="relative flex items-center">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500 pointer-events-none">
+                  <Group size={18} />
+                </span>
+                <select
+                  className="appearance-none pl-9 pr-12 py-2 w-52 border-2 border-blue-400 rounded-full bg-blue-100/80 font-semibold text-blue-800 focus:ring-2 focus:ring-blue-400 outline-none transition shadow-sm text-base"
+                  value={localGovFilter}
+                  onChange={e => setLocalGovFilter(e.target.value)}
+                >
+                  <option value="">All Local Governments</option>
+                  {localGovs.map((lg) => (
+                    <option key={lg.id} value={lg.id}>{lg.name}</option>
+                  ))}
+                </select>
+                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-blue-500">
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="flex-1 flex justify-center">
+            <div className="bg-white/80 border border-blue-100 rounded-xl shadow-sm px-4 py-3 flex flex-row flex-wrap md:flex-nowrap items-center gap-3 w-full">
+              <div className="flex items-center gap-2 w-full sm:flex-1">
+                <label className="font-semibold text-blue-700">Name</label>
+                <input
+                  type="text"
+                  className="border border-blue-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-300 outline-none transition w-full min-w-[160px]"
+                  placeholder="Search by name"
+                  value={nameFilter}
+                  onChange={e => setNameFilter(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {schoolGroups.map((sg) => (
+          {filteredSchoolGroups.map((sg) => (
             <Card key={sg.id} className="p-4 flex justify-between items-center border-2 border-blue-500/70 shadow-sm rounded-xl">
               {editId === sg.id ? (
                 <form onSubmit={saveEdit} className="flex-1 flex flex-col gap-2">

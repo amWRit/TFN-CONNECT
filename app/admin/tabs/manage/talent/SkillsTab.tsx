@@ -5,7 +5,8 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Select from 'react-select';
 import { MultiValue } from 'react-select';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Group } from 'lucide-react';
+import { useRef } from 'react';
 
 type CategoryOption = { value: string; label: string };
 
@@ -30,6 +31,14 @@ export default function SkillsTab() {
 	const [skillForm, setSkillForm] = useState<{ name: string; categories: CategoryOption[]; description: string }>({ name: '', categories: [], description: '' });
 	const [editState, setEditState] = useState<EditState>({ id: null, name: '', categories: [], description: '' });
 	const [loading, setLoading] = useState(false);
+
+	// Category filter
+	const [categoryFilter, setCategoryFilter] = useState('');
+	// Filtered skills
+	const filteredSkills = useMemo(() => {
+		if (!categoryFilter) return skills;
+		return skills.filter((s) => Array.isArray(s.categories) && s.categories.includes(categoryFilter));
+	}, [skills, categoryFilter]);
 
 	useEffect(() => {
 		fetchData();
@@ -144,6 +153,28 @@ export default function SkillsTab() {
 	// ...existing code...
 	return (
 		<div className="space-y-6">
+			{/* Category filter */}
+			<div className="flex items-center gap-2 mb-4">
+				<label className="font-semibold text-blue-700">Category</label>
+				<div className="relative flex items-center">
+					<span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500 pointer-events-none">
+						<Group size={18} />
+					</span>
+					<select
+						className="appearance-none pl-9 pr-12 py-2 w-52 border-2 border-blue-400 rounded-full bg-blue-100/80 font-semibold text-blue-800 focus:ring-2 focus:ring-blue-400 outline-none transition shadow-sm text-base"
+						value={categoryFilter}
+						onChange={e => setCategoryFilter(e.target.value)}
+					>
+						<option value="">All Categories</option>
+						{categories.map((cat) => (
+							<option key={cat.value} value={cat.label}>{cat.label}</option>
+						))}
+					</select>
+					<span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-blue-500">
+						<svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+					</span>
+				</div>
+			</div>
 			{/* Skills */}
 			<div>
 				<div className="flex justify-between items-center mb-4">
@@ -185,7 +216,7 @@ export default function SkillsTab() {
 				)}
 
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-					{skills.map((s) => (
+					  {filteredSkills.map((s) => (
 						<Card key={s.id} className="p-4 flex justify-between items-center border-2 border-blue-500/70 shadow-sm rounded-xl">
 							{editState.id === s.id ? (
 								<form onSubmit={saveEdit} className="flex-1 flex flex-col gap-2">
@@ -254,4 +285,20 @@ export default function SkillsTab() {
 			</div>
 		</div>
 	);
+}
+function useMemo<T>(factory: () => T, deps: any[]): T {
+	const prevDepsRef = useRef<any[]>();
+	const valueRef = useRef<T>();
+
+	const depsChanged =
+		!prevDepsRef.current ||
+		prevDepsRef.current.length !== deps.length ||
+		prevDepsRef.current.some((dep, i) => dep !== deps[i]);
+
+	if (depsChanged) {
+		valueRef.current = factory();
+		prevDepsRef.current = deps;
+	}
+
+	return valueRef.current as T;
 }

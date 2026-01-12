@@ -109,12 +109,6 @@ export default function IndexTab() {
         <StatCard label="Job Postings" value={stats.totalJobPostings} />
         <StatCard label="Posts" value={stats.totalPosts} />
       </div>
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
-        <h3 className="font-bold text-blue-900 mb-1 text-base">Future Feature</h3>
-        <p className="text-blue-700">
-          Alumni will be able to create and manage their own profiles, including education, employment history, and fellowship details.
-        </p>
-      </div>
     </div>
   );
 }

@@ -5,9 +5,17 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const type = searchParams.get('type');
+    const types = searchParams.get('types');
+
+    let where: any = undefined;
+    if (types) {
+      where = { type: { in: types.split(',').map(t => t.trim()) } };
+    } else if (type) {
+      where = { type: type };
+    }
 
     const people = await prisma.person.findMany({
-      where: type ? { type: type as any } : undefined,
+      where,
       include: {
         experiences: {
           include: {
