@@ -119,14 +119,8 @@ export function JobPostingCard({
 
   const isDetailPage = !href;
   // Determine if current user is the job owner by createdBy.id
-  // Add fallback and debug logging
   const userId = session?.user?.id;
   const ownerId = createdBy?.id;
-  if (typeof window !== "undefined") {
-    // For debugging, log ids to console
-    // Remove this after confirming
-    console.log("JobPostingCard: userId", userId, "ownerId", ownerId, "isSessionAdmin", isSessionAdmin, "adminView", adminView);
-  }
   const isJobOwner = !!userId && !!ownerId && userId === ownerId;
   const showEdit = (session?.user && isJobOwner) || isEffectiveAdmin;
   const showBookmark = session?.user && !isJobOwner && !isEffectiveAdmin;

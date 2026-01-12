@@ -18,7 +18,6 @@ import prisma from "@/lib/prisma";
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
-    console.log("Job detail API called with id:", id);
     const job = await prisma.jobPosting.findUnique({
       where: { id },
       include: {
@@ -26,7 +25,6 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         applications: true,
       },
     });
-    console.log("Job found:", job);
     if (!job) {
       return NextResponse.json({ error: "Not found", id }, { status: 404 });
     }

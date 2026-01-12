@@ -208,7 +208,6 @@ export function PostCard({
                   )}
                 </CardTitle>
                 <Badge className={`${getPostTypeColor(postType)} flex-shrink-0 text-xs px-3 py-1 rounded-full font-semibold flex items-center gap-1`} style={{ background: undefined, color: undefined }}>
-                  {(() => { console.log('PostType in badge:', postType); return null; })()}
                   {getPostTypeIcon(postType)}
                   <span>{postType.replace(/_/g, " ")}</span>
                 </Badge>

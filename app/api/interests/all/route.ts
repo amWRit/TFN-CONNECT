@@ -40,6 +40,7 @@ export async function GET(request: Request) {
   const categorized = {
     jobs: interests.filter((i) => i.targetType === "JOB"),
     opportunities: interests.filter((i) => i.targetType === "OPPORTUNITY"),
+    events: interests.filter((i) => i.targetType === "EVENT"),
   };
 
   return NextResponse.json(categorized);

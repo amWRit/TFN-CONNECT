@@ -4,8 +4,6 @@ import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
-  // eslint-disable-next-line no-console
-  console.log(`[BOOKMARKS API] Called with URL: ${request.url}`);
   const session = await getServerSession(authOptions);
   if (!session || !session.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -39,12 +37,6 @@ export async function GET(request: Request) {
     where: { personId: targetPersonId },
     orderBy: { createdAt: "desc" },
   });
-
-  // Debug log for admin requests
-  if (qPersonId && qPersonId !== requesterId) {
-    // eslint-disable-next-line no-console
-    console.log(`[BOOKMARKS API] Admin ${requesterId} requested bookmarks for ${targetPersonId}. Found: ${bookmarks.length}`);
-  }
 
   const categorized = {
     people: bookmarks.filter(b => b.type === "PERSON"),
