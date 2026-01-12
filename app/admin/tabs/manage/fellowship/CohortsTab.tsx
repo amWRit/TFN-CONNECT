@@ -139,106 +139,189 @@ export default function CohortsTab() {
         </div>
 
         {showCohortForm && (
-          <Card className="p-6 mb-4">
-            <form onSubmit={createCohort} className="space-y-4">
-              <input
-                type="text"
-                placeholder="Cohort Name (e.g., Tesro Paaila)"
-                value={cohortForm.name}
-                onChange={(e) => setCohortForm({ ...cohortForm, name: e.target.value })}
-                className="w-full px-3 py-2 border rounded"
-                required
-                disabled={loading}
-              />
-              <textarea
-                placeholder="Description (optional)"
-                value={cohortForm.description}
-                onChange={(e) => setCohortForm({ ...cohortForm, description: e.target.value })}
-                className="w-full px-3 py-2 border rounded"
-                rows={2}
-                disabled={loading}
-              />
-              <input
-                type="date"
-                placeholder="Start Date"
-                value={cohortForm.startDate}
-                onChange={(e) => setCohortForm({ ...cohortForm, startDate: e.target.value })}
-                className="w-full px-3 py-2 border rounded"
-                disabled={loading}
-              />
-              <input
-                type="date"
-                placeholder="End Date"
-                value={cohortForm.endDate}
-                onChange={(e) => setCohortForm({ ...cohortForm, endDate: e.target.value })}
-                className="w-full px-3 py-2 border rounded"
-                disabled={loading}
-              />
-              <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700" disabled={loading}>Create Cohort</Button>
-            </form>
-          </Card>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm">
+            <div className="relative w-full max-w-xl sm:max-w-2xl mx-2">
+              <div className="bg-gradient-to-br from-blue-50 via-white to-blue-100 rounded-2xl shadow-2xl p-4 sm:p-8 border-4 border-blue-400/70 max-h-[90vh] overflow-y-auto">
+                <button
+                  className="absolute top-3 right-3 text-blue-400 hover:text-blue-700 text-3xl font-bold transition-colors duration-150"
+                  onClick={() => {
+                    setShowCohortForm(false);
+                    setCohortForm({ name: '', description: '', startDate: '', endDate: '' });
+                  }}
+                  aria-label="Close"
+                >
+                  &times;
+                </button>
+                <h2 className="text-2xl font-extrabold mb-6 text-blue-700 text-center tracking-tight drop-shadow">Add Cohort</h2>
+                <form onSubmit={createCohort} className="space-y-6">
+                  <div>
+                    <label className="block font-semibold mb-2 text-blue-700">Cohort Name *</label>
+                    <input
+                      type="text"
+                      className="w-full border-2 border-blue-300 focus:border-blue-500 rounded-xl px-4 py-3 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none text-lg shadow-sm"
+                      placeholder="e.g., Tesro Paaila"
+                      value={cohortForm.name}
+                      onChange={e => setCohortForm({ ...cohortForm, name: e.target.value })}
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold mb-2 text-blue-700">Description</label>
+                    <textarea
+                      placeholder="Description (optional)"
+                      value={cohortForm.description}
+                      onChange={e => setCohortForm({ ...cohortForm, description: e.target.value })}
+                      className="w-full border-2 border-blue-300 focus:border-blue-500 rounded-xl px-4 py-3 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none text-lg shadow-sm"
+                      rows={2}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold mb-2 text-blue-700">Start Date</label>
+                    <input
+                      type="date"
+                      className="w-full border-2 border-blue-300 focus:border-blue-500 rounded-xl px-4 py-3 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none text-lg shadow-sm"
+                      value={cohortForm.startDate}
+                      onChange={e => setCohortForm({ ...cohortForm, startDate: e.target.value })}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold mb-2 text-blue-700">End Date</label>
+                    <input
+                      type="date"
+                      className="w-full border-2 border-blue-300 focus:border-blue-500 rounded-xl px-4 py-3 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none text-lg shadow-sm"
+                      value={cohortForm.endDate}
+                      onChange={e => setCohortForm({ ...cohortForm, endDate: e.target.value })}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="flex gap-4 mt-8">
+                    <button
+                      type="submit"
+                      className="flex-1 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
+                      disabled={loading}
+                    >
+                      Create Cohort
+                    </button>
+                    <button
+                      type="button"
+                      className="flex-1 bg-white border-2 border-red-400 text-red-600 font-bold px-8 py-3 rounded-xl shadow transition-all duration-200 text-lg tracking-wide hover:bg-red-50 hover:border-red-600"
+                      onClick={() => {
+                        setShowCohortForm(false);
+                        setCohortForm({ name: '', description: '', startDate: '', endDate: '' });
+                      }}
+                      disabled={loading}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {cohorts.map((c) => (
             <Card key={c.id} className="p-4 flex justify-between items-center border-2 border-blue-500/70 shadow-sm rounded-xl">
-              {editId === c.id ? (
-                <form onSubmit={saveEdit} className="flex-1 flex flex-col gap-2">
-                  <input
-                    type="text"
-                    value={editForm.name}
-                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    className="px-3 py-2 border rounded"
-                    required
-                    disabled={loading}
-                  />
-                  <textarea
-                    placeholder="Description (optional)"
-                    value={editForm.description}
-                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                    className="px-3 py-2 border rounded"
-                    rows={2}
-                    disabled={loading}
-                  />
-                  <input
-                    type="date"
-                    value={editForm.startDate}
-                    onChange={(e) => setEditForm({ ...editForm, startDate: e.target.value })}
-                    className="px-3 py-2 border rounded"
-                    disabled={loading}
-                  />
-                  <input
-                    type="date"
-                    value={editForm.endDate}
-                    onChange={(e) => setEditForm({ ...editForm, endDate: e.target.value })}
-                    className="px-3 py-2 border rounded"
-                    disabled={loading}
-                  />
-                  <div className="flex gap-2 mt-2">
-                    <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700" disabled={loading}>Save</Button>
-                    <Button type="button" variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50" onClick={cancelEdit} disabled={loading}>Cancel</Button>
-                  </div>
-                </form>
-              ) : (
-                <>
-                  <div>
-                    <h3 className="font-bold">{c.name}</h3>
-                    {c.startDate && <p className="text-sm text-gray-600">Start: {new Date(c.startDate).toLocaleDateString()}</p>}
-                    {c.endDate && <p className="text-sm text-gray-600">End: {new Date(c.endDate).toLocaleDateString()}</p>}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => startEdit(c)} aria-label="Edit">
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button size="icon" variant="destructive" onClick={() => handleDelete(c.id)} aria-label="Delete">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </>
-              )}
+              <div>
+                <h3 className="font-bold">{c.name}</h3>
+                {c.startDate && <p className="text-sm text-gray-600">Start: {new Date(c.startDate).toLocaleDateString()}</p>}
+                {c.endDate && <p className="text-sm text-gray-600">End: {new Date(c.endDate).toLocaleDateString()}</p>}
+              </div>
+              <div className="flex gap-2">
+                <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => startEdit(c)} aria-label="Edit">
+                  <Pencil className="w-4 h-4" />
+                </Button>
+                <Button size="icon" variant="destructive" onClick={() => handleDelete(c.id)} aria-label="Delete">
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
             </Card>
           ))}
         </div>
+
+        {/* Edit Cohort Modal */}
+        {editId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm">
+            <div className="relative w-full max-w-xl sm:max-w-2xl mx-2">
+              <div className="bg-gradient-to-br from-blue-50 via-white to-blue-100 rounded-2xl shadow-2xl p-4 sm:p-8 border-4 border-blue-400/70 max-h-[90vh] overflow-y-auto">
+                <button
+                  className="absolute top-3 right-3 text-blue-400 hover:text-blue-700 text-3xl font-bold transition-colors duration-150"
+                  onClick={cancelEdit}
+                  aria-label="Close"
+                >
+                  &times;
+                </button>
+                <h2 className="text-2xl font-extrabold mb-6 text-blue-700 text-center tracking-tight drop-shadow">Edit Cohort</h2>
+                <form onSubmit={saveEdit} className="space-y-6">
+                  <div>
+                    <label className="block font-semibold mb-2 text-blue-700">Cohort Name *</label>
+                    <input
+                      type="text"
+                      className="w-full border-2 border-blue-300 focus:border-blue-500 rounded-xl px-4 py-3 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none text-lg shadow-sm"
+                      placeholder="Edit cohort name..."
+                      value={editForm.name}
+                      onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold mb-2 text-blue-700">Description</label>
+                    <textarea
+                      placeholder="Description (optional)"
+                      value={editForm.description}
+                      onChange={e => setEditForm({ ...editForm, description: e.target.value })}
+                      className="w-full border-2 border-blue-300 focus:border-blue-500 rounded-xl px-4 py-3 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none text-lg shadow-sm"
+                      rows={2}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold mb-2 text-blue-700">Start Date</label>
+                    <input
+                      type="date"
+                      className="w-full border-2 border-blue-300 focus:border-blue-500 rounded-xl px-4 py-3 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none text-lg shadow-sm"
+                      value={editForm.startDate}
+                      onChange={e => setEditForm({ ...editForm, startDate: e.target.value })}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold mb-2 text-blue-700">End Date</label>
+                    <input
+                      type="date"
+                      className="w-full border-2 border-blue-300 focus:border-blue-500 rounded-xl px-4 py-3 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none text-lg shadow-sm"
+                      value={editForm.endDate}
+                      onChange={e => setEditForm({ ...editForm, endDate: e.target.value })}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="flex gap-4 mt-8">
+                    <button
+                      type="submit"
+                      className="flex-1 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
+                      disabled={loading}
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      className="flex-1 bg-white border-2 border-red-400 text-red-600 font-bold px-8 py-3 rounded-xl shadow transition-all duration-200 text-lg tracking-wide hover:bg-red-50 hover:border-red-600"
+                      onClick={cancelEdit}
+                      disabled={loading}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -53,7 +53,7 @@ function AdminDashboardContent() {
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
-    { id: 'browse', label: 'Browse', icon: <Search size={20} /> },
+    // { id: 'browse', label: 'Browse', icon: <Search size={20} /> },
     { id: 'manage', label: 'Manage', icon: <Settings2 size={20} /> },
     { id: 'settings', label: 'Settings', icon: <SettingsIcon size={20} /> },
   ];
@@ -111,7 +111,7 @@ function AdminDashboardContent() {
       {/* Main Content */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-8">
         {currentTab === 'dashboard' && <DashboardTab />}
-        {currentTab === 'browse' && <BrowseTab />}
+        {/* {currentTab === 'browse' && <BrowseTab />} */}
         {currentTab === 'manage' && <ManageTab />}
         {currentTab === 'settings' && <SettingsTab />}
       </main>

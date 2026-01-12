@@ -134,9 +134,9 @@ export default function SchoolGroupsTab() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <div>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-2">
           <h2 className="text-xl font-bold">School Groups</h2>
           <Button onClick={() => setShowGroupForm(!showGroupForm)} className="bg-blue-600 text-white hover:bg-blue-700">
             {showGroupForm ? 'Cancel' : '+ Add Group'}
@@ -144,36 +144,76 @@ export default function SchoolGroupsTab() {
         </div>
 
         {showGroupForm && (
-          <Card className="p-6 mb-4">
-            <form onSubmit={createSchoolGroup} className="space-y-4">
-              <input
-                type="text"
-                placeholder="Group Name"
-                value={groupForm.name}
-                onChange={(e) => setGroupForm({ ...groupForm, name: e.target.value })}
-                className="w-full px-3 py-2 border rounded"
-                required
-                disabled={loading}
-              />
-              <select
-                value={groupForm.localGovId}
-                onChange={(e) => setGroupForm({ ...groupForm, localGovId: e.target.value })}
-                className="w-full px-3 py-2 border rounded"
-                required
-                disabled={loading}
-              >
-                <option value="">Select Local Government</option>
-                {localGovs.map((lg) => (
-                  <option key={lg.id} value={lg.id}>{lg.name}</option>
-                ))}
-              </select>
-              <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700" disabled={loading}>Create Group</Button>
-            </form>
-          </Card>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm">
+            <div className="relative w-full max-w-xl sm:max-w-2xl mx-2">
+              <div className="bg-gradient-to-br from-blue-50 via-white to-blue-100 rounded-2xl shadow-2xl p-4 sm:p-8 border-4 border-blue-400/70 max-h-[90vh] overflow-y-auto">
+                <button
+                  className="absolute top-3 right-3 text-blue-400 hover:text-blue-700 text-3xl font-bold transition-colors duration-150"
+                  onClick={() => {
+                    setShowGroupForm(false);
+                    setGroupForm({ name: '', localGovId: '' });
+                  }}
+                  aria-label="Close"
+                >
+                  &times;
+                </button>
+                <h2 className="text-2xl font-extrabold mb-6 text-blue-700 text-center tracking-tight drop-shadow">Add School Group</h2>
+                <form onSubmit={createSchoolGroup} className="space-y-6">
+                  <div>
+                    <label className="block font-semibold mb-2 text-blue-700">Group Name *</label>
+                    <input
+                      type="text"
+                      className="w-full border-2 border-blue-300 focus:border-blue-500 rounded-xl px-4 py-3 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none text-lg shadow-sm"
+                      placeholder="Group Name"
+                      value={groupForm.name}
+                      onChange={e => setGroupForm({ ...groupForm, name: e.target.value })}
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold mb-2 text-blue-700">Local Government *</label>
+                    <select
+                      className="w-full border-2 border-blue-400 focus:border-blue-600 rounded-lg px-4 py-2 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none font-semibold text-blue-700"
+                      value={groupForm.localGovId}
+                      onChange={e => setGroupForm({ ...groupForm, localGovId: e.target.value })}
+                      required
+                      disabled={loading}
+                    >
+                      <option value="">Select Local Government</option>
+                      {localGovs.map((lg) => (
+                        <option key={lg.id} value={lg.id}>{lg.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex gap-4 mt-8">
+                    <button
+                      type="submit"
+                      className="flex-1 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
+                      disabled={loading}
+                    >
+                      Create Group
+                    </button>
+                    <button
+                      type="button"
+                      className="flex-1 bg-white border-2 border-red-400 text-red-600 font-bold px-8 py-3 rounded-xl shadow transition-all duration-200 text-lg tracking-wide hover:bg-red-50 hover:border-red-600"
+                      onClick={() => {
+                        setShowGroupForm(false);
+                        setGroupForm({ name: '', localGovId: '' });
+                      }}
+                      disabled={loading}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
         )}
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200/60 py-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200/60 py-1.5">
           <div className="flex-1 flex items-center sm:justify-start justify-center">
             <div className="flex items-center gap-4">
               <div className="relative flex items-center">
@@ -212,55 +252,88 @@ export default function SchoolGroupsTab() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
           {filteredSchoolGroups.map((sg) => (
             <Card key={sg.id} className="p-4 flex justify-between items-center border-2 border-blue-500/70 shadow-sm rounded-xl">
-              {editId === sg.id ? (
-                <form onSubmit={saveEdit} className="flex-1 flex flex-col gap-2">
-                  <input
-                    type="text"
-                    value={editForm.name}
-                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    className="px-3 py-2 border rounded"
-                    required
-                    disabled={loading}
-                  />
-                  <select
-                    value={editForm.localGovId}
-                    onChange={(e) => setEditForm({ ...editForm, localGovId: e.target.value })}
-                    className="px-3 py-2 border rounded"
-                    required
-                    disabled={loading}
-                  >
-                    <option value="">Select Local Government</option>
-                    {localGovs.map((lg) => (
-                      <option key={lg.id} value={lg.id}>{lg.name}</option>
-                    ))}
-                  </select>
-                  <div className="flex gap-2 mt-2">
-                    <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700" disabled={loading}>Save</Button>
-                    <Button type="button" variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50" onClick={cancelEdit} disabled={loading}>Cancel</Button>
-                  </div>
-                </form>
-              ) : (
-                <>
-                  <div>
-                    <h3 className="font-bold">{sg.name}</h3>
-                    <p className="text-xs text-gray-500">LocalGov: {localGovs.find(lg => lg.id === sg.localGovId)?.name || sg.localGovId}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => startEdit(sg)} aria-label="Edit">
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button size="icon" variant="destructive" onClick={() => handleDelete(sg.id)} aria-label="Delete">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </>
-              )}
+              <div>
+                <h3 className="font-bold">{sg.name}</h3>
+                <p className="text-xs text-gray-500">LocalGov: {localGovs.find(lg => lg.id === sg.localGovId)?.name || sg.localGovId}</p>
+              </div>
+              <div className="flex gap-2">
+                <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => startEdit(sg)} aria-label="Edit">
+                  <Pencil className="w-4 h-4" />
+                </Button>
+                <Button size="icon" variant="destructive" onClick={() => handleDelete(sg.id)} aria-label="Delete">
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
             </Card>
           ))}
         </div>
+
+        {/* Edit School Group Modal */}
+        {editId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm">
+            <div className="relative w-full max-w-xl sm:max-w-2xl mx-2">
+              <div className="bg-gradient-to-br from-blue-50 via-white to-blue-100 rounded-2xl shadow-2xl p-4 sm:p-8 border-4 border-blue-400/70 max-h-[90vh] overflow-y-auto">
+                <button
+                  className="absolute top-3 right-3 text-blue-400 hover:text-blue-700 text-3xl font-bold transition-colors duration-150"
+                  onClick={cancelEdit}
+                  aria-label="Close"
+                >
+                  &times;
+                </button>
+                <h2 className="text-2xl font-extrabold mb-6 text-blue-700 text-center tracking-tight drop-shadow">Edit School Group</h2>
+                <form onSubmit={saveEdit} className="space-y-6">
+                  <div>
+                    <label className="block font-semibold mb-2 text-blue-700">Group Name *</label>
+                    <input
+                      type="text"
+                      className="w-full border-2 border-blue-300 focus:border-blue-500 rounded-xl px-4 py-3 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none text-lg shadow-sm"
+                      placeholder="Edit group name..."
+                      value={editForm.name}
+                      onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold mb-2 text-blue-700">Local Government *</label>
+                    <select
+                      className="w-full border-2 border-blue-400 focus:border-blue-600 rounded-lg px-4 py-2 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none font-semibold text-blue-700"
+                      value={editForm.localGovId}
+                      onChange={e => setEditForm({ ...editForm, localGovId: e.target.value })}
+                      required
+                      disabled={loading}
+                    >
+                      <option value="">Select Local Government</option>
+                      {localGovs.map((lg) => (
+                        <option key={lg.id} value={lg.id}>{lg.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex gap-4 mt-8">
+                    <button
+                      type="submit"
+                      className="flex-1 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
+                      disabled={loading}
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      className="flex-1 bg-white border-2 border-red-400 text-red-600 font-bold px-8 py-3 rounded-xl shadow transition-all duration-200 text-lg tracking-wide hover:bg-red-50 hover:border-red-600"
+                      onClick={cancelEdit}
+                      disabled={loading}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

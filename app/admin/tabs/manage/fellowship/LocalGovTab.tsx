@@ -118,74 +118,148 @@ export default function LocalGovTab() {
         </div>
 
         {showLocalGovForm && (
-          <Card className="p-6 mb-4">
-            <form onSubmit={createLocalGov} className="space-y-4">
-              <input
-                type="text"
-                placeholder="Name (e.g., Dang)"
-                value={localGovForm.name}
-                onChange={(e) => setLocalGovForm({ ...localGovForm, name: e.target.value })}
-                className="w-full px-3 py-2 border rounded"
-                required
-              />
-              <input
-                type="text"
-                placeholder="Province (e.g., Lumbini)"
-                value={localGovForm.province}
-                onChange={(e) => setLocalGovForm({ ...localGovForm, province: e.target.value })}
-                className="w-full px-3 py-2 border rounded"
-                required
-              />
-              <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700">Create</Button>
-            </form>
-          </Card>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm">
+            <div className="relative w-full max-w-xl sm:max-w-2xl mx-2">
+              <div className="bg-gradient-to-br from-blue-50 via-white to-blue-100 rounded-2xl shadow-2xl p-4 sm:p-8 border-4 border-blue-400/70 max-h-[90vh] overflow-y-auto">
+                <button
+                  className="absolute top-3 right-3 text-blue-400 hover:text-blue-700 text-3xl font-bold transition-colors duration-150"
+                  onClick={() => {
+                    setShowLocalGovForm(false);
+                    setLocalGovForm({ name: '', province: '' });
+                  }}
+                  aria-label="Close"
+                >
+                  &times;
+                </button>
+                <h2 className="text-2xl font-extrabold mb-6 text-blue-700 text-center tracking-tight drop-shadow">Add Local Government</h2>
+                <form onSubmit={createLocalGov} className="space-y-6">
+                  <div>
+                    <label className="block font-semibold mb-2 text-blue-700">Name *</label>
+                    <input
+                      type="text"
+                      className="w-full border-2 border-blue-300 focus:border-blue-500 rounded-xl px-4 py-3 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none text-lg shadow-sm"
+                      placeholder="e.g., Dang"
+                      value={localGovForm.name}
+                      onChange={e => setLocalGovForm({ ...localGovForm, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold mb-2 text-blue-700">Province *</label>
+                    <input
+                      type="text"
+                      className="w-full border-2 border-blue-300 focus:border-blue-500 rounded-xl px-4 py-3 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none text-lg shadow-sm"
+                      placeholder="e.g., Lumbini"
+                      value={localGovForm.province}
+                      onChange={e => setLocalGovForm({ ...localGovForm, province: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="flex gap-4 mt-8">
+                    <button
+                      type="submit"
+                      className="flex-1 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
+                      disabled={loading}
+                    >
+                      Create
+                    </button>
+                    <button
+                      type="button"
+                      className="flex-1 bg-white border-2 border-red-400 text-red-600 font-bold px-8 py-3 rounded-xl shadow transition-all duration-200 text-lg tracking-wide hover:bg-red-50 hover:border-red-600"
+                      onClick={() => {
+                        setShowLocalGovForm(false);
+                        setLocalGovForm({ name: '', province: '' });
+                      }}
+                      disabled={loading}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {localGovs.map((lg) => (
             <Card key={lg.id} className="p-4 flex justify-between items-center border-2 border-blue-500/70 shadow-sm rounded-xl">
-              {editId === lg.id ? (
-                <form onSubmit={saveEdit} className="flex-1 flex flex-col gap-2">
-                  <input
-                    type="text"
-                    value={editForm.name}
-                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                    className="px-3 py-2 border rounded"
-                    required
-                    disabled={loading}
-                  />
-                  <input
-                    type="text"
-                    value={editForm.province}
-                    onChange={(e) => setEditForm({ ...editForm, province: e.target.value })}
-                    className="px-3 py-2 border rounded"
-                    required
-                    disabled={loading}
-                  />
-                  <div className="flex gap-2 mt-2">
-                    <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700" disabled={loading}>Save</Button>
-                    <Button type="button" variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50" onClick={cancelEdit} disabled={loading}>Cancel</Button>
-                  </div>
-                </form>
-              ) : (
-                <>
-                  <div>
-                    <h3 className="font-bold">{lg.name}</h3>
-                    <p className="text-sm text-gray-600">{lg.province}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => startEdit(lg)} aria-label="Edit">
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button size="icon" variant="destructive" onClick={() => handleDelete(lg.id)} aria-label="Delete">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </>
-              )}
+              <div>
+                <h3 className="font-bold">{lg.name}</h3>
+                <p className="text-sm text-gray-600">{lg.province}</p>
+              </div>
+              <div className="flex gap-2">
+                <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => startEdit(lg)} aria-label="Edit">
+                  <Pencil className="w-4 h-4" />
+                </Button>
+                <Button size="icon" variant="destructive" onClick={() => handleDelete(lg.id)} aria-label="Delete">
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
             </Card>
           ))}
         </div>
+
+        {/* Edit LocalGov Modal */}
+        {editId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm">
+            <div className="relative w-full max-w-xl sm:max-w-2xl mx-2">
+              <div className="bg-gradient-to-br from-blue-50 via-white to-blue-100 rounded-2xl shadow-2xl p-4 sm:p-8 border-4 border-blue-400/70 max-h-[90vh] overflow-y-auto">
+                <button
+                  className="absolute top-3 right-3 text-blue-400 hover:text-blue-700 text-3xl font-bold transition-colors duration-150"
+                  onClick={cancelEdit}
+                  aria-label="Close"
+                >
+                  &times;
+                </button>
+                <h2 className="text-2xl font-extrabold mb-6 text-blue-700 text-center tracking-tight drop-shadow">Edit Local Government</h2>
+                <form onSubmit={saveEdit} className="space-y-6">
+                  <div>
+                    <label className="block font-semibold mb-2 text-blue-700">Name *</label>
+                    <input
+                      type="text"
+                      className="w-full border-2 border-blue-300 focus:border-blue-500 rounded-xl px-4 py-3 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none text-lg shadow-sm"
+                      placeholder="Edit name..."
+                      value={editForm.name}
+                      onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold mb-2 text-blue-700">Province *</label>
+                    <input
+                      type="text"
+                      className="w-full border-2 border-blue-300 focus:border-blue-500 rounded-xl px-4 py-3 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none text-lg shadow-sm"
+                      placeholder="Edit province..."
+                      value={editForm.province}
+                      onChange={e => setEditForm({ ...editForm, province: e.target.value })}
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="flex gap-4 mt-8">
+                    <button
+                      type="submit"
+                      className="flex-1 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
+                      disabled={loading}
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      className="flex-1 bg-white border-2 border-red-400 text-red-600 font-bold px-8 py-3 rounded-xl shadow transition-all duration-200 text-lg tracking-wide hover:bg-red-50 hover:border-red-600"
+                      onClick={cancelEdit}
+                      disabled={loading}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -210,8 +210,8 @@ export default function PeopleTab() {
 	};
 
 	return (
-		<div className="space-y-6">
-			<div className="flex justify-between items-center">
+		<div className="space-y-3">
+			<div className="flex justify-between items-center mb-2">
 				<h2 className="text-xl font-bold">People</h2>
 				<Button onClick={() => setShowForm(!showForm)} className="bg-blue-600 text-white hover:bg-blue-700">
 					{showForm ? 'Cancel' : '+ Add Person'}
@@ -219,7 +219,7 @@ export default function PeopleTab() {
 			</div>
 
 			{/* People Filters */}
-			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200/60 py-3">
+			<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200/60 py-1.5">
 				<div className="flex-1 flex items-center sm:justify-start justify-center">
 					<div className="flex items-center gap-4">
 						<div className="relative flex items-center">
@@ -245,7 +245,7 @@ export default function PeopleTab() {
 					</div>
 				</div>
 				<div className="flex-1 flex justify-center">
-					<div className="bg-white/80 border border-purple-100 rounded-xl shadow-sm px-4 py-3 flex flex-row flex-wrap md:flex-nowrap items-center gap-3 w-full">
+					<div className="bg-white/80 border border-purple-100 rounded-xl shadow-sm px-3 py-2 flex flex-row flex-wrap md:flex-nowrap items-center gap-2 w-full">
 						{tab === 'ALUMNI' && (
 							<>
 								<div className="flex items-center gap-2 w-full sm:w-auto">
@@ -524,7 +524,7 @@ export default function PeopleTab() {
 				</Card>
 			)}
 
-			<div className="grid grid-cols-1 gap-4">
+			<div className="grid grid-cols-1 gap-3 mb-4">
 				{filteredPeople.slice(0, 10).map((p) => (
 					<Card key={p.id} className="p-4 flex justify-between items-center border-2 border-blue-500/70 shadow-sm rounded-xl">
 						<div>
