@@ -4,7 +4,6 @@ import prisma from '@/lib/prisma';
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const params = await context.params;
-    console.log('PATCH params:', params);
     if (!params.id) {
       return NextResponse.json({ error: 'Missing fellowship id' }, { status: 400 });
     }

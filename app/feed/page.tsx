@@ -26,8 +26,21 @@ interface Post {
 
 export default function FeedPage() {
   const { data: session, status } = useSession();
-  // Treat local admin (localStorage adminAuth) as an authenticated user for UI access
-  const [isAdmin, setIsAdmin] = useState<boolean>(() => typeof window !== 'undefined' && localStorage.getItem('adminAuth') === 'true');
+  // Track both session admin and local admin
+  const [localAdmin, setLocalAdmin] = useState(() => typeof window !== 'undefined' && localStorage.getItem('adminAuth') === 'true');
+  useEffect(() => {
+    function syncAdmin() {
+      setLocalAdmin(typeof window !== 'undefined' && localStorage.getItem('adminAuth') === 'true');
+    }
+    window.addEventListener('storage', syncAdmin);
+    window.addEventListener('focus', syncAdmin);
+    return () => {
+      window.removeEventListener('storage', syncAdmin);
+      window.removeEventListener('focus', syncAdmin);
+    };
+  }, []);
+  const isSessionAdmin = (session?.user as any)?.type === 'ADMIN';
+  const isAdmin = isSessionAdmin || localAdmin;
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -107,9 +120,13 @@ export default function FeedPage() {
     setEditSubmitting(true);
     setEditError("");
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (localStorage.getItem('adminAuth') === 'true') {
+        headers['x-admin-auth'] = 'true';
+      }
       const res = await fetch(`/api/feed/${editPost?.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ content: editContent, postType: editPostType }),
       });
       if (!res.ok) throw new Error("Failed to update post");
@@ -133,7 +150,11 @@ export default function FeedPage() {
     setEditSubmitting(true);
     setEditError("");
     try {
-      const res = await fetch(`/api/feed/${editPost.id}`, { method: "DELETE" });
+      const headers: Record<string, string> = {};
+      if (localStorage.getItem('adminAuth') === 'true') {
+        headers['x-admin-auth'] = 'true';
+      }
+      const res = await fetch(`/api/feed/${editPost.id}`, { method: "DELETE", headers });
       if (!res.ok) throw new Error("Failed to delete post");
       setEditPost(null);
       // Refresh posts
@@ -166,16 +187,16 @@ export default function FeedPage() {
     <div className="w-full bg-gradient-to-br from-blue-100 via-white to-blue-200 min-h-screen py-6">
       <div className="max-w-4xl mx-auto px-2 sm:px-4">
         {/* Header Section */}
-        <div className="mb-2 sm:mb-3 relative flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+        <div className="mb-2 sm:mb-3 relative flex items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <div className="inline-block mb-0">
-              <span className="inline-block bg-gradient-to-r from-pink-200 via-blue-200 to-green-200 text-blue-900 text-2xl font-extrabold px-8 py-3 rounded-full tracking-wide shadow-lg border-2 border-blue-200 animate-fadeIn">✨ FEED ✨</span>
+              <span className="inline-block bg-gradient-to-r from-pink-200 via-blue-200 to-green-200 text-blue-900 text-base sm:text-2xl font-extrabold px-4 sm:px-8 py-2 sm:py-3 rounded-full tracking-wide shadow-lg border-2 border-blue-200 animate-fadeIn">✨ FEED ✨</span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <label className="hidden sm:inline font-semibold text-blue-700">Type</label>
             <select
-              className="border border-blue-300 rounded px-3 py-2 bg-white/90 font-semibold text-blue-700 focus:ring-2 focus:ring-blue-200 outline-none transition"
+              className="border border-blue-300 rounded px-2 sm:px-3 py-1 sm:py-2 bg-white/90 font-semibold text-blue-700 focus:ring-2 focus:ring-blue-200 outline-none transition text-sm sm:text-base"
               value={selectedPostType}
               onChange={e => setSelectedPostType(e.target.value)}
             >
@@ -185,7 +206,6 @@ export default function FeedPage() {
               ))}
             </select>
           </div>
-          {/* Floating Action Button (enabled) */}
         </div>
 
         {/* Add Post Modal */}
@@ -201,10 +221,10 @@ export default function FeedPage() {
               </button>
               <h2 className="text-2xl font-extrabold mb-6 text-blue-700 text-center tracking-tight drop-shadow">Create a Post</h2>
               <form onSubmit={handleAddPost} className="space-y-6">
-                <div className="bg-blue-50 border border-blue-200 rounded px-3 py-2 mb-3 text-xs text-blue-700">
-                  <strong>Tip:</strong> You can use <a href="https://www.markdownguide.org/cheat-sheet/" target="_blank" rel="noopener noreferrer" className="underline text-blue-600">Markdown</a> to format your post.<br />
-                  <span>Examples: <code>**bold**</code>, <code>*italic*</code>, <code>[link](https://example.com)</code>, <code>- List item</code></span><br />
-                  <span className="block mt-1">To add a new line, end a line with two spaces or use a blank line between paragraphs.</span>
+                <div className="text-xs text-gray-500 mt-1 italic">
+                  Tip: You can use Markdown to format your post.<br />
+                  Supports **bold**, _italics_, headings, ordered and unordered lists.<br />
+                  Try <a href="https://markdownlivepreview.com/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Live Preview</a> or the <a href="https://www.markdownguide.org/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Guide</a> for syntax and examples.
                 </div>
                 <div>
                   <textarea
@@ -291,8 +311,9 @@ export default function FeedPage() {
               createdAt={new Date(post.createdAt)}
               showEmojiBadge
               hideStats
-              hideBookmark={isAdmin}
-              onEdit={() => handleEdit(post)}
+              hideBookmark={false}
+              adminView={isAdmin}
+              onEdit={isAdmin ? () => handleEdit(post) : undefined}
             />
           ))}
         </div>
@@ -303,6 +324,18 @@ export default function FeedPage() {
           </div>
         )}
       </div>
+
+      {/* Floating Add New Post Button (only if signed in) */}
+      {session && (
+        <button
+          onClick={() => setShowModal(true)}
+          className="fixed bottom-8 right-8 z-50 bg-pink-500 hover:bg-pink-600 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"
+          title="Add New Post"
+        >
+          <span className="text-2xl leading-none">＋</span>
+          <span className="hidden sm:inline">New Post</span>
+        </button>
+      )}
     </div>
   )
 }

@@ -179,10 +179,10 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ id, title, descriptio
             </div>
           )}
           {description && description.trim() !== '' ? (
-            <div className="mb-2 text-sm text-gray-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+            <div className="mb-2 text-sm text-gray-700 bg-purple-50 border border-purple-200 rounded-lg px-3 py-2">
               <div className="flex items-center gap-2 mb-1">
-                <InformationCircleIcon className="h-4 w-4 text-blue-400 flex-shrink-0" />
-                <span className="font-semibold text-blue-700">Description</span>
+                <InformationCircleIcon className="h-4 w-4 text-purple-400 flex-shrink-0" />
+                <span className="font-semibold text-purple-700">Description</span>
               </div>
               <div className="markdown-content w-full relative">
                 <div style={{
@@ -225,10 +225,10 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ id, title, descriptio
               )}
             </div>
           ) : (
-            <div className="mb-2 text-sm text-gray-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+            <div className="mb-2 text-sm text-gray-700 bg-purple-50 border border-purple-200 rounded-lg px-3 py-2">
               <div className="flex items-center gap-2 mb-1">
-                <InformationCircleIcon className="h-4 w-4 text-blue-400 flex-shrink-0" />
-                <span className="font-semibold text-blue-700">Description</span>
+                <InformationCircleIcon className="h-4 w-4 text-purple-400 flex-shrink-0" />
+                <span className="font-semibold text-purple-700">Description</span>
               </div>
               <div className="text-gray-400 italic">---</div>
             </div>

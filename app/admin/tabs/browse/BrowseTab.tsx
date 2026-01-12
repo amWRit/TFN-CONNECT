@@ -9,6 +9,7 @@ type BrowseView = 'people' | 'schools' | 'placements' | 'cohorts' | 'jobs' | 'po
 interface Person {
   id: string;
   firstName: string;
+  middleName?: string;
   lastName: string;
   type: string;
   empStatus: string;
@@ -134,7 +135,7 @@ export default function BrowseTab() {
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="font-bold">
-                        {item.firstName} {item.lastName}
+                        {[item.firstName, item.middleName, item.lastName].filter(Boolean).join(' ')}
                       </p>
                       <p className="text-sm text-gray-600">{item.email1}</p>
                     </div>

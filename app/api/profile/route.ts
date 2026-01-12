@@ -10,14 +10,17 @@ import { existsSync } from "fs";
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.email) {
+
+    if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Find or create person by email
+    const userEmail = session.user.email as string | undefined;
+    const userId = (session.user as any).id as string | undefined;
+
+    // Find or create person by email (preferred) or id fallback
     let person = await prisma.person.findUnique({
-      where: { email1: session.user.email },
+      where: userEmail ? { email1: userEmail } : { id: userId },
       include: {
         educations: {
           orderBy: { start: "desc" },
@@ -46,7 +49,7 @@ export async function GET(request: NextRequest) {
     });
 
     // If person doesn't exist, create one with basic info from session
-    if (!person) {
+    if (!person && userEmail) {
       const nameParts = (session.user.name || "").split(" ");
       const firstName = nameParts[0] || "";
       const lastName = nameParts.slice(1).join(" ") || "";
@@ -55,7 +58,7 @@ export async function GET(request: NextRequest) {
         data: {
           firstName,
           lastName,
-          email1: session.user.email,
+          email1: userEmail,
           profileImage: session.user.image || null,
         },
         include: {
@@ -100,16 +103,19 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.email) {
+
+    if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
 
-    // Find person by email
+    const userEmail = session.user.email as string | undefined;
+    const userId = (session.user as any).id as string | undefined;
+
+    // Find person by email (preferred) or id fallback
     const existingPerson = await prisma.person.findUnique({
-      where: { email1: session.user.email },
+      where: userEmail ? { email1: userEmail } : { id: userId },
     });
 
     if (!existingPerson) {
@@ -141,8 +147,11 @@ export async function PATCH(request: NextRequest) {
       where: { id: existingPerson.id },
       data: {
         firstName: body.firstName,
+        middleName: body.middleName !== undefined ? (body.middleName || null) : existingPerson.middleName,
         lastName: body.lastName,
-        type: body.type ?? existingPerson.type,
+        pronouns: body.pronouns !== undefined ? (body.pronouns || null) : existingPerson.pronouns,
+        // Only update type when a non-empty value is provided, otherwise keep existing enum
+        type: body.type && body.type !== "" ? body.type : existingPerson.type,
         phone1: body.phone1,
         phone2: body.phone2,
         email2: body.email2,

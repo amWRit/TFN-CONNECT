@@ -28,6 +28,7 @@ interface Fellowship {
 interface Person {
   id: string;
   firstName: string;
+  middleName?: string;
   lastName: string;
   email1: string;
   email2?: string;
@@ -37,6 +38,7 @@ interface Person {
   website?: string;
   bio?: string;
   dob?: string;
+  pronouns?: string;
   profileImage?: string;
   eduStatus: string;
   empStatus: string;
@@ -131,6 +133,7 @@ export default function ProfilePage() {
     placementId: "",
     subjects: [],
   });
+  const router = useRouter();
   const [cohorts, setCohorts] = useState<{ id: string; name: string; start?: string; end?: string }[]>([]);
   const [placements, setPlacements] = useState<{ id: string; school: { name: string } }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -171,7 +174,9 @@ export default function ProfilePage() {
   // Form states
   const [formData, setFormData] = useState({
     firstName: "",
+    middleName: "",
     lastName: "",
+    pronouns: "",
     type: "",
     email2: "",
     phone1: "",
@@ -245,7 +250,9 @@ export default function ProfilePage() {
         setPerson(data);
         setFormData({
           firstName: data.firstName || "",
+          middleName: data.middleName || "",
           lastName: data.lastName || "",
+          pronouns: data.pronouns || "",
           type: data.type || "",
           email2: data.email2 || "",
           phone1: data.phone1 || "",
@@ -273,7 +280,9 @@ export default function ProfilePage() {
         setPerson(data);
         setFormData({
           firstName: data.firstName || "",
+          middleName: data.middleName || "",
           lastName: data.lastName || "",
+          pronouns: data.pronouns || "",
           type: data.type || "",
           email2: data.email2 || "",
           phone1: data.phone1 || "",
@@ -354,15 +363,31 @@ export default function ProfilePage() {
 
   const handleUpdateProfile = async () => {
     try {
-      const res = await fetch("/api/profile", {
-        method: "PATCH",
-                      headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-                    });
+      if (!person?.id) return;
 
-                    if (res.ok) {
-                      await fetchProfile();
+      const isEditingOtherAsAdmin = !isProfileOwner && isEffectiveAdmin;
+      const endpoint = isEditingOtherAsAdmin ? `/api/people/${person.id}` : "/api/profile";
+      const method = isEditingOtherAsAdmin ? "PUT" : "PATCH";
+
+      const payload = isEditingOtherAsAdmin
+        ? { ...formData, email1: person.email1, profileImage: person.profileImage }
+        : formData;
+
+      const res = await fetch(endpoint, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        // Refresh from the authoritative source for the signed-in user
+        if (!isEditingOtherAsAdmin) {
+          await fetchProfile();
+        } else {
+          await fetchProfileById(person.id);
+        }
         setEditing(false);
+        try { router.refresh(); } catch {}
       }
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -417,6 +442,7 @@ export default function ProfilePage() {
           start: "",
           end: "",
         });
+        try { router.refresh(); } catch {}
                     } else {
         const errorData = await res.json();
         alert(errorData.error || "Failed to save education");
@@ -437,6 +463,7 @@ export default function ProfilePage() {
 
                         if (res.ok) {
                           await fetchProfile();
+                          try { router.refresh(); } catch {}
       }
     } catch (error) {
       console.error("Error deleting education:", error);
@@ -490,6 +517,7 @@ export default function ProfilePage() {
           start: "",
           end: "",
         });
+        try { router.refresh(); } catch {}
                         } else {
         const errorData = await res.json();
         alert(errorData.error || "Failed to save experience");
@@ -510,6 +538,7 @@ export default function ProfilePage() {
 
       if (res.ok) {
         await fetchProfile();
+        try { router.refresh(); } catch {}
       }
     } catch (error) {
       console.error("Error deleting experience:", error);
@@ -538,6 +567,7 @@ export default function ProfilePage() {
         }
         // Also fetch full profile to ensure everything is in sync
         await fetchProfile();
+        try { router.refresh(); } catch {}
       } else {
         const errorData = await res.json();
         alert(errorData.error || "Failed to upload image");
@@ -565,6 +595,7 @@ export default function ProfilePage() {
 
       if (res.ok) {
         await fetchProfile();
+        try { router.refresh(); } catch {}
       }
     } catch (error) {
       console.error("Error removing image:", error);
@@ -687,6 +718,7 @@ export default function ProfilePage() {
                       setShowFellowshipForm(false);
                       setEditingFellowship(null);
                       setFellowshipForm({ cohortId: "", placementId: "", subjects: [] });
+                      try { router.refresh(); } catch {}
                     } else {
                       alert("Failed to save fellowship");
                     }
@@ -751,6 +783,7 @@ export default function ProfilePage() {
                           const res = await fetch(`/api/fellowships/${fellow.id}`, { method: "DELETE" });
                           if (res.ok) {
                             await fetchProfile();
+                            try { router.refresh(); } catch {}
                           } else {
                             alert("Failed to delete fellowship");
                           }

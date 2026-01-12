@@ -74,15 +74,23 @@ export const authOptions: NextAuthOptions = {
       }
     },
     async session({ session, token }) {
-      // Attach user id/email to session
+      // Attach user id/email/type to session
       if (session.user?.email) {
-        // Fetch user from DB and attach id
-        const user = await prisma.person.findUnique({
+        // Fetch user from DB and attach id and type - check both email1 and email2
+        let user = await prisma.person.findUnique({
           where: { email1: session.user.email },
-          select: { id: true }
+          select: { id: true, type: true }
         });
+        // If not found by email1, try email2
+        if (!user) {
+          user = await prisma.person.findFirst({
+            where: { email2: session.user.email },
+            select: { id: true, type: true }
+          });
+        }
         if (user) {
           session.user.id = user.id;
+          (session.user as any).type = user.type;
         }
       }
       session.user.email = session.user.email || "";

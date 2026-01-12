@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 interface Job {
   id: string;
   title: string;
+  overview?: string;
   description: string;
   location?: string;
   jobType?: string;
@@ -24,6 +25,7 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
     title: "",
+    overview: "",
     description: "",
     location: "",
     jobType: "FULL_TIME",
@@ -44,6 +46,7 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
         setJob(data);
         setForm({
           title: data.title || "",
+          overview: data.overview || "",
           description: data.description || "",
           location: data.location || "",
           jobType: data.jobType || "FULL_TIME",
@@ -136,12 +139,15 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
         <label className="font-semibold">Title
           <input name="title" value={form.title} onChange={handleChange} className="block w-full border-2 border-blue-400 rounded px-3 py-2 mt-1 font-normal focus:border-blue-600 focus:ring-blue-500" required />
         </label>
+        <label className="font-semibold">Overview
+          <textarea name="overview" value={form.overview} onChange={handleChange} className="block w-full border-2 border-blue-400 rounded px-3 py-2 mt-1 font-normal focus:border-blue-600 focus:ring-blue-500" rows={2} />
+        </label>
         <label className="font-semibold">Description
           <textarea name="description" value={form.description} onChange={handleChange} className="block w-full border-2 border-blue-400 rounded px-3 py-2 mt-1 font-normal focus:border-blue-600 focus:ring-blue-500" rows={4} required />
           <div className="text-xs text-gray-500 mt-1 italic">
-            Tip: You can use Markdown to format your post.<br />
-            Supports <b>bold</b>, <i>italics</i>, headings, ordered and unordered lists.<br />
-            You can use <a href="https://markdownlivepreview.com/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Live Preview</a>.
+            Tip: You can use Markdown to format your description.<br />
+            Supports **bold**, _italics_, headings, ordered and unordered lists.<br />
+            Try <a href="https://markdownlivepreview.com/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Live Preview</a> or the <a href="https://www.markdownguide.org/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Guide</a> for syntax and examples.
           </div>
         </label>
         {/* ...existing code... */}
@@ -204,9 +210,9 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
             }}
           />
         </label>
-        <div className="flex flex-row-reverse gap-3 mt-6">
-          <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-lg min-w-[100px]" disabled={saving}>{saving ? "Saving..." : "Save"}</button>
-          <button type="button" className="bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-6 py-2 rounded-lg border border-red-300 min-w-[100px]" onClick={() => router.push(`/jobs/${id}`)} disabled={saving}>Cancel</button>
+        <div className="flex gap-4 mt-8">
+          <button type="submit" className="flex-1 bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide" disabled={saving}>{saving ? "Saving..." : "Save"}</button>
+          <button type="button" className="flex-1 bg-red-100 border-2 border-red-300 text-red-700 font-bold px-8 py-3 rounded-xl shadow transition-all duration-200 text-lg tracking-wide hover:bg-red-200 hover:border-red-400" onClick={() => router.push(`/jobs/${id}`)} disabled={saving}>Cancel</button>
         </div>
       </form>
     </div>

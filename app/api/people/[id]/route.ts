@@ -6,6 +6,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       where: { id },
       data: {
         firstName: body.firstName,
+        middleName: body.middleName || null,
         lastName: body.lastName,
         email1: body.email1,
         email2: body.email2 || null,
@@ -15,6 +16,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         linkedin: body.linkedin || null,
         profileImage: body.profileImage || null,
         bio: body.bio || null,
+        pronouns: body.pronouns || null,
         type: body.type || null,
         eduStatus: body.eduStatus || null,
         empStatus: body.empStatus || null,

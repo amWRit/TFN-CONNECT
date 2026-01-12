@@ -9,7 +9,7 @@ import NotFound from "@/components/NotFound";
 import { ProfileImage } from "@/components/ProfileImage";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Mail, Phone, Briefcase, Rocket, MessageSquare, Bookmark as BookmarkIcon, Heart, Users } from "lucide-react";
+import { Trash2, Mail, Phone, Briefcase, Rocket, MessageSquare, Bookmark as BookmarkIcon, Heart, Users, Calendar } from "lucide-react";
 import { JobPostingCard } from "@/components/JobPostingCard";
 import OpportunityCard from "@/components/OpportunityCard";
 import { PostCard } from "@/components/PostCard";
@@ -59,12 +59,14 @@ export default function ProfileActivityPage() {
   const [jobDetails, setJobDetails] = useState<Record<string, any>>({});
   const [postDetails, setPostDetails] = useState<Record<string, any>>({});
   const [opportunityDetails, setOpportunityDetails] = useState<Record<string, any>>({});
+  const [eventDetails, setEventDetails] = useState<Record<string, any>>({});
   const [bmLoading, setBmLoading] = useState(false);
   const [bmError, setBmError] = useState<string | null>(null);
   const [intLoading, setIntLoading] = useState(false);
   const [intError, setIntError] = useState<string | null>(null);
   const [interestJobDetails, setInterestJobDetails] = useState<Record<string, any>>({});
   const [interestOppDetails, setInterestOppDetails] = useState<Record<string, any>>({});
+  const [interestEventDetails, setInterestEventDetails] = useState<Record<string, any>>({});
   // Post edit modal state (reuse logic from feed page)
   const [editPost, setEditPost] = useState<any | null>(null);
   const [editContent, setEditContent] = useState("");
@@ -189,16 +191,16 @@ export default function ProfileActivityPage() {
     async function fetchBookmarksAndDetails() {
       try {
         let bmUrl = "/api/bookmarks/all";
-        let fetchOptions = {};
+        // Always include credentials and headers as needed
+        let fetchOptions: RequestInit = { credentials: 'include', headers: {} };
         // If signed-in admin is viewing someone else's profile, request their bookmarks
         if (isAdmin && !isProfileOwner && id) {
           bmUrl += `?personId=${encodeURIComponent(id)}`;
           // If bypass admin, send header
           if (typeof window !== 'undefined' && localStorage.getItem('adminAuth') === 'true') {
-            fetchOptions = { headers: { 'x-admin-bypass': 'true' } };
+            (fetchOptions.headers as Record<string, string>)['x-admin-bypass'] = 'true';
           }
         }
-        console.log("[BOOKMARKS FETCH] Fetching:", bmUrl, "isAdmin:", isAdmin, "isProfileOwner:", isProfileOwner, "id:", id, fetchOptions);
         const bmRes = await fetch(bmUrl, fetchOptions);
         if (bmRes.ok) {
           const data = await bmRes.json();
@@ -253,6 +255,27 @@ export default function ProfileActivityPage() {
                 if (opp && opp.id) map[opp.id] = opp;
               });
               setOpportunityDetails(map);
+            } catch (e) {
+              // swallow errors here; bookmarks UI will fall back to IDs
+            }
+          }
+          // Fetch event details for event bookmarks
+          if (data.events && data.events.length > 0) {
+            const eventIds: string[] = Array.from(new Set(data.events.map((b: any) => b.targetId)));
+            try {
+              const results = await Promise.all(
+                eventIds.map(async (eid) => {
+                  const res = await fetch(`/api/events/${eid}`);
+                  if (!res.ok) return null;
+                  const evt = await res.json();
+                  return evt && evt.id ? evt : null;
+                })
+              );
+              const map: Record<string, any> = {};
+              results.forEach((evt) => {
+                if (evt && evt.id) map[evt.id] = evt;
+              });
+              setEventDetails(map);
             } catch (e) {
               // swallow errors here; bookmarks UI will fall back to IDs
             }
@@ -327,6 +350,29 @@ export default function ProfileActivityPage() {
           } else {
             setInterestOppDetails({});
           }
+          // Fetch event details for interested events
+          if (data.events && Array.isArray(data.events) && data.events.length > 0) {
+            const eventIds: string[] = Array.from(new Set(data.events.map((i: any) => i.targetId)));
+            try {
+              const results = await Promise.all(
+                eventIds.map(async (eid) => {
+                  const res = await fetch(`/api/events/${eid}`);
+                  if (!res.ok) return null;
+                  const evt = await res.json();
+                  return evt && evt.id ? evt : null;
+                })
+              );
+              const map: Record<string, any> = {};
+              results.forEach((evt) => {
+                if (evt && evt.id) map[evt.id] = evt;
+              });
+              setInterestEventDetails(map);
+            } catch {
+              setInterestEventDetails({});
+            }
+          } else {
+            setInterestEventDetails({});
+          }
         } else {
           setIntError("Failed to load interests");
         }
@@ -367,9 +413,13 @@ export default function ProfileActivityPage() {
     setEditSubmitting(true);
     setEditError("");
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (typeof window !== 'undefined' && localStorage.getItem('adminAuth') === 'true') {
+        headers['x-admin-auth'] = 'true';
+      }
       const res = await fetch(`/api/feed/${editPost.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ content: editContent, postType: editPostType }),
       });
       if (!res.ok) throw new Error("Failed to update post");
@@ -396,7 +446,11 @@ export default function ProfileActivityPage() {
     setEditSubmitting(true);
     setEditError("");
     try {
-      const res = await fetch(`/api/feed/${editPost.id}`, { method: "DELETE" });
+      const headers: Record<string, string> = {};
+      if (typeof window !== 'undefined' && localStorage.getItem('adminAuth') === 'true') {
+        headers['x-admin-auth'] = 'true';
+      }
+      const res = await fetch(`/api/feed/${editPost.id}`, { method: "DELETE", headers });
       if (!res.ok) throw new Error("Failed to delete post");
       setEditPost(null);
       // Refresh posts for this profile
@@ -448,7 +502,7 @@ export default function ProfileActivityPage() {
               key={post.id}
               {...post}
               author={post.person}
-              hideBookmark={isAdmin}
+              hideBookmark={false}
               hideStats
               onEdit={() => handleEdit(post)}
             />
@@ -460,12 +514,13 @@ export default function ProfileActivityPage() {
       if (bmError) return <div className="text-center text-red-500">{bmError}</div>;
       return bookmarks && Object.keys(bookmarks).length > 0 ? (
         <div className="space-y-6">
-          {(["people", "jobs", "opportunities", "posts"] as const).filter(type => (bookmarks as any)[type]?.length > 0).map(type => {
+          {(["people", "jobs", "opportunities", "events", "posts"] as const).filter(type => (bookmarks as any)[type]?.length > 0).map(type => {
             const items = (bookmarks as any)[type];
             let border = "border-blue-400", label = "text-blue-700";
             if (type === "jobs") { border = "border-green-400"; label = "text-green-700"; }
             if (type === "posts") { border = "border-purple-400"; label = "text-purple-700"; }
             if (type === "opportunities") { border = "border-orange-400"; label = "text-orange-700"; }
+            if (type === "events") { border = "border-emerald-400"; label = "text-emerald-700"; }
             let IconComp: React.ComponentType<any> | null = null;
             let headingText = "";
             if (type === "people") {
@@ -480,6 +535,9 @@ export default function ProfileActivityPage() {
             } else if (type === "opportunities") {
               IconComp = Rocket;
               headingText = "Opportunities";
+            } else if (type === "events") {
+              IconComp = Calendar;
+              headingText = "Events";
             }
             return (
               <section key={type} className={`rounded-xl border-2 ${border} bg-blue-50 px-4 py-4 shadow-sm`}>
@@ -623,42 +681,79 @@ export default function ProfileActivityPage() {
                                 </Card>
                               );
                             })
-                          : items.map((bm: any) => {
-                              const opp = opportunityDetails[bm.targetId];
-                              return (
-                                <Card key={bm.id} className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-orange-300">
-                                  <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
-                                    <CardTitle className="text-lg font-semibold text-orange-700 flex-1 flex items-center gap-2">
-                                      {opp ? (
-                                        <>
-                                          <Link href={`/opportunities/${opp.id}`} className="hover:underline">
-                                            {opp.title || "Untitled Opportunity"}
-                                          </Link>
-                                          {opp.status && (
-                                            <span className="ml-2 px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-xs font-semibold uppercase">
-                                              {opp.status}
-                                            </span>
-                                          )}
-                                        </>
-                                      ) : (
-                                        <span>Opportunity ID: {bm.targetId}</span>
+                          : type === "opportunities"
+                            ? items.map((bm: any) => {
+                                const opp = opportunityDetails[bm.targetId];
+                                return (
+                                  <Card key={bm.id} className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-orange-300">
+                                    <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
+                                      <CardTitle className="text-lg font-semibold text-orange-700 flex-1 flex items-center gap-2">
+                                        {opp ? (
+                                          <>
+                                            <Link href={`/opportunities/${opp.id}`} className="hover:underline">
+                                              {opp.title || "Untitled Opportunity"}
+                                            </Link>
+                                            {opp.status && (
+                                              <span className="ml-2 px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-xs font-semibold uppercase">
+                                                {opp.status}
+                                              </span>
+                                            )}
+                                          </>
+                                        ) : (
+                                          <span>Opportunity ID: {bm.targetId}</span>
+                                        )}
+                                      </CardTitle>
+                                      {(isProfileOwner || isAdmin) && (
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="text-red-500 hover:bg-red-100 ml-2 self-start"
+                                          title="Remove bookmark"
+                                          onClick={() => handleDelete(bm, type)}
+                                        >
+                                          <Trash2 />
+                                        </Button>
                                       )}
-                                    </CardTitle>
-                                    {isProfileOwner && (
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="text-red-500 hover:bg-red-100 ml-2 self-start"
-                                        title="Remove bookmark"
-                                        onClick={() => handleDelete(bm, type)}
-                                      >
-                                        <Trash2 />
-                                      </Button>
-                                    )}
-                                  </CardHeader>
-                                </Card>
-                              );
-                            })}
+                                    </CardHeader>
+                                  </Card>
+                                );
+                              })
+                            : items.map((bm: any) => {
+                                const evt = eventDetails[bm.targetId];
+                                return (
+                                  <Card key={bm.id} className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-emerald-300">
+                                    <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
+                                      <CardTitle className="text-lg font-semibold text-emerald-700 flex-1 flex items-center gap-2">
+                                        {evt ? (
+                                          <>
+                                            <Link href={`/events/${evt.id}`} className="hover:underline">
+                                              {evt.title || "Untitled Event"}
+                                            </Link>
+                                            {evt.status && (
+                                              <span className="ml-2 px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase">
+                                                {evt.status}
+                                              </span>
+                                            )}
+                                          </>
+                                        ) : (
+                                          <span>Event ID: {bm.targetId}</span>
+                                        )}
+                                      </CardTitle>
+                                      {(isProfileOwner || isAdmin) && (
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="text-red-500 hover:bg-red-100 ml-2 self-start"
+                                          title="Remove bookmark"
+                                          onClick={() => handleDelete(bm, type)}
+                                        >
+                                          <Trash2 />
+                                        </Button>
+                                      )}
+                                    </CardHeader>
+                                  </Card>
+                                );
+                              })}
                   </div>
                 ) : (
                   <p className="text-gray-500">No bookmarks in this category.</p>
@@ -672,9 +767,9 @@ export default function ProfileActivityPage() {
     if (tab === "interests" && (isProfileOwner || isAdmin)) {
       if (intLoading) return <div className="text-center text-gray-500">Loading interests...</div>;
       if (intError) return <div className="text-center text-red-500">{intError}</div>;
-      return interestGroups && (interestGroups.jobs?.length || interestGroups.opportunities?.length) ? (
+      return interestGroups && (interestGroups.jobs?.length || interestGroups.opportunities?.length || interestGroups.events?.length) ? (
         <div className="space-y-6">
-          {(["jobs", "opportunities"] as const)
+          {(["jobs", "opportunities", "events"] as const)
             .filter((type) => (interestGroups as any)[type]?.length > 0)
             .map((type) => {
               const items = (interestGroups as any)[type];
@@ -683,6 +778,9 @@ export default function ProfileActivityPage() {
               if (type === "opportunities") {
                 border = "border-orange-400";
                 label = "text-orange-700";
+              } else if (type === "events") {
+                border = "border-emerald-400";
+                label = "text-emerald-700";
               }
               let IconComp: React.ComponentType<any> | null = null;
               let headingText = "";
@@ -692,6 +790,9 @@ export default function ProfileActivityPage() {
               } else if (type === "opportunities") {
                 IconComp = Rocket;
                 headingText = "Opportunities";
+              } else if (type === "events") {
+                IconComp = Calendar;
+                headingText = "Events";
               }
               return (
                 <section
@@ -742,48 +843,103 @@ export default function ProfileActivityPage() {
                               </Card>
                             );
                           })
-                        : items.map((interest: any) => {
-                            const opp = interestOppDetails[interest.targetId];
-                            return (
-                              <Card
-                                key={interest.id}
-                                className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-orange-300"
-                              >
-                                <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
-                                  <CardTitle className="text-lg font-semibold text-orange-700 flex-1 flex items-center gap-2">
-                                    {opp ? (
-                                      <>
-                                        <Link
-                                          href={`/opportunities/${opp.id}`}
-                                          className="hover:underline"
-                                        >
-                                          {opp.title || "Untitled Opportunity"}
-                                        </Link>
-                                        {opp.status && (
-                                          <span className="ml-2 px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-xs font-semibold uppercase">
-                                            {opp.status}
-                                          </span>
-                                        )}
-                                      </>
-                                    ) : (
-                                      <span>Opportunity ID: {interest.targetId}</span>
+                        : type === "opportunities"
+                          ? items.map((interest: any) => {
+                              const opp = interestOppDetails[interest.targetId];
+                              return (
+                                <Card
+                                  key={interest.id}
+                                  className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-orange-300"
+                                >
+                                  <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
+                                    <CardTitle className="text-lg font-semibold text-orange-700 flex-1 flex items-center gap-2">
+                                      {opp ? (
+                                        <>
+                                          <Link
+                                            href={`/opportunities/${opp.id}`}
+                                            className="hover:underline"
+                                          >
+                                            {opp.title || "Untitled Opportunity"}
+                                          </Link>
+                                          {opp.status && (
+                                            <span className="ml-2 px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-xs font-semibold uppercase">
+                                              {opp.status}
+                                            </span>
+                                          )}
+                                        </>
+                                      ) : (
+                                        <span>Opportunity ID: {interest.targetId}</span>
+                                      )}
+                                    </CardTitle>
+                                    {isProfileOwner && (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-red-500 hover:bg-red-100 ml-2 self-start"
+                                        title="Remove interest"
+                                        onClick={() => handleInterestDelete(interest, type)}
+                                      >
+                                        <Trash2 />
+                                      </Button>
                                     )}
-                                  </CardTitle>
-                                  {isProfileOwner && (
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="text-red-500 hover:bg-red-100 ml-2 self-start"
-                                      title="Remove interest"
-                                      onClick={() => handleInterestDelete(interest, type)}
-                                    >
-                                      <Trash2 />
-                                    </Button>
+                                  </CardHeader>
+                                </Card>
+                              );
+                            })
+                          : items.map((interest: any) => {
+                              const evt = interestEventDetails[interest.targetId];
+                              return (
+                                <Card
+                                  key={interest.id}
+                                  className="flex flex-col gap-1 p-3 hover:shadow bg-white border-l-4 border-emerald-300"
+                                >
+                                  <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
+                                    <CardTitle className="text-lg font-semibold text-emerald-700 flex-1 flex items-center gap-2">
+                                      {evt ? (
+                                        <>
+                                          <Link href={`/events/${evt.id}`} className="hover:underline">
+                                            {evt.title || "Untitled Event"}
+                                          </Link>
+                                          {evt.type && (
+                                            <span className="ml-2 px-2 py-0.5 rounded bg-teal-100 text-teal-700 text-xs font-semibold uppercase">
+                                              {evt.type.replace(/_/g, " ")}
+                                            </span>
+                                          )}
+                                          {evt.status && (
+                                            <span className="ml-2 px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase">
+                                              {evt.status}
+                                            </span>
+                                          )}
+                                        </>
+                                      ) : (
+                                        <span>Event ID: {interest.targetId}</span>
+                                      )}
+                                    </CardTitle>
+                                    {isProfileOwner && (
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-red-500 hover:bg-red-100 ml-2 self-start"
+                                        title="Remove interest"
+                                        onClick={() => handleInterestDelete(interest, type)}
+                                      >
+                                        <Trash2 />
+                                      </Button>
+                                    )}
+                                  </CardHeader>
+                                  {evt && evt.startDateTime && (
+                                    <div className="text-sm text-gray-600 flex items-center gap-2 pl-1">
+                                      <Calendar className="w-4 h-4 text-emerald-600" />
+                                      <span>
+                                        {new Date(evt.startDateTime).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                                        {" at "}
+                                        {new Date(evt.startDateTime).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}
+                                      </span>
+                                    </div>
                                   )}
-                                </CardHeader>
-                              </Card>
-                            );
-                          })}
+                                </Card>
+                              );
+                            })}
                     </div>
                   ) : (
                     <p className="text-gray-500">No interests in this category.</p>
@@ -814,6 +970,9 @@ export default function ProfileActivityPage() {
     } else if (type === "opportunities") {
       url += "opportunity";
       body = { targetOpportunityId: bm.targetId };
+    } else if (type === "events") {
+      url += "event";
+      body = { targetEventId: bm.targetId };
     } else {
       alert("Unbookmarking for this type is not implemented yet.");
       return;
@@ -838,7 +997,7 @@ export default function ProfileActivityPage() {
   }
 
   function handleInterestDelete(entry: any, type: string) {
-    const targetType = type === "jobs" ? "JOB" : type === "opportunities" ? "OPPORTUNITY" : null;
+    const targetType = type === "jobs" ? "JOB" : type === "opportunities" ? "OPPORTUNITY" : type === "events" ? "EVENT" : null;
     if (!targetType) return;
     fetch("/api/interests", {
       method: "DELETE",

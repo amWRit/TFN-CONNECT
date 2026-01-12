@@ -12,6 +12,7 @@ import { Bookmark, BookmarkCheck, Users } from "lucide-react"
 interface Person {
 	id: string
 	firstName: string
+	middleName?: string
 	lastName: string
 	profileImage?: string
 	bio?: string
@@ -45,8 +46,10 @@ export default function PeoplePage() {
 	const [cohortFilter, setCohortFilter] = useState("");
 	const [empStatusFilter, setEmpStatusFilter] = useState("");
 	const [nameFilter, setNameFilter] = useState("");
-	const [allCohorts, setAllCohorts] = useState<string[]>([]);
+	const [allCohorts, setAllCohorts] = useState<{id: string; name: string}[]>([]);
 	const [personTypes, setPersonTypes] = useState<string[]>([]);
+	const [page, setPage] = useState(1);
+	const pageSize = 24;
 	const { data: session } = useSession();
 	const [bookmarkStates, setBookmarkStates] = useState<Record<string, { bookmarked: boolean; loading: boolean }>>({});
 	const [isAdmin, setIsAdmin] = useState(false);
@@ -56,17 +59,24 @@ export default function PeoplePage() {
 			.then((res) => res.json())
 			.then((data) => {
 				setPeople(data);
-				// Extract all unique cohorts from fellowships (for alumni only)
-				const cohortSet = new Set<string>();
-				data.filter((p: Person) => p.type === "ALUMNI").forEach((p: any) => {
-					if (p.fellowships && Array.isArray(p.fellowships)) {
-						p.fellowships.forEach((f: any) => {
-							if (f.cohort && f.cohort.name) cohortSet.add(f.cohort.name);
-						});
-					}
-				});
-				setAllCohorts(Array.from(cohortSet));
 				setLoading(false);
+			});
+	}, []);
+
+	// Fetch cohorts from the cohorts API
+	useEffect(() => {
+		fetch("/api/cohorts")
+			.then((res) => res.json())
+			.then((data) => {
+				if (Array.isArray(data)) {
+					const cohorts = data
+						.filter((c: any) => c.id && c.name)
+						.map((c: any) => ({ id: String(c.id), name: String(c.name) }));
+					setAllCohorts(cohorts);
+				}
+			})
+			.catch((err) => {
+				console.error("Error fetching cohorts", err);
 			});
 	}, []);
 
@@ -125,11 +135,24 @@ export default function PeoplePage() {
 
 	// Filter logic
 	const filteredPeople = useMemo(() => {
-		let filtered = tab === "ALL" ? people : people.filter((person) => person.type === tab);
+		let filtered = people;
+		if (tab === "ALL") {
+			// Show all
+		} else if (tab === "ALUMNI") {
+			// Include both ALUMNI and STAFF_ALUMNI
+			filtered = filtered.filter((person) => person.type === "ALUMNI" || person.type === "STAFF_ALUMNI");
+		} else if (tab === "STAFF") {
+			// Include both STAFF and STAFF_ALUMNI and STAFF_ADMIN
+			filtered = filtered.filter((person) => person.type === "STAFF" || person.type === "STAFF_ALUMNI" || person.type === "STAFF_ADMIN");
+		} else {
+			filtered = filtered.filter((person) => person.type === tab);
+		}
 		if (tab === "ALUMNI") {
 			if (cohortFilter) {
 				filtered = filtered.filter((person: any) => {
-					return person.fellowships && person.fellowships.some((f: any) => f.cohort && f.cohort.name === cohortFilter);
+					return person.fellowships && person.fellowships.some((f: any) => 
+						f.cohortId === cohortFilter || (f.cohort && f.cohort.id === cohortFilter)
+					);
 				});
 			}
 			if (empStatusFilter) {
@@ -137,10 +160,30 @@ export default function PeoplePage() {
 			}
 		}
 		if (nameFilter) {
-			filtered = filtered.filter((person) => (person.firstName + ' ' + person.lastName).toLowerCase().includes(nameFilter.toLowerCase()));
+			filtered = filtered.filter((person) => {
+				const fullName = [person.firstName, person.middleName, person.lastName].filter(Boolean).join(' ');
+				return fullName.toLowerCase().includes(nameFilter.toLowerCase());
+			});
 		}
+		// Sort by name ascending
+		filtered = [...filtered].sort((a, b) => {
+			const nameA = [a.firstName, a.middleName, a.lastName].filter(Boolean).join(' ').toLowerCase();
+			const nameB = [b.firstName, b.middleName, b.lastName].filter(Boolean).join(' ').toLowerCase();
+			return nameA.localeCompare(nameB);
+		});
 		return filtered;
 	}, [people, tab, cohortFilter, empStatusFilter, nameFilter]);
+
+	// Reset to first page whenever filters or tab change
+	useEffect(() => {
+		setPage(1);
+	}, [tab, cohortFilter, empStatusFilter, nameFilter]);
+
+	const totalPages = Math.max(1, Math.ceil(filteredPeople.length / pageSize));
+	const paginatedPeople = useMemo(() => {
+		const start = (page - 1) * pageSize;
+		return filteredPeople.slice(start, start + pageSize);
+	}, [filteredPeople, page, pageSize]);
 
 	if (loading) {
 		return (
@@ -152,9 +195,9 @@ export default function PeoplePage() {
 
 	return (
 		<div className="w-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 min-h-screen">
-			<div className="max-w-7xl mx-auto px-4 py-4 sm:py-8">
+			<div className="max-w-7xl mx-auto px-4 pt-2 pb-8 sm:pt-4 sm:pb-10">
 				{/* Filters */}
-				<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+				<div className="sticky top-16 z-20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200/60 py-3">
 					<div className="flex-1 flex items-center sm:justify-start justify-center">
 						<div className="flex items-center gap-4">
 							<span>
@@ -192,14 +235,18 @@ export default function PeoplePage() {
 									<div className="flex items-center gap-2 w-full sm:w-auto">
 										<label className="font-semibold text-purple-700">Cohort</label>
 										<select
-											className="border border-purple-200 rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition"
+											className="border border-purple-200 rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition min-w-[140px]"
 											value={cohortFilter}
 											onChange={e => setCohortFilter(e.target.value)}
 										>
 											<option value="">All</option>
-											{allCohorts.map((c) => (
-												<option key={c} value={c}>{c}</option>
-											))}
+											{allCohorts.map((c) => {
+												return (
+													<option key={c.id} value={c.id}>
+														{c.name}
+													</option>
+												);
+											})}
 										</select>
 									</div>
 									<div className="flex items-center gap-2 w-full sm:w-auto">
@@ -229,12 +276,41 @@ export default function PeoplePage() {
 							</div>
 						</div>
 					</div>
-					<div className="flex-1 flex items-center sm:justify-end justify-center"></div>
+					<div className="flex-1 flex items-center sm:justify-end justify-center">
+						{filteredPeople.length > 0 && (
+							<div className="flex items-center gap-2 text-xs text-gray-600">
+								<button
+									type="button"
+									disabled={page === 1}
+									onClick={() => setPage((p) => Math.max(1, p - 1))}
+									className={`px-3 py-1 rounded border text-xs font-medium transition-colors ${
+										page === 1
+											? "border-gray-200 text-gray-300 cursor-not-allowed"
+											: "border-blue-300 text-blue-700 hover:bg-blue-50"
+										}`}
+								>
+									Prev
+								</button>
+								<button
+									type="button"
+									disabled={page >= totalPages}
+									onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+									className={`px-3 py-1 rounded border text-xs font-medium transition-colors ${
+										page >= totalPages
+											? "border-gray-200 text-gray-300 cursor-not-allowed"
+											: "border-blue-300 text-blue-700 hover:bg-blue-50"
+										}`}
+								>
+									Next
+								</button>
+							</div>
+						)}
+					</div>
 				</div>
 
 				{/* People Cards */}
 				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
-					{filteredPeople.map((person) => {
+					{paginatedPeople.map((person) => {
 						const isProfileOwner = session && session.user && session.user.id === person.id;
 						const showBookmark = session && session.user && !isProfileOwner && !isAdmin;
 						const bookmarkState = bookmarkStates[person.id] || { bookmarked: false, loading: false };
@@ -255,9 +331,9 @@ export default function PeoplePage() {
 													<div className="h-16 w-16 rounded-full border-3 border-blue-100 overflow-hidden group-hover:border-blue-300 transition shadow-md">
 														<ProfileImage
 															src={person.profileImage}
-															name={`${person.firstName} ${person.lastName}`}
+															name={[person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ")}
 															className="h-full w-full object-cover"
-															alt={`${person.firstName} ${person.lastName}`}
+															alt={[person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ")}
 														/>
 													</div>
 													<div className="flex-1">
@@ -324,7 +400,7 @@ export default function PeoplePage() {
 												)}
 											</div>
 											<CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition">
-												{person.firstName} {person.lastName}
+												{[person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ")}
 											</CardTitle>
 											{person.experiences && person.experiences[0] && (
 												<div className="text-sm text-gray-600 font-medium mt-2">
@@ -359,6 +435,45 @@ export default function PeoplePage() {
 						);
 					})}
 				</div>
+
+				{/* Pagination Controls */}
+				{filteredPeople.length > 0 && (
+					<div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-700">
+						<span>
+							Showing {Math.min((page - 1) * pageSize + 1, filteredPeople.length)}–
+							{Math.min(page * pageSize, filteredPeople.length)} of {filteredPeople.length}
+						</span>
+						<div className="flex items-center gap-2">
+							<button
+								type="button"
+								disabled={page === 1}
+								onClick={() => setPage((p) => Math.max(1, p - 1))}
+								className={`px-3 py-1 rounded border text-xs font-medium transition-colors ${
+									page === 1
+										? "border-gray-200 text-gray-300 cursor-not-allowed"
+										: "border-blue-300 text-blue-700 hover:bg-blue-50"
+								}`}
+							>
+								Prev
+							</button>
+							<span className="text-xs text-gray-500">
+								Page {page} of {totalPages}
+							</span>
+							<button
+								type="button"
+								disabled={page >= totalPages}
+								onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+								className={`px-3 py-1 rounded border text-xs font-medium transition-colors ${
+									page >= totalPages
+										? "border-gray-200 text-gray-300 cursor-not-allowed"
+										: "border-blue-300 text-blue-700 hover:bg-blue-50"
+								}`}
+							>
+								Next
+							</button>
+						</div>
+					</div>
+				)}
 			</div>
 		</div>
 	);

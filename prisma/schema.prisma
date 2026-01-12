@@ -1,9 +1,10 @@
 // ===== WHITELISTED EMAILS =====
 model WhitelistEmail {
-  id      String   @id @default(cuid())
-  email   String   @unique
+  id        String   @id @default(cuid())
+  email     String   @unique
   createdAt DateTime @default(now())
 }
+
 // Final Prisma Schema - Teach For Nepal Alumni System
 // Simplified, production-ready structure
 
@@ -24,7 +25,7 @@ enum PersonType {
   ADMIN
   STAFF_ADMIN
   STAFF_ALUMNI
-  LEADERSHIP 
+  LEADERSHIP
   GENERAL
 }
 
@@ -57,320 +58,326 @@ enum SchoolType {
 
 // ===== GEOGRAPHY HIERARCHY =====
 model LocalGov {
-  id        String   @id @default(cuid())
-  name      String   @unique // "Dang", "Tanahun"
-  province  String   // "Lumbini", "Bagmati"
-  
-  schools   School[]
+  id       String @id @default(cuid())
+  name     String @unique // "Dang", "Tanahun"
+  province String // "Lumbini", "Bagmati"
+
+  schools      School[]
   schoolGroups SchoolGroup[]
-  
+
   createdAt DateTime @default(now())
 }
 
 model School {
-  id          String        @id @default(cuid())
-  name        String        // "Kushmawati Secondary School"
-  localGovId  String
-  district    String        // "tanahun"
-  sector      String?       // "Education"
-  type        SchoolType?
-  
-  localGov    LocalGov      @relation(fields: [localGovId], references: [id])
-  placements  Placement[]
+  id         String      @id @default(cuid())
+  name       String // "Kushmawati Secondary School"
+  localGovId String
+  district   String // "tanahun"
+  sector     String? // "Education"
+  type       SchoolType?
+
+  localGov     LocalGov            @relation(fields: [localGovId], references: [id])
+  placements   Placement[]
   schoolGroups SchoolGroupSchool[]
-  
-  createdAt   DateTime      @default(now())
+
+  createdAt DateTime @default(now())
 }
 
 model SchoolGroup {
-  id         String   @id @default(cuid())
-  name       String   // "Group 1 - Dang East"
+  id         String @id @default(cuid())
+  name       String // "Group 1 - Dang East"
   localGovId String
-  
-  localGov   LocalGov @relation(fields: [localGovId], references: [id])
+
+  localGov   LocalGov            @relation(fields: [localGovId], references: [id])
   schools    SchoolGroupSchool[]
   placements Placement[]
-  
-  createdAt  DateTime @default(now())
+
+  createdAt DateTime @default(now())
 }
 
 model SchoolGroupSchool {
   schoolGroupId String
   schoolId      String
-  
-  schoolGroup   SchoolGroup @relation(fields: [schoolGroupId], references: [id], onDelete: Cascade)
-  school        School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  
+
+  schoolGroup SchoolGroup @relation(fields: [schoolGroupId], references: [id], onDelete: Cascade)
+  school      School      @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+
   @@id([schoolGroupId, schoolId])
 }
 
 // ===== PROGRAM STRUCTURE =====
 model Cohort {
-  id          String       @id @default(cuid())
-  name        String       @unique // "Tesro Paaila", "Aatma Paaila"
+  id          String    @id @default(cuid())
+  name        String    @unique // "Tesro Paaila", "Aatma Paaila"
   description String?
   start       DateTime?
   end         DateTime?
-  
+
   fellowships Fellowship[]
-  
-  createdAt   DateTime     @default(now())
+
+  createdAt DateTime @default(now())
 }
 
-// ===== PLACEMENT (Core Entity - Replaces LDC) =====
+// ===== PLACEMENT =====
 model Placement {
-  id             String      @id @default(cuid())
-  name           String?     // "Kushmawati Placement", "Dang Group Placement"
-  schoolId       String
-  schoolGroupId  String?
-  managerId      String      // Person managing this placement
-  fellowCount    Int         @default(0)
-  subjects       String[]    // ["Math", "Science"]
-  
-  school         School      @relation(fields: [schoolId], references: [id])
-  schoolGroup    SchoolGroup? @relation(fields: [schoolGroupId], references: [id])
-  manager        Person      @relation("PlacementManager", fields: [managerId], references: [id])
-  fellowships    Fellowship[]
-  
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  id            String   @id @default(cuid())
+  name          String? // "Kushmawati Placement", "Dang Group Placement"
+  schoolId      String   @unique
+  schoolGroupId String?
+  managerId     String // Person managing this placement
+  fellowCount   Int      @default(0)
+  subjects      String[] // ["Math", "Science"]
+
+  school      School       @relation(fields: [schoolId], references: [id])
+  schoolGroup SchoolGroup? @relation(fields: [schoolGroupId], references: [id])
+  manager     Person       @relation("PlacementManager", fields: [managerId], references: [id])
+  fellowships Fellowship[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ===== CORE PERSON MODEL =====
 model Person {
-  id             String           @id @default(cuid())
-  firstName      String
-  lastName       String
-  dob            DateTime?
-  phone1         String?
-  phone2         String?
-  email1         String           @unique
-  email2         String?
-  linkedin       String?
-  website        String?
-  profileImage   String?
-  bio            String?
-  
+  id           String    @id @default(cuid())
+  firstName    String
+  middleName   String?
+  lastName     String
+  pronouns     String?
+  dob          DateTime?
+  phone1       String?
+  phone2       String?
+  email1       String    @unique
+  email2       String?
+  linkedin     String?
+  website      String?
+  profileImage String?
+  bio          String?
+
   // Status
-  type           PersonType       @default(ALUMNI)
-  eduStatus      EduStatus        @default(COMPLETED)
-  empStatus      EmpStatus        @default(SEEKING)
-  
+  type      PersonType @default(ALUMNI)
+  eduStatus EduStatus  @default(COMPLETED)
+  empStatus EmpStatus  @default(SEEKING)
+
   // Relations
-  educations     Education[]
-  experiences    Experience[]
-  fellowships    Fellowship[]
-  managedPlacements Placement[]   @relation("PlacementManager")
-  jobPostings    JobPosting[]     @relation("JobPostings")
-  jobApplications JobApplication[] @relation("JobApplications")
-  posts          Post[]           @relation("Posts")
-  comments       Comment[]        @relation("Comments")
-  bookmarks      Bookmark[]
-  interests      Interest[]
-  opportunities  Opportunity[] @relation("CreatedOpportunities")
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  educations        Education[]
+  experiences       Experience[]
+  fellowships       Fellowship[]
+  managedPlacements Placement[]      @relation("PlacementManager")
+  jobPostings       JobPosting[]     @relation("JobPostings")
+  jobApplications   JobApplication[] @relation("JobApplications")
+  posts             Post[]           @relation("Posts")
+  comments          Comment[]        @relation("Comments")
+  bookmarks         Bookmark[]
+  interests         Interest[]
+  opportunities     Opportunity[]    @relation("CreatedOpportunities")
+  createdEvents     Event[]          @relation("CreatedEvents")
+  eventRsvps        EventRsvp[]
+  subscriptions     Subscription[]
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 }
 
 // ===== ALUMNI JOURNEY =====
 model Fellowship {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   personId    String
   cohortId    String
   placementId String
-  subjects    String[]  // Personal subjects taught
-  
-  person      Person    @relation(fields: [personId], references: [id], onDelete: Cascade)
-  cohort      Cohort    @relation(fields: [cohortId], references: [id])
-  placement   Placement @relation(fields: [placementId], references: [id])
-  
-  createdAt   DateTime  @default(now())
+  subjects    String[] // Personal subjects taught
+
+  person    Person    @relation(fields: [personId], references: [id], onDelete: Cascade)
+  cohort    Cohort    @relation(fields: [cohortId], references: [id])
+  placement Placement @relation(fields: [placementId], references: [id])
+
+  createdAt DateTime @default(now())
 }
 
 // ===== SUPPORTING RECORDS =====
 model Education {
-  id          String   @id @default(cuid())
+  id          String        @id @default(cuid())
   personId    String
-  institution String   // "Tribhuvan University"
+  institution String // "Tribhuvan University"
   university  String?
-  level       String   // "Bachelors", "Fellowship"
-  name        String   // "Bachelor of Education"
+  level       String // "Bachelors", "Fellowship"
+  name        String // "Bachelor of Education"
   type        EducationType @default(DEGREE)
   sector      String?
   start       DateTime
   end         DateTime?
-  
-  person      Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
-  
-  createdAt   DateTime @default(now())
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 }
 
 model Experience {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   personId    String
   orgName     String
   title       String
   sector      String
-  type        String   // "full_time", "fellowship", "contract"
+  type        String // "full_time", "fellowship", "contract"
   description String?
   start       DateTime
   end         DateTime?
-  
-  person           Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  person           Person            @relation(fields: [personId], references: [id], onDelete: Cascade)
   experienceSkills ExperienceSkill[]
-  
-  createdAt   DateTime @default(now())
+
+  createdAt DateTime @default(now())
 }
 
 // ===== SKILLS (Optional - Add Later) =====
 model Skill {
-  id           String           @id @default(cuid())
-  name         String           @unique
-  description  String?
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
 
-  experiences  ExperienceSkill[]
-  categories   SkillCategory[]
+  experiences ExperienceSkill[]
+  categories  SkillCategory[]
 
-  createdAt    DateTime         @default(now())
+  createdAt DateTime @default(now())
 }
 
 model SkillCategory {
-  skillId     String
-  categoryId  String
+  skillId    String
+  categoryId String
 
-  skill       Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
-  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  skill    Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
   @@id([skillId, categoryId])
 }
 
 model Category {
-  id        String   @id @default(cuid())
-  name      String   @unique
+  id        String          @id @default(cuid())
+  name      String          @unique
   skills    SkillCategory[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
 }
+
 model ExperienceSkill {
   experienceId String
   skillId      String
-  
-  experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
-  skill        Skill      @relation(fields: [skillId], references: [id])
-  
+
+  experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  skill      Skill      @relation(fields: [skillId], references: [id])
+
   @@id([experienceId, skillId])
 }
 
 // ===== JOBS & HIRING =====
 
 enum JobType {
-  FULL_TIME     // Permanent/permanent 40hr contracts
-  PART_TIME     // <30 hours/week
-  CONTRACT      // Fixed-term (6-24 months)
-  INTERNSHIP    // Paid/unpaid student placements
-  VOLUNTEER     // Pro-bono roles (teaching support)
-  FREELANCE     // Project-based consulting
-  TEMPORARY     // Seasonal/short-term (<3 months)
-  REMOTE        // Work-from-home flexibility
-  HYBRID        // Office + remote mix
+  FULL_TIME // Permanent/permanent 40hr contracts
+  PART_TIME // <30 hours/week
+  CONTRACT // Fixed-term (6-24 months)
+  INTERNSHIP // Paid/unpaid student placements
+  VOLUNTEER // Pro-bono roles (teaching support)
+  FREELANCE // Project-based consulting
+  TEMPORARY // Seasonal/short-term (<3 months)
+  REMOTE // Work-from-home flexibility
+  HYBRID // Office + remote mix
 }
 
 enum JobStatus {
-  OPEN      // Actively accepting applications
-  FILLED    // Position filled, closed
-  CLOSED    // Posting expired/removed
-  PAUSED    // Temporarily not accepting apps
-  DRAFT     // Admin saved but not published
+  OPEN // Actively accepting applications
+  FILLED // Position filled, closed
+  CLOSED // Posting expired/removed
+  PAUSED // Temporarily not accepting apps
+  DRAFT // Admin saved but not published
 }
 
 model JobPosting {
-  id            String   @id @default(cuid())
-  createdById   String?
-  title         String
-  overview      String
-  description   String
-  sector        String   // 'Education'
+  id             String    @id @default(cuid())
+  createdById    String?
+  title          String
+  overview       String
+  description    String
+  sector         String // 'Education'
   requiredSkills String[] // Array of skill IDs
-  location      String?
-  jobType       JobType   @default(FULL_TIME)
-  status        JobStatus   @default(OPEN)
-  deadline      DateTime?
-  
-  createdBy     Person?  @relation("JobPostings", fields: [createdById], references: [id], onDelete: SetNull)
-  applications  JobApplication[]
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  location       String?
+  jobType        JobType   @default(FULL_TIME)
+  status         JobStatus @default(OPEN)
+  deadline       DateTime?
+
+  createdBy    Person?          @relation("JobPostings", fields: [createdById], references: [id], onDelete: SetNull)
+  applications JobApplication[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model JobApplication {
-  id            String   @id @default(cuid())
-  jobPostingId  String
-  personId      String
-  status        String   @default("applied") // 'applied'|'reviewed'|'rejected'|'accepted'
-  message       String?
-  
-  jobPosting    JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
-  person        Person   @relation("JobApplications", fields: [personId], references: [id], onDelete: Cascade)
-  
-  createdAt     DateTime @default(now())
+  id           String  @id @default(cuid())
+  jobPostingId String
+  personId     String
+  status       String  @default("applied") // 'applied'|'reviewed'|'rejected'|'accepted'
+  message      String?
+
+  jobPosting JobPosting @relation(fields: [jobPostingId], references: [id], onDelete: Cascade)
+  person     Person     @relation("JobApplications", fields: [personId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 }
 
 // ===== ACTIVITY FEED =====
 
 enum PostType {
   // Personal Updates
-  CAREER_UPDATE     // "Promoted to Principal @ ABC School!"
-  ACHIEVEMENT       // "Masters in Education Policy completed"
-  CERTIFICATION     // "Google Cloud Educator certified"
+  CAREER_UPDATE // "Promoted to Principal @ ABC School!"
+  ACHIEVEMENT // "Masters in Education Policy completed"
+  CERTIFICATION // "Google Cloud Educator certified"
 
   // Job Opportunities  
-  JOB_POSTING       // Hiring: Math Teacher, Tanahun
-  JOB_APPLICATION   // "Applied for Program Coordinator"
+  JOB_POSTING // Hiring: Math Teacher, Tanahun
+  JOB_APPLICATION // "Applied for Program Coordinator"
 
   // Community & Events
   EVENT_ANNOUNCEMENT // "TFN Alumni Summit - Register now!"
-  EVENT_RSVP        // "RSVP'd for Paaila Reunion"
+  EVENT_RSVP // "RSVP'd for Paaila Reunion"
 
   // Knowledge Sharing
-  ARTICLE_SHARE     // "5 tips for rural school leadership"
-  RESOURCE_SHARE    // "Free teacher training course"
+  ARTICLE_SHARE // "5 tips for rural school leadership"
+  RESOURCE_SHARE // "Free teacher training course"
 
   // Networking & Collaboration
   SEEK_COLLABORATION // "Looking for Math curriculum partner"
-  SEEK_MENTOR       // "Need Principal mentor - Tanahun"
-  OFFER_MENTORSHIP  // "Experienced fellows: happy to mentor"
+  SEEK_MENTOR // "Need Principal mentor - Tanahun"
+  OFFER_MENTORSHIP // "Experienced fellows: happy to mentor"
 
   // General
-  GENERAL           // Casual updates, questions
+  GENERAL // Casual updates, questions
 }
 
 model Post {
-  id            String   @id @default(cuid())
-  personId      String
-  content       String
-  postType      PostType // enum for post type
-  imageUrl      String?
-  likes         Int      @default(0)
+  id       String   @id @default(cuid())
+  personId String
+  content  String
+  postType PostType // enum for post type
+  imageUrl String?
+  likes    Int      @default(0)
 
-  person        Person   @relation("Posts", fields: [personId], references: [id], onDelete: Cascade)
-  comments      Comment[]
+  person   Person    @relation("Posts", fields: [personId], references: [id], onDelete: Cascade)
+  comments Comment[]
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Comment {
-  id            String   @id @default(cuid())
-  postId        String
-  personId      String
-  content       String
-  
-  post          Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  person        Person   @relation("Comments", fields: [personId], references: [id], onDelete: Cascade)
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id       String @id @default(cuid())
+  postId   String
+  personId String
+  content  String
+
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  person Person @relation("Comments", fields: [personId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ===== BOOKMARKS =====
@@ -380,21 +387,22 @@ enum BookmarkType {
   POST
   JOB_APPLICATION
   OPPORTUNITY
+  EVENT
 }
 
 model Bookmark {
-  id        String      @id @default(cuid())
+  id        String       @id @default(cuid())
   personId  String
   type      BookmarkType
   targetId  String?
-  createdAt DateTime    @default(now())
+  createdAt DateTime     @default(now())
 
-  person    Person      @relation(fields: [personId], references: [id], onDelete: Cascade)
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
 
+  @@unique([personId, type, targetId])
   @@index([personId])
   @@index([type])
   @@index([targetId])
-  @@unique([personId, type, targetId])
 }
 
 // ===== OPPORTUNITIES & INTERESTS =====
@@ -421,19 +429,19 @@ enum OpportunityStatus {
 }
 
 model Opportunity {
-  id            String   @id @default(cuid())
-  createdById   String
-  title         String
-  overview      String
-  description   String
-  types         OpportunityType[] // Multiple: ['JOB', 'MENTORSHIP', 'TRAINING']
-  location      String?
-  status        OpportunityStatus @default(OPEN)
+  id          String            @id @default(cuid())
+  createdById String
+  title       String
+  overview    String
+  description String
+  types       OpportunityType[] // Multiple: ['JOB', 'MENTORSHIP', 'TRAINING']
+  location    String?
+  status      OpportunityStatus @default(OPEN)
 
-  createdBy     Person   @relation("CreatedOpportunities", fields: [createdById], references: [id], onDelete: Cascade)
+  createdBy Person @relation("CreatedOpportunities", fields: [createdById], references: [id], onDelete: Cascade)
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum InterestTargetType {
@@ -443,16 +451,128 @@ enum InterestTargetType {
 }
 
 model Interest {
-  id          String   @id @default(cuid())
-  personId    String
-  targetType  InterestTargetType // JOB, OPPORTUNITY...
-  targetId    String
-  message     String?
-  createdAt   DateTime @default(now())
-  updatedAt  DateTime          @updatedAt
+  id         String             @id @default(cuid())
+  personId   String
+  eventId    String?
+  targetType InterestTargetType // JOB, OPPORTUNITY, EVENT
+  targetId   String
+  message    String?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
 
-  person      Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  event  Event? @relation("EventInterests", fields: [eventId], references: [id], onDelete: Cascade)
 
   @@unique([personId, targetType, targetId])
   @@index([targetType, targetId])
+}
+
+enum EventType {
+  WORKSHOP
+  CONFERENCE
+  NETWORKING
+  TRAINING
+  REUNION
+  WEBINAR
+  HACKATHON
+  SOCIAL
+  FUNDRAISER
+  GENERAL
+  OTHER
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+model Event {
+  id             String   @id @default(cuid())
+  createdById    String
+  title          String
+  slug           String   @unique
+  description    String?
+  overview       String?
+  location       String? // "Kathmandu" or "Virtual"
+  address        String?
+  latitude       Float?
+  longitude      Float?
+  imageUrl       String?
+  tags           String[] // For filtering/search
+  externalLink   String? // Registration/Zoom/etc.
+  sponsors       String[] // Sponsors/partners
+  recurrenceRule String? // For recurring events (RFC 5545)
+
+  // Timing
+  startDateTime DateTime
+  endDateTime   DateTime?
+
+  // Event details
+  type      EventType   @default(GENERAL)
+  status    EventStatus @default(DRAFT)
+  capacity  Int? // Max attendees
+  rsvpCount Int         @default(0)
+  isFree    Boolean     @default(true)
+  price     Float? // If not free
+
+  // Organization
+  organizerName String?
+  organizerLink String?
+
+  // Relations
+  rsvps         EventRsvp[]
+  interests     Interest[]     @relation("EventInterests")
+  subscriptions Subscription[] @relation("EventSubscriptions")
+
+  createdBy Person @relation("CreatedEvents", fields: [createdById], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum SubscriptionType {
+  EVENT
+  JOB_POSTING
+  OPPORTUNITY
+  POST
+  PERSON // Follow people
+  SCHOOL // Follow schools
+}
+
+model Subscription {
+  id                   String           @id @default(cuid())
+  personId             String
+  eventId              String?
+  type                 SubscriptionType
+  targetId             String // Polymorphic ID reference
+  notifications        Boolean          @default(true) // Email/push notifications?
+  notificationSettings Json? // JSON for detailed preferences
+  source               String? // How/where user subscribed
+  createdAt            DateTime         @default(now())
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  event  Event? @relation("EventSubscriptions", fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([personId, type, targetId])
+  @@index([type])
+  @@index([targetId])
+}
+
+model EventRsvp {
+  id          String    @id @default(cuid())
+  personId    String
+  eventId     String
+  status      String    @default("confirmed") // confirmed|waitlist|cancelled
+  checkedIn   Boolean   @default(false) // Attendance tracking - FUTURE
+  checkedInAt DateTime? // FUTURE
+  note        String? // Special requests, dietary, etc.
+
+  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
+  event  Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([personId, eventId])
 }

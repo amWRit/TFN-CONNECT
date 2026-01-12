@@ -1,0 +1,114 @@
+Events Model
+Here's a robust Event model designed for community/alumni platforms:
+
+text
+enum EventType {
+  WORKSHOP
+  CONFERENCE
+  NETWORKING
+  TRAINING
+  REUNION
+  WEBINAR
+  HACKATHON
+  SOCIAL
+  FUNDRAISER
+  GENERAL
+  OTHER
+}
+
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
+model Event {
+  id             String         @id @default(cuid())
+  title          String
+  slug           String         @unique
+  description    String?
+  overview       String?
+  location       String?        // "Kathmandu" or "Virtual"
+  address        String?
+  latitude       Float?
+  longitude      Float?
+  imageUrl       String? // Future
+  
+  // Timing
+  startDateTime  DateTime
+  endDateTime    DateTime?
+  
+  // Event details
+  type           EventType      @default(NETWORKING)
+  status         EventStatus    @default(DRAFT)
+  capacity       Int?           // Max attendees
+  rsvpCount      Int            @default(0)
+  isFree         Boolean        @default(true)
+  price          Float?         // If not free
+  
+  // Organization
+  organizerId    String         // Person/Staff who created
+  createdBy      Person         @relation(fields: [organizerId], references: [id])
+  
+  // Relations
+  rsvps          EventRsvp[]
+  interests      Interest[]     // Users interested
+  posts          Post[]         // Activity feed mentions
+  subscriptions  Subscription[]
+  
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+Subscriptions Model (Polymorphic)
+Generic subscription system that works for events, jobs, opportunities, posts:
+
+text
+enum SubscriptionType {
+  EVENT
+  JOB_POSTING
+  OPPORTUNITY
+  POST
+  PERSON      // Follow people
+  SCHOOL      // Follow schools
+}
+
+model Subscription {
+  id             String           @id @default(cuid())
+  personId       String
+  type           SubscriptionType
+  targetId       String           // Polymorphic ID reference
+  notifications  Boolean          @default(true)  // Email/push notifications?
+  createdAt      DateTime         @default(now())
+  
+  person         Person           @relation(fields: [personId], references: [id], onDelete: Cascade)
+  
+  @@unique([personId, type, targetId])  // Prevent duplicates
+  @@index([type])
+  @@index([targetId])
+}
+
+Supporting EventRsvp Model
+For event attendance tracking:
+
+text
+model EventRsvp {
+  id        String   @id @default(cuid())
+  personId  String
+  eventId   String
+  status    String   @default("confirmed")  // confirmed|waitlist|cancelled
+  
+  person    Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([personId, eventId])
+}
+
+based on the new model for events and eventsrsvp, lets add the features for events
+- events link at the top, that takes to a events listing page
+- events will take the similar format to that of jobs and opportunities; listing page, detail page, new and edit page
+- keep the ui of events listing, detail page, neww and edit page, similar to that of jobs and opportunities
+- i am using blue for jobs, purple for opportuniites, for events maybe we can use a different color like pearl green type
+- 
