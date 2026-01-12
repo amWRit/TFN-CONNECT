@@ -412,9 +412,13 @@ export default function ProfileActivityPage() {
     setEditSubmitting(true);
     setEditError("");
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (typeof window !== 'undefined' && localStorage.getItem('adminAuth') === 'true') {
+        headers['x-admin-auth'] = 'true';
+      }
       const res = await fetch(`/api/feed/${editPost.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ content: editContent, postType: editPostType }),
       });
       if (!res.ok) throw new Error("Failed to update post");
@@ -441,7 +445,11 @@ export default function ProfileActivityPage() {
     setEditSubmitting(true);
     setEditError("");
     try {
-      const res = await fetch(`/api/feed/${editPost.id}`, { method: "DELETE" });
+      const headers: Record<string, string> = {};
+      if (typeof window !== 'undefined' && localStorage.getItem('adminAuth') === 'true') {
+        headers['x-admin-auth'] = 'true';
+      }
+      const res = await fetch(`/api/feed/${editPost.id}`, { method: "DELETE", headers });
       if (!res.ok) throw new Error("Failed to delete post");
       setEditPost(null);
       // Refresh posts for this profile
@@ -493,7 +501,7 @@ export default function ProfileActivityPage() {
               key={post.id}
               {...post}
               author={post.person}
-              hideBookmark={isAdmin}
+              hideBookmark={false}
               hideStats
               onEdit={() => handleEdit(post)}
             />
