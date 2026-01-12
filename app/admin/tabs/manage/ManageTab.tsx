@@ -11,8 +11,9 @@ import PlacementsTab from './fellowship/PlacementsTab';
 import PeopleTab from './people/PeopleTab';
 import SkillsTab from './talent/SkillsTab';
 import SkillCategoryTab from './talent/SkillCategoryTab';
+import ListingsTab from './listings/ListingsTab';
 
-type ManageView = 'fellowship-program' | 'people' | 'talent';
+type ManageView = 'fellowship-program' | 'people' | 'talent' | 'listings';
 type FellowshipSubTab = 'localgovs' | 'schools' | 'schoolgroups' | 'cohorts' | 'placements';
 
 export default function ManageTab() {
@@ -21,7 +22,7 @@ export default function ManageTab() {
 
   return (
     <div className="space-y-4">
-      {/* Top-level Manage tabs: Fellowship, People, Talent */}
+      {/* Top-level Manage tabs: Fellowship, People, Talent, Listings */}
       <div className="flex gap-2 mb-4 flex-wrap">
         <button
           onClick={() => setCurrentView('fellowship-program')}
@@ -52,6 +53,16 @@ export default function ManageTab() {
           }`}
         >
           Talent
+        </button>
+        <button
+          onClick={() => setCurrentView('listings')}
+          className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+            currentView === 'listings'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'bg-gray-100 text-gray-700 hover:bg-blue-50'
+          }`}
+        >
+          Listings
         </button>
       </div>
 
@@ -98,6 +109,9 @@ export default function ManageTab() {
           <SkillsTab />
         </div>
       )}
+
+      {/* Listings Group */}
+      {currentView === 'listings' && <ListingsTab />}
     </div>
   );
 }
