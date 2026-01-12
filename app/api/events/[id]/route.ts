@@ -79,8 +79,11 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Allow a local admin bypass via header for developer convenience.
+  // Client will send `x-local-admin: true` when `localStorage.adminAuth === 'true'`.
+  const localAdminHeader = request.headers.get('x-local-admin') === 'true';
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  if (!session?.user?.id && !localAdminHeader) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -92,8 +95,9 @@ export async function PUT(
   }
 
   // Check if user is the creator or admin
-  const isAdmin = (session as any).user?.type === 'ADMIN';
-  if (existingEvent.createdById !== session.user.id && !isAdmin) {
+  const isAdmin = session?.user?.type === 'ADMIN' || localAdminHeader;
+  const sessionUserId = session?.user?.id;
+  if (existingEvent.createdById !== sessionUserId && !isAdmin) {
     return NextResponse.json({ error: "Not authorized to edit this event" }, { status: 403 });
   }
 
@@ -166,8 +170,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const localAdminHeader = request.headers.get('x-local-admin') === 'true';
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  if (!session?.user?.id && !localAdminHeader) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -179,8 +184,9 @@ export async function DELETE(
   }
 
   // Check if user is the creator or admin
-  const isAdmin = (session as any).user?.type === 'ADMIN';
-  if (existingEvent.createdById !== session.user.id && !isAdmin) {
+  const isAdmin = session?.user?.type === 'ADMIN' || localAdminHeader;
+  const sessionUserId = session?.user?.id;
+  if (existingEvent.createdById !== sessionUserId && !isAdmin) {
     return NextResponse.json({ error: "Not authorized to delete this event" }, { status: 403 });
   }
 

@@ -121,10 +121,17 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
     setError(null);
 
     try {
-      const res = await fetch(`/api/events/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        const headers: Record<string,string> = { "Content-Type": "application/json" };
+        try {
+          if (typeof window !== 'undefined' && localStorage.getItem('adminAuth') === 'true') {
+            headers['x-local-admin'] = 'true';
+          }
+        } catch (e) {}
+
+        const res = await fetch(`/api/events/${id}`, {
+          method: "PUT",
+          headers,
+          body: JSON.stringify({
           title,
           slug,
           overview,

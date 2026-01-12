@@ -133,6 +133,7 @@ export default function ProfilePage() {
     placementId: "",
     subjects: [],
   });
+  const router = useRouter();
   const [cohorts, setCohorts] = useState<{ id: string; name: string; start?: string; end?: string }[]>([]);
   const [placements, setPlacements] = useState<{ id: string; school: { name: string } }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -386,6 +387,7 @@ export default function ProfilePage() {
           await fetchProfileById(person.id);
         }
         setEditing(false);
+        try { router.refresh(); } catch {}
       }
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -440,6 +442,7 @@ export default function ProfilePage() {
           start: "",
           end: "",
         });
+        try { router.refresh(); } catch {}
                     } else {
         const errorData = await res.json();
         alert(errorData.error || "Failed to save education");
@@ -460,6 +463,7 @@ export default function ProfilePage() {
 
                         if (res.ok) {
                           await fetchProfile();
+                          try { router.refresh(); } catch {}
       }
     } catch (error) {
       console.error("Error deleting education:", error);
@@ -513,6 +517,7 @@ export default function ProfilePage() {
           start: "",
           end: "",
         });
+        try { router.refresh(); } catch {}
                         } else {
         const errorData = await res.json();
         alert(errorData.error || "Failed to save experience");
@@ -533,6 +538,7 @@ export default function ProfilePage() {
 
       if (res.ok) {
         await fetchProfile();
+        try { router.refresh(); } catch {}
       }
     } catch (error) {
       console.error("Error deleting experience:", error);
@@ -561,6 +567,7 @@ export default function ProfilePage() {
         }
         // Also fetch full profile to ensure everything is in sync
         await fetchProfile();
+        try { router.refresh(); } catch {}
       } else {
         const errorData = await res.json();
         alert(errorData.error || "Failed to upload image");
@@ -588,6 +595,7 @@ export default function ProfilePage() {
 
       if (res.ok) {
         await fetchProfile();
+        try { router.refresh(); } catch {}
       }
     } catch (error) {
       console.error("Error removing image:", error);
@@ -710,6 +718,7 @@ export default function ProfilePage() {
                       setShowFellowshipForm(false);
                       setEditingFellowship(null);
                       setFellowshipForm({ cohortId: "", placementId: "", subjects: [] });
+                      try { router.refresh(); } catch {}
                     } else {
                       alert("Failed to save fellowship");
                     }
@@ -774,6 +783,7 @@ export default function ProfilePage() {
                           const res = await fetch(`/api/fellowships/${fellow.id}`, { method: "DELETE" });
                           if (res.ok) {
                             await fetchProfile();
+                            try { router.refresh(); } catch {}
                           } else {
                             alert("Failed to delete fellowship");
                           }

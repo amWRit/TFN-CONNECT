@@ -26,6 +26,7 @@ interface PostProps {
   hideStats?: boolean;
   leftBorder?: boolean;
   showEmojiBadge?: boolean;
+  adminView?: boolean;
 }
 
 const getPostTypeColor = (type: string) => {
@@ -105,11 +106,27 @@ export function PostCard({
   hideStats = false,
   leftBorder = false,
   onEdit,
+  adminView = false,
 }: PostProps & { onEdit?: () => void }) {
   const { status, data: session } = useSession();
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
   const isOwner = author && author.id && session?.user?.id === author.id;
+  const [localAdmin, setLocalAdmin] = useState(false);
+  useEffect(() => {
+    function syncAdmin() {
+      setLocalAdmin(typeof window !== 'undefined' && localStorage.getItem('adminAuth') === 'true');
+    }
+    syncAdmin();
+    window.addEventListener('storage', syncAdmin);
+    window.addEventListener('focus', syncAdmin);
+    return () => {
+      window.removeEventListener('storage', syncAdmin);
+      window.removeEventListener('focus', syncAdmin);
+    };
+  }, []);
+  const isSessionAdmin = (session?.user as any)?.type === 'ADMIN';
+  const isEffectiveAdmin = adminView || isSessionAdmin || localAdmin;
 
   // Fetch initial bookmark state
   useEffect(() => {
@@ -147,7 +164,7 @@ export function PostCard({
       <CardHeader className="relative">
         {/* Edit or Bookmark Button (UI only) - top right */}
         {!hideBookmark && (
-          isOwner ? (
+          (isOwner || isEffectiveAdmin) ? (
             <button
               aria-label="Edit Post"
               className="p-2 rounded-full shadow-md transition-colors duration-200 border-2 bg-white border-blue-300 text-blue-600 hover:bg-blue-50 hover:scale-110 disabled:opacity-60"

@@ -23,6 +23,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       where: { id },
       data: {
         title: body.title,
+        overview: body.overview,
         description: body.description,
         types: body.types,
         location: body.location,

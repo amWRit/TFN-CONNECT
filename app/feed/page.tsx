@@ -26,8 +26,21 @@ interface Post {
 
 export default function FeedPage() {
   const { data: session, status } = useSession();
-  // Treat local admin (localStorage adminAuth) as an authenticated user for UI access
-  const [isAdmin, setIsAdmin] = useState<boolean>(() => typeof window !== 'undefined' && localStorage.getItem('adminAuth') === 'true');
+  // Track both session admin and local admin
+  const [localAdmin, setLocalAdmin] = useState(() => typeof window !== 'undefined' && localStorage.getItem('adminAuth') === 'true');
+  useEffect(() => {
+    function syncAdmin() {
+      setLocalAdmin(typeof window !== 'undefined' && localStorage.getItem('adminAuth') === 'true');
+    }
+    window.addEventListener('storage', syncAdmin);
+    window.addEventListener('focus', syncAdmin);
+    return () => {
+      window.removeEventListener('storage', syncAdmin);
+      window.removeEventListener('focus', syncAdmin);
+    };
+  }, []);
+  const isSessionAdmin = (session?.user as any)?.type === 'ADMIN';
+  const isAdmin = isSessionAdmin || localAdmin;
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -107,9 +120,13 @@ export default function FeedPage() {
     setEditSubmitting(true);
     setEditError("");
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (localStorage.getItem('adminAuth') === 'true') {
+        headers['x-admin-auth'] = 'true';
+      }
       const res = await fetch(`/api/feed/${editPost?.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ content: editContent, postType: editPostType }),
       });
       if (!res.ok) throw new Error("Failed to update post");
@@ -133,7 +150,11 @@ export default function FeedPage() {
     setEditSubmitting(true);
     setEditError("");
     try {
-      const res = await fetch(`/api/feed/${editPost.id}`, { method: "DELETE" });
+      const headers: Record<string, string> = {};
+      if (localStorage.getItem('adminAuth') === 'true') {
+        headers['x-admin-auth'] = 'true';
+      }
+      const res = await fetch(`/api/feed/${editPost.id}`, { method: "DELETE", headers });
       if (!res.ok) throw new Error("Failed to delete post");
       setEditPost(null);
       // Refresh posts
@@ -290,8 +311,9 @@ export default function FeedPage() {
               createdAt={new Date(post.createdAt)}
               showEmojiBadge
               hideStats
-              hideBookmark={isAdmin}
-              onEdit={() => handleEdit(post)}
+              hideBookmark={false}
+              adminView={isAdmin}
+              onEdit={isAdmin ? () => handleEdit(post) : undefined}
             />
           ))}
         </div>
