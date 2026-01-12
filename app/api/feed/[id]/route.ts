@@ -32,7 +32,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
     } else {
       // Normal users can only update their own post
       post = await prisma.post.update({
-        where: { id, personId: session.user.id },
+        where: { id, personId: session!.user!.id },
         data: { content, postType },
       });
     }
@@ -57,7 +57,7 @@ export async function DELETE(req: Request, context: { params: Promise<{ id: stri
       await prisma.post.delete({ where: { id } });
     } else {
       // Normal users can only delete their own post
-      await prisma.post.delete({ where: { id, personId: session.user.id } });
+      await prisma.post.delete({ where: { id, personId: session!.user!.id } });
     }
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (err) {
