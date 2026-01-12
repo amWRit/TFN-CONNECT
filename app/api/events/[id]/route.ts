@@ -95,7 +95,7 @@ export async function PUT(
   }
 
   // Check if user is the creator or admin
-  const isAdmin = session?.user?.type === 'ADMIN' || localAdminHeader;
+  const isAdmin = (session?.user && (session.user as any).type === 'ADMIN') || localAdminHeader;
   const sessionUserId = session?.user?.id;
   if (existingEvent.createdById !== sessionUserId && !isAdmin) {
     return NextResponse.json({ error: "Not authorized to edit this event" }, { status: 403 });
@@ -184,7 +184,7 @@ export async function DELETE(
   }
 
   // Check if user is the creator or admin
-  const isAdmin = session?.user?.type === 'ADMIN' || localAdminHeader;
+  const isAdmin = (session?.user && (session.user as any).type === 'ADMIN') || localAdminHeader;
   const sessionUserId = session?.user?.id;
   if (existingEvent.createdById !== sessionUserId && !isAdmin) {
     return NextResponse.json({ error: "Not authorized to delete this event" }, { status: 403 });
