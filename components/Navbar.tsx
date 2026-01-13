@@ -19,7 +19,14 @@ export default function Navbar() {
 
   const isActive = (path: string) => {
     if (path === "/people") {
-      return pathname === "/people" || pathname?.startsWith("/people/") || pathname === "/alumni" || pathname?.startsWith("/alumni/");
+      return (
+        pathname === "/people" ||
+        pathname?.startsWith("/people/") ||
+        pathname === "/alumni" ||
+        pathname?.startsWith("/alumni/") ||
+        pathname === "/profile" ||
+        pathname?.startsWith("/profile/")
+      );
     }
     return pathname === path || pathname?.startsWith(`${path}/`);
   };
@@ -37,8 +44,12 @@ export default function Navbar() {
         </a>
         <div className="flex gap-3 sm:gap-6 text-xs sm:text-sm items-stretch h-full">
           <a 
-            href="/people" 
-            className={`font-semibold transition flex items-center gap-1 py-3 sm:py-4 -mb-0.5 ${isActive("/people") ? "text-cyan-600 border-b-2 border-cyan-600" : "text-gray-700 hover:text-cyan-600 border-b-2 border-transparent"}`} 
+            href="/people"
+            className={`font-semibold transition flex items-center gap-1 py-3 sm:py-4 -mb-0.5 ${
+              isActive("/people") || pathname === "/profile" || pathname?.startsWith("/profile/")
+                ? "text-cyan-600 border-b-2 border-cyan-600"
+                : "text-gray-700 hover:text-cyan-600 border-b-2 border-transparent"
+            }`}
             title="Community"
           >
             <Users className="h-4 w-4" />
@@ -78,7 +89,7 @@ export default function Navbar() {
               <span className="hidden sm:inline">Feed</span>
             </a>
           )}
-          <div className="flex items-center py-3 sm:py-4">
+          <div className={`flex items-center gap-1 py-3 sm:py-4 -mb-0.5 ${isAdmin && pathname === "/admin/home" ? "border-b-2 border-yellow-700" : ""}`}>
             <UserMenu />
           </div>
         </div>
