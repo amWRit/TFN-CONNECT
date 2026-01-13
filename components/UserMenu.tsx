@@ -9,7 +9,7 @@ declare global {
 
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
-import { UserCircle, LogOut, User, Activity, Shield, Eye, EyeOff } from "lucide-react";
+import { UserCircle, LogOut, User, Activity, Shield, Eye, EyeOff, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ProfileImage } from "./ProfileImage";
@@ -26,6 +26,8 @@ export default function UserMenu() {
   const menuRef = useRef<HTMLDivElement | null>(null);
   // Modal state for password prompt
   const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminToggleActive, setAdminToggleActive] = useState(false);
+  // Add missing admin modal state
   const [adminPassword, setAdminPassword] = useState("");
   const [adminError, setAdminError] = useState("");
   const [adminLoading, setAdminLoading] = useState(false);
@@ -182,7 +184,8 @@ export default function UserMenu() {
       setOpen(false);
       router.refresh();
     } else {
-      // Show password modal
+      // Keep toggle visually on while modal is open
+      setAdminToggleActive(true);
       setShowAdminModal(true);
     }
   };
@@ -201,16 +204,22 @@ export default function UserMenu() {
     setAdminLoading(false);
     if (data.success) {
       localStorage.setItem("adminAuth", "true");
-      // Dispatch custom event for same-tab update
       window.dispatchEvent(new Event("adminAuthChanged"));
       setIsAdmin(true);
       setShowAdminModal(false);
       setAdminPassword("");
       setOpen(false);
+      setAdminToggleActive(false); // turn off visual toggle
       router.refresh();
     } else {
       setAdminError(data.error || "Login failed");
     }
+  };
+
+  // When modal closes/cancels, turn off visual toggle
+  const handleAdminModalClose = () => {
+    setShowAdminModal(false);
+    setAdminToggleActive(false);
   };
 
   const displayName = session.user?.name || session.user?.email || "User";
@@ -273,13 +282,13 @@ export default function UserMenu() {
                 <div className="group relative flex-shrink-0">
                   <button
                     onClick={handleAdminToggle}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${isAdmin ? "bg-green-500" : "bg-gray-300"}`}
-                    aria-pressed={isAdmin}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${isAdmin ? "bg-green-500" : adminToggleActive ? "bg-blue-500" : "bg-gray-300"}`}
+                    aria-pressed={isAdmin || adminToggleActive}
                     aria-label="Toggle admin mode"
                   >
                     <span className="sr-only">Toggle admin mode</span>
                     <span
-                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ${isAdmin ? "translate-x-5" : "translate-x-1"}`}
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ${isAdmin || adminToggleActive ? "translate-x-5" : "translate-x-1"}`}
                     />
                   </button>
                   <span className="absolute left-1/2 -translate-x-1/2 -top-8 z-50 whitespace-nowrap rounded bg-gray-900 px-2 py-1 text-xs text-white opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-200">
@@ -299,53 +308,63 @@ export default function UserMenu() {
               )}
             </>
           )}
-                {/* Admin password modal */}
-                {showAdminModal && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-                    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
-                      <div className="flex flex-col items-center mb-2">
-                        <Shield size={36} className="text-blue-700 mb-1" />
-                        <h2 className="text-xl font-bold text-blue-700">Enter Admin Password</h2>
-                      </div>
-                      <form onSubmit={handleAdminPassword} className="space-y-4">
-                        <div className="relative">
-                          <input
-                            type={adminLoading ? "password" : (showAdminPassword ? "text" : "password")}
-                            className="w-full border-2 border-blue-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 px-3 py-2 rounded-lg pr-10 transition"
-                            placeholder="Admin password"
-                            value={adminPassword}
-                            onChange={e => setAdminPassword(e.target.value)}
-                            required
-                            autoFocus
-                          />
-                          <button
-                            type="button"
-                            tabIndex={-1}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-400 hover:text-blue-600 focus:outline-none"
-                            onClick={() => setShowAdminPassword((v) => !v)}
-                            aria-label={showAdminPassword ? "Hide password" : "Show password"}
-                          >
-                            {showAdminPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                          </button>
-                        </div>
-                        {adminError && <div className="text-red-600 text-sm">{adminError}</div>}
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            className="flex-1 py-2 rounded bg-red-600 text-white border border-red-700 hover:bg-red-700 hover:text-white font-semibold transition"
-                            onClick={() => { setShowAdminModal(false); setAdminPassword(""); setAdminError(""); window.showAdminPassword = false; }}
-                            disabled={adminLoading}
-                          >Cancel</button>
-                          <button
-                            type="submit"
-                            className="flex-1 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 font-semibold transition"
-                            disabled={adminLoading}
-                          >{adminLoading ? "Checking..." : "Confirm"}</button>
-                        </div>
-                      </form>
-                    </div>
+          {/* Admin password modal */}
+          {showAdminModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+              <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-xs relative">
+                <button
+                  type="button"
+                  className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 p-1 rounded-full focus:outline-none"
+                  onClick={handleAdminModalClose}
+                  aria-label="Close"
+                  disabled={adminLoading}
+                >
+                  <X size={20} />
+                </button>
+                <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <Shield size={20} className="text-yellow-700" /> Enter Admin Password
+                </h2>
+                <form onSubmit={handleAdminPassword}>
+                  <input
+                    type={showAdminPassword ? "text" : "password"}
+                    className="w-full border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded px-3 py-2 mb-2 transition"
+                    placeholder="Password"
+                    value={adminPassword}
+                    onChange={e => setAdminPassword(e.target.value)}
+                    autoFocus
+                  />
+                  {adminError && <div className="text-red-500 text-sm mb-2">{adminError}</div>}
+                  <div className="flex items-center gap-2 mb-2">
+                    <input
+                      type="checkbox"
+                      id="show-admin-password"
+                      checked={showAdminPassword}
+                      onChange={() => setShowAdminPassword(v => !v)}
+                    />
+                    <label htmlFor="show-admin-password" className="text-sm">Show password</label>
                   </div>
-                )}
+                  <div className="flex gap-2 mt-4">
+                    <button
+                      type="submit"
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-semibold flex-1 flex items-center justify-center gap-2 shadow"
+                      disabled={adminLoading}
+                    >
+                      <Shield size={16} />
+                      {adminLoading ? "Logging in..." : "Login"}
+                    </button>
+                    <button
+                      type="button"
+                      className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-400 px-4 py-2 rounded font-semibold flex-1 flex items-center justify-center gap-2 transition-colors"
+                      onClick={handleAdminModalClose}
+                      disabled={adminLoading}
+                    >
+                      <X size={16} /> Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
           <button
             onClick={() => { setOpen(false); signOut({ callbackUrl: "/" }); }}
             className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-blue-50 text-gray-700 text-sm"

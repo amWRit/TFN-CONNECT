@@ -17,28 +17,17 @@ type JobPosting = {
 
 function statusBadgeVariant(status: string) {
   switch (status) {
-    case 'OPEN': return 'default';
-    case 'FILLED': return 'secondary';
-    case 'CLOSED': return 'destructive';
+    case 'OPEN': return 'green'; // custom green
+    case 'CLOSED': return 'destructive'; // red
+    case 'FILLED': return 'gray'; // custom gray
     case 'PAUSED': return 'outline';
     case 'DRAFT': return 'outline';
     default: return 'outline';
   }
 }
 
-function typeBadgeVariant(type: string) {
-  switch (type) {
-    case 'FULL_TIME': return 'default';
-    case 'PART_TIME': return 'secondary';
-    case 'CONTRACT': return 'outline';
-    case 'INTERNSHIP': return 'outline';
-    case 'VOLUNTEER': return 'outline';
-    case 'FREELANCE': return 'outline';
-    case 'TEMPORARY': return 'outline';
-    case 'REMOTE': return 'outline';
-    case 'HYBRID': return 'outline';
-    default: return 'outline';
-  }
+function typeBadgeVariant(type: string): "default" | "secondary" | "destructive" | "outline" {
+  return "secondary"; // always use secondary for type
 }
 
 
