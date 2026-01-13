@@ -8,13 +8,14 @@ import SchoolsTab from './fellowship/SchoolsTab';
 import SchoolGroupsTab from './fellowship/SchoolGroupsTab';
 import CohortsTab from './fellowship/CohortsTab';
 import PlacementsTab from './fellowship/PlacementsTab';
+import SubjectTab from './fellowship/SubjectTab';
 import PeopleTab from './people/PeopleTab';
 import SkillsTab from './talent/SkillsTab';
 import SkillCategoryTab from './talent/SkillCategoryTab';
 import ListingsTab from './listings/ListingsTab';
 
 type ManageView = 'fellowship-program' | 'people' | 'talent' | 'listings';
-type FellowshipSubTab = 'localgovs' | 'schools' | 'schoolgroups' | 'cohorts' | 'placements';
+type FellowshipSubTab = 'localgovs' | 'schools' | 'schoolgroups' | 'cohorts' | 'placements' | 'subjects';
 
 export default function ManageTab() {
   const [currentView, setCurrentView] = useState<ManageView>('fellowship-program');
@@ -76,6 +77,7 @@ export default function ManageTab() {
               { id: 'schoolgroups', label: 'School Groups' },
               { id: 'cohorts', label: 'Cohorts' },
               { id: 'placements', label: 'Placements' },
+              { id: 'subjects', label: 'Subjects' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -96,6 +98,7 @@ export default function ManageTab() {
           {fellowshipSubTab === 'schoolgroups' && <SchoolGroupsTab />}
           {fellowshipSubTab === 'cohorts' && <CohortsTab />}
           {fellowshipSubTab === 'placements' && <PlacementsTab />}
+          {fellowshipSubTab === 'subjects' && <SubjectTab />}
         </div>
       )}
 

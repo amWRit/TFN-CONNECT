@@ -8,6 +8,12 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2, User } from 'lucide-react';
 
+interface Subject {
+	id: string;
+	name: string;
+	description?: string;
+}
+
 interface Placement {
 	id: string;
 	name?: string;
@@ -227,7 +233,19 @@ export default function PlacementsTab() {
 		setEditAction(null);
 	};
 
-	const subjectOptions = ['Mathematics', 'Science', 'English', 'Computer'];
+	const [subjectOptions, setSubjectOptions] = useState<Subject[]>([]);
+
+	useEffect(() => {
+		const fetchSubjects = async () => {
+			try {
+				const res = await fetch('/api/subjects');
+				if (res.ok) setSubjectOptions(await res.json());
+			} catch (error) {
+				console.error('Failed to fetch subjects:', error);
+			}
+		};
+		fetchSubjects();
+	}, []);
 
 	return (
 	   <div className="space-y-3">
@@ -349,14 +367,14 @@ export default function PlacementsTab() {
 									<label className="block font-semibold mb-2 text-blue-700">Subjects Taught *</label>
 									<div className="grid grid-cols-2 gap-2">
 										{subjectOptions.map((subject) => (
-											<label key={subject} className="flex items-center gap-2">
+											<label key={subject.id} className="flex items-center gap-2">
 												<input
 													type="checkbox"
-													checked={form.subjects.includes(subject)}
-													onChange={() => handleSubjectToggle(subject)}
+													checked={form.subjects.includes(subject.name)}
+													onChange={() => handleSubjectToggle(subject.name)}
 													className="w-4 h-4"
 												/>
-												{subject}
+												{subject.name}
 											</label>
 										))}
 									</div>
@@ -450,14 +468,14 @@ export default function PlacementsTab() {
 									<label className="block font-semibold mb-2 text-blue-700">Subjects Taught *</label>
 									<div className="grid grid-cols-2 gap-2">
 										{subjectOptions.map((subject) => (
-											<label key={subject} className="flex items-center gap-2">
+											<label key={subject.id} className="flex items-center gap-2">
 												<input
 													type="checkbox"
-													checked={form.subjects.includes(subject)}
-													onChange={() => handleSubjectToggle(subject)}
+													checked={form.subjects.includes(subject.name)}
+													onChange={() => handleSubjectToggle(subject.name)}
 													className="w-4 h-4"
 												/>
-												{subject}
+												{subject.name}
 											</label>
 										))}
 									</div>
