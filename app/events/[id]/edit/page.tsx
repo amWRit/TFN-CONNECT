@@ -219,6 +219,10 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
         </button>
       </div>
 
+      <div className="mb-4 text-sm text-gray-700 text-center bg-yellow-100 border border-yellow-300 rounded-lg px-4 py-2">
+        By posting or editing an event, you agree to our <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline text-emerald-700 font-semibold">Terms and Conditions</a>.
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Title */}
         <div>

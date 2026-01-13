@@ -135,7 +135,9 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
         </button>
       </div>
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow p-6 flex flex-col gap-4 border-2 border-blue-400">
-        {/* ...existing code... */}
+        <div className="mb-4 text-sm text-gray-700 text-center bg-yellow-100 border border-yellow-300 rounded-lg px-4 py-2">
+          By editing or posting a job, you agree to our <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline text-blue-700 font-semibold">Terms and Conditions</a>.
+        </div>
         <label className="font-semibold">Title
           <input name="title" value={form.title} onChange={handleChange} className="block w-full border-2 border-blue-400 rounded px-3 py-2 mt-1 font-normal focus:border-blue-600 focus:ring-blue-500" required />
         </label>
@@ -150,7 +152,6 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
             Try <a href="https://markdownlivepreview.com/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Live Preview</a> or the <a href="https://www.markdownguide.org/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Guide</a> for syntax and examples.
           </div>
         </label>
-        {/* ...existing code... */}
         <label className="font-semibold">Job Type
           <select name="jobType" value={form.jobType} onChange={handleChange} className="block w-full border-2 border-blue-400 rounded px-3 py-2 mt-1 font-normal focus:border-blue-600 focus:ring-blue-500">
             {jobTypes.map(type => (
@@ -158,7 +159,6 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
             ))}
           </select>
         </label>
-        {/* ...existing code... */}
         <label className="font-semibold">Location
           <input name="location" value={form.location} onChange={handleChange} className="block w-full border-2 border-blue-400 rounded px-3 py-2 mt-1 font-normal focus:border-blue-600 focus:ring-blue-500" />
         </label>
@@ -172,7 +172,6 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
             ))}
           </select>
         </label>
-        {/* ...existing code... */}
         <label className="font-semibold">Required Skills
           <Select
             instanceId="edit-job-required-skills"

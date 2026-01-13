@@ -222,6 +222,9 @@ export default function FeedPage() {
                 &times;
               </button>
               <h2 className="text-2xl font-extrabold mb-6 text-blue-700 text-center tracking-tight drop-shadow">Create a Post</h2>
+              <div className="mb-4 text-sm text-gray-700 text-center bg-yellow-100 border border-yellow-300 rounded-lg px-4 py-2">
+                By posting, you agree to our <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline text-blue-700 font-semibold">Terms and Conditions</a>.
+              </div>
               <form onSubmit={handleAddPost} className="space-y-6">
                 <div className="text-xs text-gray-500 mt-1 italic">
                   Tip: You can use Markdown to format your post.<br />
