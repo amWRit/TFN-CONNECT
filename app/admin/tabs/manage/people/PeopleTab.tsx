@@ -14,7 +14,8 @@ const TYPE_META: Record<string, { bg: string; text: string; icon: string; label:
 };
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2, Eye } from 'lucide-react';
+import ConfirmModal from '@/components/ConfirmModal';
+import { Pencil, Trash2, Eye, UserCheck, XCircle } from 'lucide-react';
 
 interface Person {
 	id: string;
@@ -121,6 +122,10 @@ export default function PeopleTab() {
 		type: '',
 	});
 	const [addSubmitting, setAddSubmitting] = useState(false);
+	const [createdPersonId, setCreatedPersonId] = useState<string | null>(null);
+	const [addError, setAddError] = useState("");
+	const [deleteId, setDeleteId] = useState<string | null>(null);
+	const [deleteLoading, setDeleteLoading] = useState(false);
 	const router = useRouter();
 
 	useEffect(() => {
@@ -147,7 +152,7 @@ export default function PeopleTab() {
 		<div className="space-y-3">
 			<div className="flex justify-between items-center mb-2">
 				<h2 className="text-xl font-bold">People</h2>
-				<Button onClick={() => setShowAddModal(true)} className="bg-blue-600 text-white hover:bg-blue-700">
+				<Button onClick={() => { setShowAddModal(true); setAddError(""); }} className="bg-blue-600 text-white hover:bg-blue-700">
 					+ Add Person
 				</Button>
 			</div>
@@ -230,7 +235,7 @@ export default function PeopleTab() {
 						<div className="bg-gradient-to-br from-blue-50 via-white to-blue-100 rounded-2xl shadow-2xl p-6 border-4 border-blue-400/70 max-h-[90vh] overflow-y-auto">
 							<button
 								className="absolute top-3 right-3 text-blue-400 hover:text-blue-700 text-3xl font-bold transition-colors duration-150"
-								onClick={() => setShowAddModal(false)}
+								onClick={() => { setShowAddModal(false); setAddError(""); }}
 								aria-label="Close"
 							>
 								&times;
@@ -239,8 +244,15 @@ export default function PeopleTab() {
 							<form
 								onSubmit={async (e) => {
 									e.preventDefault();
+									setAddError("");
 									if (!addForm.firstName.trim() || !addForm.lastName.trim() || !addForm.email1.trim() || !addForm.type) {
-										alert('Please fill all required fields');
+										setAddError('Please fill all required fields');
+										return;
+									}
+									// Email uniqueness check
+									const emailLower = addForm.email1.trim().toLowerCase();
+									if (people.some(p => p.email1.trim().toLowerCase() === emailLower)) {
+										setAddError('This email already exists.');
 										return;
 									}
 									setAddSubmitting(true);
@@ -254,12 +266,12 @@ export default function PeopleTab() {
 											const person = await res.json();
 											setShowAddModal(false);
 											setAddForm({ firstName: '', middleName: '', lastName: '', email1: '', type: '' });
-											router.push(`/profile?id=${person.id}`);
+											setCreatedPersonId(person.id);
 										} else {
-											alert('Failed to create person');
+											setAddError('Failed to create person');
 										}
 									} catch (error) {
-										alert('Error creating person');
+										setAddError('Error creating person');
 									}
 									setAddSubmitting(false);
 								}}
@@ -268,6 +280,7 @@ export default function PeopleTab() {
 								<div className="mb-2 text-xs text-blue-700 text-center font-medium bg-blue-50 rounded p-2">
 									After creating a person, you can update more details (education, experience, etc.) from their profile page.
 								</div>
+								{addError && <div className="text-red-600 mb-2 font-medium text-center">{addError}</div>}
 								<div className="grid grid-cols-1 gap-3">
 									<input
 										type="text"
@@ -323,7 +336,7 @@ export default function PeopleTab() {
 									<button
 										type="button"
 										className="flex-1 bg-white border-2 border-red-400 text-red-600 font-bold px-8 py-3 rounded-xl shadow transition-all duration-200 text-lg tracking-wide hover:bg-red-50 hover:border-red-600"
-										onClick={() => setShowAddModal(false)}
+										onClick={() => { setShowAddModal(false); setAddError(""); }}
 										disabled={addSubmitting}
 									>
 										Cancel
@@ -355,23 +368,38 @@ export default function PeopleTab() {
 								</span>
 							</a>
 							<span title="Delete Person">
-								<Button size="icon" variant="destructive" onClick={async () => {
-									if (!window.confirm('Are you sure you want to delete this person?')) return;
-									try {
-										const res = await fetch(`/api/people/${p.id}`, { method: 'DELETE' });
-										if (res.ok) {
-											fetchData();
-										} else {
-											const errorData = await res.json();
-											alert(errorData.error || 'Failed to delete person');
-										}
-									} catch (error) {
-										alert('Failed to delete person');
-									}
-								}} aria-label="Delete">
+								<Button size="icon" variant="destructive" onClick={() => setDeleteId(p.id)} aria-label="Delete">
 									<Trash2 className="w-4 h-4" />
 								</Button>
 							</span>
+									{/* Confirm Delete Modal */}
+									<ConfirmModal
+										open={!!deleteId}
+										title="Delete Person"
+										message="Are you sure you want to delete this person? This action cannot be undone."
+										confirmText="Delete"
+										cancelText="Cancel"
+										loading={deleteLoading}
+										onConfirm={async () => {
+											if (!deleteId) return;
+											setDeleteLoading(true);
+											try {
+												const res = await fetch(`/api/people/${deleteId}`, { method: 'DELETE' });
+												if (res.ok) {
+													setDeleteId(null);
+													fetchData();
+												} else {
+													const errorData = await res.json();
+													alert(errorData.error || 'Failed to delete person');
+												}
+											} catch (error) {
+												alert('Failed to delete person');
+											} finally {
+												setDeleteLoading(false);
+											}
+										}}
+										onCancel={() => setDeleteId(null)}
+									/>
 						</div>
 					</Card>
 				))}
@@ -418,6 +446,33 @@ export default function PeopleTab() {
 						>
 							Next
 						</button>
+					</div>
+				</div>
+			)}
+
+			{/* Modal after person creation */}
+			{createdPersonId && (
+				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm">
+					<div className="bg-white rounded-2xl shadow-2xl p-8 border-4 border-blue-400/70 max-w-md mx-auto text-center">
+						<h2 className="text-2xl font-bold mb-4 text-blue-700">Person Created!</h2>
+						<p className="mb-6 text-gray-700">Would you like to go to their profile and update details?</p>
+						<div className="flex gap-4 justify-center">
+							<button
+								className="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold shadow hover:bg-blue-700 transition flex items-center gap-2"
+								onClick={() => {
+									router.push(`/profile?id=${createdPersonId}`);
+									setCreatedPersonId(null);
+								}}
+							>
+								<UserCheck className="w-5 h-5" /> Go to Profile
+							</button>
+							<button
+								className="bg-white border-2 border-red-400 text-red-600 px-6 py-2 rounded-lg font-semibold shadow hover:bg-red-50 hover:border-red-600 transition flex items-center gap-2"
+								onClick={() => { setCreatedPersonId(null); fetchData(); }}
+							>
+								<XCircle className="w-5 h-5" /> Cancel
+							</button>
+						</div>
 					</div>
 				</div>
 			)}
