@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { EditPostModal } from '@/components/EditPostModal';
+import ConfirmModal from '@/components/ConfirmModal';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2, User } from 'lucide-react';
@@ -65,18 +66,25 @@ export default function PlacementsTab() {
 	const [editSubmitting, setEditSubmitting] = useState(false);
 	const [editAction, setEditAction] = useState<'save' | 'delete' | null>(null);
 
-	// Delete placement handler
-	const handleDelete = async (id: string) => {
-		if (!confirm('Are you sure you want to delete this placement?')) return;
+	// Delete placement state and handler for ConfirmModal
+	const [deleteId, setDeleteId] = useState<string | null>(null);
+	const [deleteLoading, setDeleteLoading] = useState(false);
+
+	const handleDelete = async () => {
+		if (!deleteId) return;
+		setDeleteLoading(true);
 		try {
-			const res = await fetch(`/api/placements/${id}`, { method: 'DELETE' });
+			const res = await fetch(`/api/placements/${deleteId}`, { method: 'DELETE' });
 			if (res.ok) {
-				setPlacements((prev) => prev.filter((p) => p.id !== id));
+				setPlacements((prev) => prev.filter((p) => p.id !== deleteId));
+				setDeleteId(null);
 			} else {
 				alert('Failed to delete placement');
 			}
 		} catch (err) {
 			alert('Error deleting placement');
+		} finally {
+			setDeleteLoading(false);
 		}
 	};
 
@@ -271,12 +279,12 @@ export default function PlacementsTab() {
 			   		   	   <p className="text-xs text-gray-500 mt-1">Fellows: {p.fellowCount}</p>
 			   		   </div>
 			   		   <div className="flex gap-2">
-			   		   	   <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => handleEditOpen(p)} aria-label="Edit">
-			   		   		   <Pencil className="w-4 h-4" />
-			   		   	   </Button>
-			   		   	   <Button size="icon" variant="destructive" aria-label="Delete" onClick={() => handleDelete(p.id)}>
-			   		   		   <Trash2 className="w-4 h-4" />
-			   		   	   </Button>
+						   <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => handleEditOpen(p)} aria-label="Edit">
+							   <Pencil className="w-4 h-4" />
+						   </Button>
+						   <Button size="icon" variant="destructive" aria-label="Delete" onClick={() => setDeleteId(p.id)}>
+							   <Trash2 className="w-4 h-4" />
+						   </Button>
 			   		   </div>
 			   	   </Card>
 			   ))}
@@ -303,7 +311,7 @@ export default function PlacementsTab() {
 									<input
 										type="text"
 										className="w-full border-2 border-blue-300 focus:border-blue-500 rounded-xl px-4 py-3 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none text-lg shadow-sm"
-										placeholder="e.g., Kushmawati Placement, Dang Group Placement"
+										placeholder="e.g., Kushmawati Placement 2022, Dang Group Placement 2019"
 										value={form.name}
 										onChange={e => setForm({ ...form, name: e.target.value })}
 										required
@@ -491,7 +499,19 @@ export default function PlacementsTab() {
 					</div>
 				</div>
 			)}
+
+			{/* Confirm Delete Modal */}
+			<ConfirmModal
+				open={!!deleteId}
+				title="Delete Placement"
+				message="Are you sure you want to delete this placement? This action cannot be undone."
+				confirmText="Delete"
+				cancelText="Cancel"
+				onConfirm={handleDelete}
+				onCancel={() => setDeleteId(null)}
+				loading={deleteLoading}
+			/>
 		</div>
 	);
-}
+	}
 

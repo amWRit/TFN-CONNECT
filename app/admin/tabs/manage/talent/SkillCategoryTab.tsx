@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import ConfirmModal from '@/components/ConfirmModal';
 
 
 import { Pencil, Trash2 } from 'lucide-react';
@@ -20,7 +21,10 @@ export default function SkillCategoryTab() {
   const [editId, setEditId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [addError, setAddError] = useState('');
+  const [editError, setEditError] = useState('');
   const startEdit = (c: Category) => {
+    setEditError('');
     setEditId(c.id);
     setEditName(c.name);
   };
@@ -33,6 +37,15 @@ export default function SkillCategoryTab() {
   const saveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editId) return;
+    if (!editName.trim()) {
+      setEditError('Category name is required');
+      return;
+    }
+    // Unique name check (case-insensitive, exclude current category)
+    if (categories.some(c => c.id !== editId && c.name.trim().toLowerCase() === editName.trim().toLowerCase())) {
+      setEditError('Category name must be unique');
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch(`/api/skillcategories/${editId}`, {
@@ -55,14 +68,18 @@ export default function SkillCategoryTab() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this category?')) return;
-    setLoading(true);
+  // ConfirmModal state for delete
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    setDeleteLoading(true);
     try {
-      const res = await fetch(`/api/skillcategories/${id}`, {
+      const res = await fetch(`/api/skillcategories/${deleteId}`, {
         method: 'DELETE',
       });
       if (res.ok) {
+        setDeleteId(null);
         fetchCategories();
       } else {
         const errorData = await res.json();
@@ -72,6 +89,7 @@ export default function SkillCategoryTab() {
       console.error('Failed to delete category:', error);
     } finally {
       setLoading(false);
+      setDeleteLoading(false);
     }
   };
 
@@ -90,6 +108,16 @@ export default function SkillCategoryTab() {
 
   const createCategory = async (e: React.FormEvent) => {
     e.preventDefault();
+    setAddError('');
+    if (!categoryName.trim()) {
+      setAddError('Category name is required');
+      return;
+    }
+    // Unique name check (case-insensitive)
+    if (categories.some(c => c.name.trim().toLowerCase() === categoryName.trim().toLowerCase())) {
+      setAddError('Category name must be unique');
+      return;
+    }
     try {
       const res = await fetch('/api/skillcategories', {
         method: 'POST',
@@ -111,7 +139,7 @@ export default function SkillCategoryTab() {
       <div>
         <div className="flex justify-between items-center mb-2">
           <h2 className="text-xl font-bold">Skill Categories</h2>
-          <Button onClick={() => setShowForm(!showForm)} className="bg-blue-600 text-white hover:bg-blue-700">
+          <Button onClick={() => { setAddError(''); setShowForm(!showForm); }} className="bg-blue-600 text-white hover:bg-blue-700">
             {showForm ? 'Cancel' : '+ Add Category'}
           </Button>
         </div>
@@ -133,6 +161,9 @@ export default function SkillCategoryTab() {
                 <form onSubmit={createCategory} className="space-y-6">
                   <div>
                     <label className="block font-semibold mb-2 text-blue-700">Category Name *</label>
+                    {addError && (
+                      <div className="text-red-500 text-center font-semibold mb-2">{addError}</div>
+                    )}
                     <input
                       type="text"
                       className="w-full border-2 border-blue-300 focus:border-blue-500 rounded-xl px-4 py-3 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none text-lg shadow-sm"
@@ -183,6 +214,9 @@ export default function SkillCategoryTab() {
                       <form onSubmit={saveEdit} className="space-y-6">
                         <div>
                           <label className="block font-semibold mb-2 text-blue-700">Category Name *</label>
+                          {editError && (
+                            <div className="text-red-500 text-center font-semibold mb-2">{editError}</div>
+                          )}
                           <input
                             type="text"
                             className="w-full border-2 border-blue-300 focus:border-blue-500 rounded-xl px-4 py-3 bg-white/80 focus:bg-blue-50 transition-all duration-200 outline-none text-lg shadow-sm"
@@ -223,9 +257,20 @@ export default function SkillCategoryTab() {
                     <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => startEdit(c)} aria-label="Edit">
                       <Pencil className="w-4 h-4" />
                     </Button>
-                    <Button size="icon" variant="destructive" onClick={() => handleDelete(c.id)} aria-label="Delete">
+                    <Button size="icon" variant="destructive" onClick={() => setDeleteId(c.id)} aria-label="Delete">
                       <Trash2 className="w-4 h-4" />
                     </Button>
+                        {/* Confirm Delete Modal */}
+                        <ConfirmModal
+                          open={!!deleteId}
+                          title="Delete Category"
+                          message="Are you sure you want to delete this category? This action cannot be undone."
+                          confirmText="Delete"
+                          cancelText="Cancel"
+                          onConfirm={handleDelete}
+                          onCancel={() => setDeleteId(null)}
+                          loading={deleteLoading}
+                        />
                   </div>
                 </>
               )}

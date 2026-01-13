@@ -5,6 +5,7 @@ import { Group } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2 } from 'lucide-react';
+import ConfirmModal from '@/components/ConfirmModal';
 
 interface SchoolGroup {
   id: string;
@@ -24,6 +25,8 @@ export default function SchoolGroupsTab() {
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: '', localGovId: '' });
   const [loading, setLoading] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Filters
   const [localGovFilter, setLocalGovFilter] = useState('');
@@ -113,14 +116,15 @@ export default function SchoolGroupsTab() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this school group?')) return;
-    setLoading(true);
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    setDeleteLoading(true);
     try {
-      const res = await fetch(`/api/schoolgroups/${id}`, {
+      const res = await fetch(`/api/schoolgroups/${deleteId}`, {
         method: 'DELETE',
       });
       if (res.ok) {
+        setDeleteId(null);
         fetchData();
       } else {
         const errorData = await res.json();
@@ -129,7 +133,7 @@ export default function SchoolGroupsTab() {
     } catch (error) {
       alert('Failed to delete school group');
     } finally {
-      setLoading(false);
+      setDeleteLoading(false);
     }
   };
 
@@ -263,7 +267,7 @@ export default function SchoolGroupsTab() {
                 <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => startEdit(sg)} aria-label="Edit">
                   <Pencil className="w-4 h-4" />
                 </Button>
-                <Button size="icon" variant="destructive" onClick={() => handleDelete(sg.id)} aria-label="Delete">
+                <Button size="icon" variant="destructive" onClick={() => setDeleteId(sg.id)} aria-label="Delete">
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
@@ -335,6 +339,17 @@ export default function SchoolGroupsTab() {
           </div>
         )}
       </div>
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        open={!!deleteId}
+        title="Delete School Group"
+        message="Are you sure you want to delete this school group? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteId(null)}
+        loading={deleteLoading}
+      />
     </div>
   );
 }

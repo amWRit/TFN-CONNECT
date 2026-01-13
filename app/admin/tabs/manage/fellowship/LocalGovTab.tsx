@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2 } from 'lucide-react';
+import ConfirmModal from '@/components/ConfirmModal';
 
 interface LocalGov {
   id: string;
@@ -19,6 +20,10 @@ export default function LocalGovTab() {
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: '', province: '' });
   const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [editFormError, setEditFormError] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -35,6 +40,13 @@ export default function LocalGovTab() {
 
   const createLocalGov = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
+    // Check for duplicate name (case-insensitive)
+    const duplicate = localGovs.some(lg => lg.name.trim().toLowerCase() === localGovForm.name.trim().toLowerCase());
+    if (duplicate) {
+      setFormError('A local government with this name already exists.');
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch('/api/localgovs', {
@@ -46,8 +58,12 @@ export default function LocalGovTab() {
         setLocalGovForm({ name: '', province: '' });
         setShowLocalGovForm(false);
         fetchData();
+      } else {
+        const errorData = await res.json();
+        setFormError(errorData.error || 'Failed to create local government');
       }
     } catch (error) {
+      setFormError('Failed to create local government');
       console.error('Failed to create LocalGov:', error);
     } finally {
       setLoading(false);
@@ -66,7 +82,14 @@ export default function LocalGovTab() {
 
   const saveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setEditFormError(null);
     if (!editId) return;
+    // Check for duplicate name (case-insensitive, ignore self)
+    const duplicate = localGovs.some(lg => lg.id !== editId && lg.name.trim().toLowerCase() === editForm.name.trim().toLowerCase());
+    if (duplicate) {
+      setEditFormError('A local government with this name already exists.');
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch(`/api/localgovs/${editId}`, {
@@ -80,21 +103,23 @@ export default function LocalGovTab() {
         fetchData();
       } else {
         const errorData = await res.json();
-        alert(errorData.error || 'Failed to update local government');
+        setEditFormError(errorData.error || 'Failed to update local government');
       }
     } catch (error) {
+      setEditFormError('Failed to update local government');
       console.error('Failed to update LocalGov:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this local government?')) return;
-    setLoading(true);
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    setDeleteLoading(true);
     try {
-      const res = await fetch(`/api/localgovs/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/localgovs/${deleteId}`, { method: 'DELETE' });
       if (res.ok) {
+        setDeleteId(null);
         fetchData();
       } else {
         const errorData = await res.json();
@@ -103,7 +128,7 @@ export default function LocalGovTab() {
     } catch (error) {
       alert('Failed to delete local government');
     } finally {
-      setLoading(false);
+      setDeleteLoading(false);
     }
   };
 
@@ -133,6 +158,9 @@ export default function LocalGovTab() {
                 </button>
                 <h2 className="text-2xl font-extrabold mb-6 text-blue-700 text-center tracking-tight drop-shadow">Add Local Government</h2>
                 <form onSubmit={createLocalGov} className="space-y-6">
+                  {formError && (
+                    <div className="mb-2 text-red-600 font-semibold text-center">{formError}</div>
+                  )}
                   <div>
                     <label className="block font-semibold mb-2 text-blue-700">Name *</label>
                     <input
@@ -192,7 +220,7 @@ export default function LocalGovTab() {
                 <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => startEdit(lg)} aria-label="Edit">
                   <Pencil className="w-4 h-4" />
                 </Button>
-                <Button size="icon" variant="destructive" onClick={() => handleDelete(lg.id)} aria-label="Delete">
+                <Button size="icon" variant="destructive" onClick={() => setDeleteId(lg.id)} aria-label="Delete">
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
@@ -214,6 +242,9 @@ export default function LocalGovTab() {
                 </button>
                 <h2 className="text-2xl font-extrabold mb-6 text-blue-700 text-center tracking-tight drop-shadow">Edit Local Government</h2>
                 <form onSubmit={saveEdit} className="space-y-6">
+                  {editFormError && (
+                    <div className="mb-2 text-red-600 font-semibold text-center">{editFormError}</div>
+                  )}
                   <div>
                     <label className="block font-semibold mb-2 text-blue-700">Name *</label>
                     <input
@@ -261,6 +292,17 @@ export default function LocalGovTab() {
           </div>
         )}
       </div>
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        open={!!deleteId}
+        title="Delete Local Government"
+        message="Are you sure you want to delete this local government? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteId(null)}
+        loading={deleteLoading}
+      />
     </div>
   );
 }

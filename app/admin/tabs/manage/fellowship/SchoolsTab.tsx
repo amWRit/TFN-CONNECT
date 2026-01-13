@@ -5,6 +5,7 @@ import { School } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2 } from 'lucide-react';
+import ConfirmModal from '@/components/ConfirmModal';
 
 interface School {
   id: string;
@@ -26,6 +27,8 @@ export default function SchoolsTab() {
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ name: '', localGovId: '', district: '', type: 'SECONDARY' });
   const [loading, setLoading] = useState(false);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
     // Filters
   const [localGovFilter, setLocalGovFilter] = useState('');
@@ -120,14 +123,15 @@ export default function SchoolsTab() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this school?')) return;
-    setLoading(true);
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    setDeleteLoading(true);
     try {
-      const res = await fetch(`/api/schools/${id}`, {
+      const res = await fetch(`/api/schools/${deleteId}`, {
         method: 'DELETE',
       });
       if (res.ok) {
+        setDeleteId(null);
         fetchData();
       } else {
         const errorData = await res.json();
@@ -136,7 +140,7 @@ export default function SchoolsTab() {
     } catch (error) {
       alert('Failed to delete school');
     } finally {
-      setLoading(false);
+      setDeleteLoading(false);
     }
   };
 
@@ -296,7 +300,7 @@ export default function SchoolsTab() {
                 <Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => startEdit(s)} aria-label="Edit">
                   <Pencil className="w-4 h-4" />
                 </Button>
-                <Button size="icon" variant="destructive" onClick={() => handleDelete(s.id)} aria-label="Delete">
+                <Button size="icon" variant="destructive" onClick={() => setDeleteId(s.id)} aria-label="Delete">
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
@@ -393,6 +397,17 @@ export default function SchoolsTab() {
           </div>
         )}
       </div>
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        open={!!deleteId}
+        title="Delete School"
+        message="Are you sure you want to delete this school? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteId(null)}
+        loading={deleteLoading}
+      />
     </div>
   );
 }

@@ -11,6 +11,12 @@ type Opportunity = {
   title: string;
   types: string[];
   status: string;
+  createdBy?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+  createdByName?: string;
 };
 
 export default function OpportunitiesTab() {
@@ -74,8 +80,8 @@ export default function OpportunitiesTab() {
 
   function statusBadgeVariant(status: string) {
     switch (status) {
-      case 'OPEN': return 'default';
-      case 'CLOSED': return 'destructive';
+      case 'OPEN': return 'green'; // custom green
+      case 'CLOSED': return 'destructive'; // red
       default: return 'outline';
     }
   }
@@ -119,6 +125,7 @@ export default function OpportunitiesTab() {
           <thead>
             <tr className="bg-blue-50">
               <th className="px-4 py-2 text-left">Title</th>
+              <th className="px-4 py-2 text-left">Posted By</th>
               <th className="px-4 py-2 text-left">Type(s)</th>
               <th className="px-4 py-2 text-left">Status</th>
               <th className="px-4 py-2 text-left">Actions</th>
@@ -127,12 +134,13 @@ export default function OpportunitiesTab() {
           <tbody>
             {filteredOpps.length === 0 && (
               <tr>
-                <td colSpan={4} className="text-center py-6 text-gray-400">No opportunities found.</td>
+                <td colSpan={5} className="text-center py-6 text-gray-400">No opportunities found.</td>
               </tr>
             )}
             {filteredOpps.map(o => (
               <tr key={o.id} className="border-b">
                 <td className="px-4 py-2 font-medium">{o.title}</td>
+                <td className="px-4 py-2">{o.createdByName || (o.createdBy ? `${o.createdBy.firstName} ${o.createdBy.lastName}` : <span className="text-xs text-gray-400">---</span>)}</td>
                 <td className="px-4 py-2">
                   {Array.isArray(o.types) && o.types.length > 0 ? o.types.map((t, i) => (
                     <Badge key={t} variant="secondary" className="mr-1 mb-1 inline-block">{t}</Badge>
@@ -143,8 +151,8 @@ export default function OpportunitiesTab() {
                 </td>
                 <td className="px-4 py-2 flex gap-2">
                   <Link href={`/opportunities/${o.id}`}>
-                    <Button size="icon" variant="outline" aria-label="View">
-                      <Eye className="w-4 h-4" />
+                    <Button size="icon" className="bg-blue-600 hover:bg-blue-700 text-white" aria-label="View">
+                      <Eye className="w-4 h-4 text-white" />
                     </Button>
                   </Link>
                   <Button size="icon" variant="destructive" aria-label="Delete" onClick={() => handleDelete(o.id)} disabled={loading}>

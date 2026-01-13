@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import ConfirmModal from '@/components/ConfirmModal';
 import Select from 'react-select';
 import { MultiValue } from 'react-select';
 import { Pencil, Trash2, Group } from 'lucide-react';
@@ -31,6 +32,8 @@ export default function SkillsTab() {
 	const [skillForm, setSkillForm] = useState<{ name: string; categories: CategoryOption[]; description: string }>({ name: '', categories: [], description: '' });
 	const [editState, setEditState] = useState<EditState>({ id: null, name: '', categories: [], description: '' });
 	const [loading, setLoading] = useState(false);
+	const [addError, setAddError] = useState('');
+	const [editError, setEditError] = useState('');
 
 	// Category filter
 	const [categoryFilter, setCategoryFilter] = useState('');
@@ -67,6 +70,20 @@ export default function SkillsTab() {
 
 	const createSkill = async (e: React.FormEvent) => {
 		e.preventDefault();
+		setAddError('');
+		if (!skillForm.name.trim()) {
+			setAddError('Skill name is required');
+			return;
+		}
+		if (!skillForm.categories || skillForm.categories.length === 0) {
+			setAddError('At least one category is required');
+			return;
+		}
+		// Unique name check (case-insensitive)
+		if (skills.some(s => s.name.trim().toLowerCase() === skillForm.name.trim().toLowerCase())) {
+			setAddError('Skill name must be unique');
+			return;
+		}
 		try {
 			const res = await fetch('/api/skills', {
 				method: 'POST',
@@ -85,14 +102,15 @@ export default function SkillsTab() {
 
 	// ...existing code...
 	const startEdit = (s: Skill) => {
+		setEditError('');
 		setEditState({
 			id: s.id,
 			name: s.name,
 			categories: Array.isArray(s.categories)
 				? s.categories.map((cat) => {
-						const found = categories.find((c) => c.label === cat);
-						return found ? found : { value: '', label: cat };
-					})
+							const found = categories.find((c) => c.label === cat);
+							return found ? found : { value: '', label: cat };
+						})
 				: [],
 			description: s.description || '',
 		});
@@ -104,7 +122,21 @@ export default function SkillsTab() {
 
 	const saveEdit = async (e: React.FormEvent) => {
 		e.preventDefault();
+		setEditError('');
 		if (!editState.id) return;
+		if (!editState.name.trim()) {
+			setEditError('Skill name is required');
+			return;
+		}
+		if (!editState.categories || editState.categories.length === 0) {
+			setEditError('At least one category is required');
+			return;
+		}
+		// Unique name check (case-insensitive, exclude current skill)
+		if (skills.some(s => s.id !== editState.id && s.name.trim().toLowerCase() === editState.name.trim().toLowerCase())) {
+			setEditError('Skill name must be unique');
+			return;
+		}
 		setLoading(true);
 		try {
 			const res = await fetch(`/api/skills/${editState.id}`, {
@@ -130,14 +162,18 @@ export default function SkillsTab() {
 		}
 	};
 
-	const handleDelete = async (id: string) => {
-		if (!window.confirm('Are you sure you want to delete this skill?')) return;
-		setLoading(true);
+	// ConfirmModal state for delete
+	const [deleteId, setDeleteId] = useState<string | null>(null);
+	const [deleteLoading, setDeleteLoading] = useState(false);
+	const handleDelete = async () => {
+		if (!deleteId) return;
+		setDeleteLoading(true);
 		try {
-			const res = await fetch(`/api/skills/${id}`, {
+			const res = await fetch(`/api/skills/${deleteId}`, {
 				method: 'DELETE',
 			});
 			if (res.ok) {
+				setDeleteId(null);
 				fetchData();
 			} else {
 				const errorData = await res.json();
@@ -146,7 +182,7 @@ export default function SkillsTab() {
 		} catch (error) {
 			console.error('Failed to delete skill:', error);
 		} finally {
-			setLoading(false);
+			setDeleteLoading(false);
 		}
 	};
 
@@ -179,7 +215,7 @@ export default function SkillsTab() {
 			<div>
 				<div className="flex justify-between items-center mb-2">
 					<h2 className="text-xl font-bold">Skills</h2>
-					<Button onClick={() => setShowSkillForm(!showSkillForm)} className="bg-blue-600 text-white hover:bg-blue-700">
+					  <Button onClick={() => { setAddError(''); setShowSkillForm(!showSkillForm); }} className="bg-blue-600 text-white hover:bg-blue-700">
 						{showSkillForm ? 'Cancel' : '+ Add Skill'}
 					</Button>
 				</div>
@@ -187,7 +223,7 @@ export default function SkillsTab() {
 				{showSkillForm && (
 					<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm">
 						<div className="relative w-full max-w-xl sm:max-w-2xl mx-2">
-							<div className="bg-gradient-to-br from-blue-50 via-white to-blue-100 rounded-2xl shadow-2xl p-4 sm:p-8 border-4 border-blue-400/70 max-h-[90vh] overflow-y-auto">
+							  <div className="bg-gradient-to-br from-blue-50 via-white to-blue-100 rounded-2xl shadow-2xl p-4 sm:p-8 border-4 border-blue-400/70 max-h-[98vh] overflow-y-auto">
 								<button
 									className="absolute top-3 right-3 text-blue-400 hover:text-blue-700 text-3xl font-bold transition-colors duration-150"
 									onClick={() => {
@@ -200,6 +236,9 @@ export default function SkillsTab() {
 								</button>
 								<h2 className="text-2xl font-extrabold mb-6 text-blue-700 text-center tracking-tight drop-shadow">Add Skill</h2>
 								<form onSubmit={createSkill} className="space-y-6">
+									{addError && (
+										<div className="text-red-500 text-center font-semibold mb-2">{addError}</div>
+									)}
 									<div>
 										<label className="block font-semibold mb-2 text-blue-700">Skill Name *</label>
 										<input
@@ -222,7 +261,8 @@ export default function SkillsTab() {
 										/>
 									</div>
 									<div>
-										<label className="block font-semibold mb-2 text-blue-700">Categories</label>
+										<label className="block font-semibold mb-2 text-blue-700">Categories *</label>
+										<div className="text-xs text-blue-500 mb-1">You can select multiple categories</div>
 										<Select<CategoryOption, true>
 											isMulti
 											options={categories as readonly CategoryOption[]}
@@ -271,7 +311,10 @@ export default function SkillsTab() {
 												&times;
 											</button>
 											<h2 className="text-2xl font-extrabold mb-6 text-blue-700 text-center tracking-tight drop-shadow">Edit Skill</h2>
-											<form onSubmit={saveEdit} className="space-y-6">
+												<form onSubmit={saveEdit} className="space-y-6">
+													{editError && (
+														<div className="text-red-500 text-center font-semibold mb-2">{editError}</div>
+													)}
 												<div>
 													<label className="block font-semibold mb-2 text-blue-700">Skill Name *</label>
 													<input
@@ -296,7 +339,8 @@ export default function SkillsTab() {
 													/>
 												</div>
 												<div>
-													<label className="block font-semibold mb-2 text-blue-700">Categories</label>
+													<label className="block font-semibold mb-2 text-blue-700">Categories *</label>
+													<div className="text-xs text-blue-500 mb-1">You can select multiple categories</div>
 													<Select<CategoryOption, true>
 														isMulti
 														options={categories as readonly CategoryOption[]}
@@ -351,9 +395,20 @@ export default function SkillsTab() {
 										<Button size="icon" className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => startEdit(s)} aria-label="Edit">
 											<Pencil className="w-4 h-4" />
 										</Button>
-										<Button size="icon" variant="destructive" onClick={() => handleDelete(s.id)} aria-label="Delete">
+										<Button size="icon" variant="destructive" onClick={() => setDeleteId(s.id)} aria-label="Delete">
 											<Trash2 className="w-4 h-4" />
 										</Button>
+										{/* Confirm Delete Modal */}
+										<ConfirmModal
+											open={!!deleteId}
+											title="Delete Skill"
+											message="Are you sure you want to delete this skill? This action cannot be undone."
+											confirmText="Delete"
+											cancelText="Cancel"
+											onConfirm={handleDelete}
+											onCancel={() => setDeleteId(null)}
+											loading={deleteLoading}
+										/>
 									</div>
 								</>
 							)}

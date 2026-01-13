@@ -11,6 +11,11 @@ type JobPosting = {
   title: string;
   jobType: string;
   status: string;
+  createdBy?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
 };
 
 
@@ -129,6 +134,7 @@ export default function JobsTab() {
           <thead>
             <tr className="bg-blue-50">
               <th className="px-4 py-2 text-left">Title</th>
+              <th className="px-4 py-2 text-left">Posted By</th>
               <th className="px-4 py-2 text-left">Status</th>
               <th className="px-4 py-2 text-left">Type</th>
               <th className="px-4 py-2 text-left">Actions</th>
@@ -137,12 +143,13 @@ export default function JobsTab() {
           <tbody>
             {filteredJobs.length === 0 && (
               <tr>
-                <td colSpan={4} className="text-center py-6 text-gray-400">No job postings found.</td>
+                <td colSpan={5} className="text-center py-6 text-gray-400">No job postings found.</td>
               </tr>
             )}
             {filteredJobs.map(job => (
               <tr key={job.id} className="border-b">
                 <td className="px-4 py-2 font-medium">{job.title}</td>
+                <td className="px-4 py-2">{job.createdBy ? `${job.createdBy.firstName} ${job.createdBy.lastName}` : <span className="text-xs text-gray-400">---</span>}</td>
                 <td className="px-4 py-2">
                   <Badge variant={statusBadgeVariant(job.status)}>{job.status}</Badge>
                 </td>
@@ -151,8 +158,8 @@ export default function JobsTab() {
                 </td>
                 <td className="px-4 py-2 flex gap-2">
                   <Link href={`/jobs/${job.id}`}>
-                    <Button size="icon" variant="outline" aria-label="View">
-                      <Eye className="w-4 h-4" />
+                    <Button size="icon" className="bg-blue-600 hover:bg-blue-700 text-white" aria-label="View">
+                      <Eye className="w-4 h-4 text-white" />
                     </Button>
                   </Link>
                   <Button size="icon" variant="destructive" aria-label="Delete" onClick={() => handleDelete(job.id)} disabled={loading}>

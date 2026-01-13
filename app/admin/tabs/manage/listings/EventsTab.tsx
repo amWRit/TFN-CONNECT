@@ -11,6 +11,12 @@ type Event = {
   title: string;
   type: string;
   status: string;
+  createdBy?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+  createdByName?: string;
 };
 
 export default function EventsTab() {
@@ -75,7 +81,7 @@ export default function EventsTab() {
   function statusBadgeVariant(status: string) {
     switch (status) {
       case 'DRAFT': return 'outline';
-      case 'PUBLISHED': return 'default';
+      case 'PUBLISHED': return 'green'; // custom green
       case 'CANCELLED': return 'destructive';
       case 'COMPLETED': return 'secondary';
       default: return 'outline';
@@ -121,6 +127,7 @@ export default function EventsTab() {
           <thead>
             <tr className="bg-blue-50">
               <th className="px-4 py-2 text-left">Title</th>
+              <th className="px-4 py-2 text-left">Posted By</th>
               <th className="px-4 py-2 text-left">Type</th>
               <th className="px-4 py-2 text-left">Status</th>
               <th className="px-4 py-2 text-left">Actions</th>
@@ -129,12 +136,13 @@ export default function EventsTab() {
           <tbody>
             {filteredEvents.length === 0 && (
               <tr>
-                <td colSpan={4} className="text-center py-6 text-gray-400">No events found.</td>
+                <td colSpan={5} className="text-center py-6 text-gray-400">No events found.</td>
               </tr>
             )}
             {filteredEvents.map(e => (
               <tr key={e.id} className="border-b">
                 <td className="px-4 py-2 font-medium">{e.title}</td>
+                <td className="px-4 py-2">{e.createdByName || (e.createdBy ? `${e.createdBy.firstName} ${e.createdBy.lastName}` : <span className="text-xs text-gray-400">---</span>)}</td>
                 <td className="px-4 py-2">
                   <Badge variant="secondary">{e.type}</Badge>
                 </td>
@@ -143,8 +151,8 @@ export default function EventsTab() {
                 </td>
                 <td className="px-4 py-2 flex gap-2">
                   <Link href={`/events/${e.id}`}>
-                    <Button size="icon" variant="outline" aria-label="View">
-                      <Eye className="w-4 h-4" />
+                    <Button size="icon" className="bg-blue-600 hover:bg-blue-700 text-white" aria-label="View">
+                      <Eye className="w-4 h-4 text-white" />
                     </Button>
                   </Link>
                   <Button size="icon" variant="destructive" aria-label="Delete" onClick={() => handleDelete(e.id)} disabled={loading}>
