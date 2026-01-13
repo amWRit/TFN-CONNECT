@@ -4,7 +4,7 @@ import { redirect } from "next/navigation"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/pages/api/auth/[...nextauth]"
 import prisma from "@/lib/prisma"
-import type { PersonType } from "@prisma/client"
+import { PersonType } from "@prisma/client"
 
 export default async function Home() {
   const session = await getServerSession(authOptions)
@@ -16,11 +16,11 @@ export default async function Home() {
   // Live stats from the database
   const now = new Date()
   const [alumniCount, openJobCount, opportunityCount, postCount, activeCohortCount] = await Promise.all([
-    // Treat FELLOW and ALUMNI / STAFF_ALUMNI as part of the alumni & fellows network
+    // Treat ALUMNI as part of the alumni & fellows network
     prisma.person.count({
       where: {
         type: {
-          in: [ "FELLOW", "ALUMNI", "STAFF_ALUMNI" ] as PersonType[],
+          in: [PersonType.ALUMNI, PersonType.STAFF_ALUMNI, PersonType.FELLOW], // Only use valid enum values
         },
       },
     }),
