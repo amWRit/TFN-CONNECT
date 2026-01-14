@@ -83,16 +83,19 @@ const TYPE_CONFIG = {
   },
   POST: {
     model: 'post',
-    subject: (item: any) => `[TFN Connect] Post: ${item.title}`,
+    subject: (item: any) => {
+      // Use a preview of content for subject, fallback to id
+      const preview = item.content ? item.content.slice(0, 40).replace(/\n/g, ' ') + (item.content.length > 40 ? '...' : '') : item.id;
+      return `[TFN Connect] Post: ${preview}`;
+    },
     html: (item: any, appUrl: string, subscriber?: { firstName?: string }) => {
       const postType = item.postType
         ? `<div style=\"color:#333;font-size:15px;margin-bottom:8px;\"><b>Type:</b> ${item.postType.replace('_', ' ').toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}</div>`
         : '';
-      const postedBy = item.person?.firstName || item.person?.lastName
-        ? `<div style=\"color:#333;font-size:15px;margin-bottom:8px;\"><b>Posted by:</b> ${[item.person?.firstName, item.person?.lastName].filter(Boolean).join(' ')}</div>`
-        : '';
+      // Always show postedBy, fallback to 'Unknown'
+      const postedBy = `<div style=\"color:#333;font-size:15px;margin-bottom:8px;\"><b>Posted by:</b> ${[item.person?.firstName, item.person?.lastName].filter(Boolean).join(' ') || 'Unknown'}</div>`;
       const greeting = subscriber?.firstName
-        ? `<p style='margin-bottom:0;'>Hi ${subscriber.firstName},</p>\n<p style='margin-bottom:16px;'>You have a new post update from TFN Connect:</p>`
+        ? `<p style='margin-bottom:0;'>Hi ${subscriber.firstName},</p>\n<p style='margin-bottom:16px;'>You have a post update from TFN Connect:</p>`
         : '';
       return `
         <div style=\"font-family:sans-serif;max-width:600px;margin:auto;\">
@@ -132,7 +135,10 @@ export async function POST(req: NextRequest) {
         item = await prisma.opportunity.findUnique({ where: { id } });
         break;
       case 'POST':
-        item = await prisma.post.findUnique({ where: { id } });
+        item = await prisma.post.findUnique({
+          where: { id },
+          include: { person: { select: { firstName: true, lastName: true } } },
+        });
         break;
       default:
         item = null;
