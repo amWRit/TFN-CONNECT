@@ -26,6 +26,7 @@ interface Skill {
 }
 
 export default function SkillsTab() {
+
 	const [skills, setSkills] = useState<Skill[]>([]);
 	const [categories, setCategories] = useState<CategoryOption[]>([]);
 	const [showSkillForm, setShowSkillForm] = useState(false);
@@ -37,11 +38,20 @@ export default function SkillsTab() {
 
 	// Category filter
 	const [categoryFilter, setCategoryFilter] = useState('');
+	// Name filter
+	const [nameFilter, setNameFilter] = useState('');
+
 	// Filtered skills
 	const filteredSkills = useMemo(() => {
-		if (!categoryFilter) return skills;
-		return skills.filter((s) => Array.isArray(s.categories) && s.categories.includes(categoryFilter));
-	}, [skills, categoryFilter]);
+		let filtered = skills;
+		if (categoryFilter) {
+			filtered = filtered.filter((s) => Array.isArray(s.categories) && s.categories.includes(categoryFilter));
+		}
+		if (nameFilter) {
+			filtered = filtered.filter((s) => s.name.toLowerCase().includes(nameFilter.toLowerCase()));
+		}
+		return filtered;
+	}, [skills, categoryFilter, nameFilter]);
 
 	useEffect(() => {
 		fetchData();
@@ -189,28 +199,45 @@ export default function SkillsTab() {
 	// ...existing code...
 	return (
 		<div className="space-y-3">
-			{/* Category filter */}
-			<div className="flex items-center gap-2 mb-2">
-				<label className="font-semibold text-blue-700">Category</label>
-				<div className="relative flex items-center">
-					<span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500 pointer-events-none">
-						<Group size={18} />
-					</span>
-					<select
-						className="appearance-none pl-9 pr-12 py-2 w-52 border-2 border-blue-400 rounded-full bg-blue-100/80 font-semibold text-blue-800 focus:ring-2 focus:ring-blue-400 outline-none transition shadow-sm text-base"
-						value={categoryFilter}
-						onChange={e => setCategoryFilter(e.target.value)}
-					>
-						<option value="">All Categories</option>
-						{categories.map((cat) => (
-							<option key={cat.value} value={cat.label}>{cat.label}</option>
-						))}
-					</select>
-					<span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-blue-500">
-						<svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-					</span>
+				{/* Filters */}
+				<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200/60 py-1.5">
+					<div className="flex-1 flex items-center sm:justify-start justify-center">
+						<div className="flex items-center gap-4">
+							<div className="relative flex items-center">
+								<span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500 pointer-events-none">
+									<Group size={18} />
+								</span>
+								<select
+									className="appearance-none pl-9 pr-12 py-2 w-52 border-2 border-blue-400 rounded-full bg-blue-100/80 font-semibold text-blue-800 focus:ring-2 focus:ring-blue-400 outline-none transition shadow-sm text-base"
+									value={categoryFilter}
+									onChange={e => setCategoryFilter(e.target.value)}
+								>
+									<option value="">All Categories</option>
+									{categories.map((cat) => (
+										<option key={cat.value} value={cat.label}>{cat.label}</option>
+									))}
+								</select>
+								<span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-blue-500">
+									<svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div className="flex-1 flex justify-center">
+						<div className="bg-white/80 border border-purple-100 rounded-xl shadow-sm px-3 py-2 flex flex-row flex-wrap md:flex-nowrap items-center gap-2 w-full">
+							<div className="flex items-center gap-2 w-full sm:flex-1">
+								<label className="font-semibold text-purple-700">Name</label>
+								<input
+									type="text"
+									className="border border-purple-300 rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition w-full min-w-[160px]"
+									placeholder="Search by name"
+									value={nameFilter}
+									onChange={e => setNameFilter(e.target.value)}
+								/>
+							</div>
+						</div>
+					</div>
 				</div>
-			</div>
 			{/* Skills */}
 			<div>
 				<div className="flex justify-between items-center mb-2">

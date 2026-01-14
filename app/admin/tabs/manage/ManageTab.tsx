@@ -20,6 +20,9 @@ type FellowshipSubTab = 'localgovs' | 'schools' | 'schoolgroups' | 'cohorts' | '
 export default function ManageTab() {
   const [currentView, setCurrentView] = useState<ManageView>('fellowship-program');
   const [fellowshipSubTab, setFellowshipSubTab] = useState<FellowshipSubTab>('localgovs');
+  // Talent sub-tabs
+  type TalentSubTab = 'skills' | 'categories';
+  const [talentSubTab, setTalentSubTab] = useState<TalentSubTab>('skills');
 
   return (
     <div className="space-y-4">
@@ -105,11 +108,35 @@ export default function ManageTab() {
       {/* People */}
       {currentView === 'people' && <PeopleTab />}
 
-      {/* Talent Group (Skills) */}
+      {/* Talent Group (Skills & Categories) */}
       {currentView === 'talent' && (
         <div className="space-y-8">
-          <SkillCategoryTab />
-          <SkillsTab />
+          {/* Talent sub-tabs */}
+          <div className="flex gap-2 mb-4 flex-wrap">
+            <button
+              onClick={() => setTalentSubTab('skills')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                talentSubTab === 'skills'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-gray-100 text-gray-700 hover:bg-blue-50'
+              }`}
+            >
+              Skills
+            </button>
+            <button
+              onClick={() => setTalentSubTab('categories')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                talentSubTab === 'categories'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-gray-100 text-gray-700 hover:bg-blue-50'
+              }`}
+            >
+              Categories
+            </button>
+          </div>
+          {/* Show only the selected sub-tab content */}
+          {talentSubTab === 'skills' && <SkillsTab />}
+          {talentSubTab === 'categories' && <SkillCategoryTab />}
         </div>
       )}
 
