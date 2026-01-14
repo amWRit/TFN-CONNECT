@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Mail } from 'lucide-react';
+import AdminEmailForm from '../../../../components/AdminEmailForm';
 
 export default function ToolsTab() {
   const [toolsTab, setToolsTab] = useState('custom-email');
@@ -18,9 +19,7 @@ export default function ToolsTab() {
       </div>
       {toolsTab === 'custom-email' && (
         <div className="bg-white p-6 rounded-xl border shadow-sm">
-          <h2 className="text-lg font-bold mb-2 text-blue-700">Send Custom Email</h2>
-          {/* Custom email form goes here */}
-          <div className="text-gray-500 text-sm">(Coming soon)</div>
+          <AdminEmailForm />
         </div>
       )}
     </div>
