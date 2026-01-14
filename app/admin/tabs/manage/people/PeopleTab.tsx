@@ -171,7 +171,7 @@ export default function PeopleTab() {
 								onChange={e => setTab(e.target.value)}
 							>
 								<option value="ALL">All</option>
-								{personTypes.filter((t) => t !== 'ADMIN').map((t) => (
+								{personTypes.filter((t) => t !== '').map((t) => (
 									<option key={t} value={t}>
 										{TYPE_META[t]?.label ?? t.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase())}
 									</option>

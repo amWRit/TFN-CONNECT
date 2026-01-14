@@ -9,7 +9,7 @@ declare global {
 
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
-import { UserCircle, LogOut, User, Activity, Shield, Eye, EyeOff, X } from "lucide-react";
+import { UserCircle, LogOut, User, Activity, Shield, Eye, EyeOff, X, Settings } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ProfileImage } from "./ProfileImage";
@@ -270,6 +270,13 @@ export default function UserMenu() {
             onClick={() => setOpen(false)}
           >
             <span role="img" aria-label="Bookmarks">🔖</span> My Bookmarks
+          </Link>
+          <Link
+            href="/profile/settings"
+            className="flex items-center gap-2 px-4 py-2 hover:bg-blue-50 text-gray-700 text-sm"
+            onClick={() => setOpen(false)}
+          >
+            <Settings size={16} /> Settings
           </Link>
           {/* Admin Panel toggle button and Dashboard link */}
           {showAdminPanel && (
