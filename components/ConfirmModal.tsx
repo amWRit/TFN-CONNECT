@@ -34,7 +34,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
               onClick={onConfirm}
               disabled={loading}
             >
-              {confirmText}
+              {loading ? 'Deleting...' : confirmText}
             </button>
             <button
               className="flex-1 bg-red-100 border-2 border-red-400 text-red-700 font-bold px-6 py-2 rounded-xl shadow transition-all duration-200 text-lg tracking-wide hover:bg-red-200 hover:border-red-600"

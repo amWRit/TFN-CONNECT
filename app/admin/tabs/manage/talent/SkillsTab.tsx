@@ -33,6 +33,7 @@ export default function SkillsTab() {
 	const [skillForm, setSkillForm] = useState<{ name: string; categories: CategoryOption[]; description: string }>({ name: '', categories: [], description: '' });
 	const [editState, setEditState] = useState<EditState>({ id: null, name: '', categories: [], description: '' });
 	const [loading, setLoading] = useState(false);
+	const [addLoading, setAddLoading] = useState(false);
 	const [addError, setAddError] = useState('');
 	const [editError, setEditError] = useState('');
 
@@ -94,6 +95,7 @@ export default function SkillsTab() {
 			setAddError('Skill name must be unique');
 			return;
 		}
+		setAddLoading(true);
 		try {
 			const res = await fetch('/api/skills', {
 				method: 'POST',
@@ -107,6 +109,8 @@ export default function SkillsTab() {
 			}
 		} catch (error) {
 			console.error('Failed to create Skill:', error);
+		} finally {
+			setAddLoading(false);
 		}
 	};
 
@@ -200,7 +204,7 @@ export default function SkillsTab() {
 	return (
 		<div className="space-y-3">
 				{/* Filters */}
-				<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200/60 py-1.5">
+				<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2 bg-slate-50/95 border-b border-slate-200/60 py-1.5">
 					<div className="flex-1 flex items-center sm:justify-start justify-center">
 						<div className="flex items-center gap-4">
 							<div className="relative flex items-center">
@@ -303,8 +307,9 @@ export default function SkillsTab() {
 										<button
 											type="submit"
 											className="flex-1 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
+											disabled={addLoading}
 										>
-											Create Skill
+											{addLoading ? 'Creating...' : 'Create Skill'}
 										</button>
 										<button
 											type="button"
@@ -384,7 +389,7 @@ export default function SkillsTab() {
 														className="flex-1 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
 														disabled={loading}
 													>
-														Save
+														{loading ? 'Saving...' : 'Save'}
 													</button>
 													<button
 														type="button"

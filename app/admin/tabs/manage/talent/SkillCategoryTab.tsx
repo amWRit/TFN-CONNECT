@@ -21,6 +21,7 @@ export default function SkillCategoryTab() {
   const [editId, setEditId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [addLoading, setAddLoading] = useState(false);
   const [addError, setAddError] = useState('');
   const [editError, setEditError] = useState('');
   const startEdit = (c: Category) => {
@@ -118,6 +119,7 @@ export default function SkillCategoryTab() {
       setAddError('Category name must be unique');
       return;
     }
+    setAddLoading(true);
     try {
       const res = await fetch('/api/skillcategories', {
         method: 'POST',
@@ -131,6 +133,8 @@ export default function SkillCategoryTab() {
       }
     } catch (error) {
       console.error('Failed to create category:', error);
+    } finally {
+      setAddLoading(false);
     }
   };
 
@@ -177,8 +181,9 @@ export default function SkillCategoryTab() {
                     <button
                       type="submit"
                       className="flex-1 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
+                      disabled={addLoading}
                     >
-                      Create Category
+                      {addLoading ? 'Adding...' : 'Add Category'}
                     </button>
                     <button
                       type="button"
@@ -233,7 +238,7 @@ export default function SkillCategoryTab() {
                             className="flex-1 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
                             disabled={loading}
                           >
-                            Save
+                            {loading ? 'Saving...' : 'Save'}
                           </button>
                           <button
                             type="button"
