@@ -42,6 +42,8 @@ export default function EventsTab() {
   const [modalEventId, setModalEventId] = useState<string | null>(null);
   const [selectedPersonTypes, setSelectedPersonTypes] = useState<string[]>(['ADMIN']);
   const [selectedEmailField, setSelectedEmailField] = useState<'email1' | 'email2'>('email1');
+  // Modal for showing result messages
+  const [resultModal, setResultModal] = useState<{ open: boolean; message: string; success: boolean }>({ open: false, message: '', success: false });
 
   useEffect(() => {
     fetchEvents();
@@ -117,12 +119,16 @@ export default function EventsTab() {
       });
       if (res.ok) {
         const result = await res.json();
-        alert(`Email sent to ${selectedEmailField === 'email1' ? 'primary' : 'secondary'} email for selected person types. (${result.count} notified)`);
+        setResultModal({
+          open: true,
+          message: `Email sent to ${selectedEmailField === 'email1' ? 'primary' : 'secondary'} email for selected person types. (${result.count} notified)`,
+          success: true,
+        });
       } else {
-        alert('Failed to send email notification');
+        setResultModal({ open: true, message: 'Failed to send email notification', success: false });
       }
     } catch (e) {
-      alert('Error sending email notification');
+      setResultModal({ open: true, message: 'Error sending email notification', success: false });
     } finally {
       setLoading(false);
       setModalOpen(false);
@@ -275,6 +281,17 @@ export default function EventsTab() {
           </div>
         </div>
       </ConfirmModal>
+
+      {/* Result Modal */}
+      <ConfirmModal
+        open={resultModal.open}
+        title={resultModal.success ? 'Success' : 'Error'}
+        message={resultModal.message}
+        confirmText="OK"
+        onConfirm={() => setResultModal({ ...resultModal, open: false })}
+        onCancel={() => setResultModal({ ...resultModal, open: false })}
+        loading={false}
+      />
     </>
   );
 }

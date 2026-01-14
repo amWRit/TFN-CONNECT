@@ -1,23 +1,28 @@
+
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import type { SubscriptionType } from '@prisma/client';
+import { marked } from 'marked';
 
 const LOGO_URL = "https://tfn-connect.vercel.app/logo.png";
 
 const TYPE_CONFIG = {
   EVENT: {
     model: 'event',
-    subject: (item: any) => `[TFN] New Event: ${item.title}`,
-    html: (item: any, appUrl: string) => {
+    subject: (item: any) => `[TFN Connect] Event: ${item.title}`,
+    html: (item: any, appUrl: string, subscriber?: { firstName?: string }) => {
       const startDate = item.startDateTime ? new Date(item.startDateTime).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' }) : '';
       const externalLink = item.externalLink ? `<div style=\"margin:12px 0;\"><a href=\"${item.externalLink}\" style=\"color:#1565c0;text-decoration:underline;font-weight:bold;\">External Link</a></div>` : '';
+      const overviewHtml = item.overview ? `<b>Overview:</b><br>` + marked.parse(item.overview) : '';
+      const greeting = subscriber?.firstName ? `<p style='margin-bottom:0;'>Dear ${subscriber.firstName},</p>\n<p style='margin-bottom:16px;'>Here is an event you might be interested in.</p>` : '';
       return `
         <div style=\"font-family:sans-serif;max-width:600px;margin:auto;\">
           <img src='${LOGO_URL}' alt='TFN Logo' style='height:48px;margin-bottom:16px;'>
+          ${greeting}
           <h2 style='color:#1a237e;'>${item.title}</h2>
           <div style=\"color:#333;font-size:15px;margin-bottom:8px;\"><b>When:</b> ${startDate}</div>
           ${externalLink}
-          <p>${item.description || ''}</p>
+          <div>${overviewHtml}</div>
           <a href=\"${appUrl}/events/${item.id}\" style=\"display:inline-block;padding:10px 20px;background:#1a237e;color:#fff;text-decoration:none;border-radius:4px;margin:16px 0;\">View Details</a>
           <hr style=\"margin:24px 0;\">
           <p style=\"font-size:13px;color:#888;\">You are receiving this because you subscribed to <b>Events</b> notifications.<br>
@@ -28,19 +33,22 @@ const TYPE_CONFIG = {
   },
   JOB_POSTING: {
     model: 'jobPosting',
-    subject: (item: any) => `[TFN] New Job Posting: ${item.title}`,
-    html: (item: any, appUrl: string) => {
-    const jobType: string = item.jobType
-      ? `<div style=\"color:#333;font-size:15px;margin-bottom:4px;\"><b>Type:</b> ${item.jobType.replace('_', ' ').toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}</div>`
-      : '';
+    subject: (item: any) => `[TFN Connect] Job Posting: ${item.title}`,
+    html: (item: any, appUrl: string, subscriber?: { firstName?: string }) => {
+      const jobType: string = item.jobType
+        ? `<div style=\"color:#333;font-size:15px;margin-bottom:4px;\"><b>Type:</b> ${item.jobType.replace('_', ' ').toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}</div>`
+        : '';
       const deadline = item.deadline ? `<div style=\"color:#333;font-size:15px;margin-bottom:8px;\"><b>Deadline:</b> ${new Date(item.deadline).toLocaleDateString('en-US', { dateStyle: 'medium' })}</div>` : '';
+      const overviewHtml = item.overview ? `<b>Overview:</b><br>` + marked.parse(item.overview) : '';
+      const greeting = subscriber?.firstName ? `<p style='margin-bottom:0;'>Dear ${subscriber.firstName},</p>\n<p style='margin-bottom:16px;'>Here is a job posting you might be interested in.</p>` : '';
       return `
         <div style=\"font-family:sans-serif;max-width:600px;margin:auto;\">
           <img src='${LOGO_URL}' alt='TFN Logo' style='height:48px;margin-bottom:16px;'>
+          ${greeting}
           <h2 style='color:#1a237e;'>${item.title}</h2>
           ${jobType}
           ${deadline}
-          <p>${item.description || ''}</p>
+          <div>${overviewHtml}</div>
           <a href=\"${appUrl}/jobs/${item.id}\" style=\"display:inline-block;padding:10px 20px;background:#1a237e;color:#fff;text-decoration:none;border-radius:4px;margin:16px 0;\">View Details</a>
           <hr style=\"margin:24px 0;\">
           <p style=\"font-size:13px;color:#888;\">You are receiving this because you subscribed to <b>Job Postings</b> notifications.<br>
@@ -51,17 +59,20 @@ const TYPE_CONFIG = {
   },
   OPPORTUNITY: {
     model: 'opportunity',
-    subject: (item: any) => `[TFN] New Opportunity: ${item.title}`,
-    html: (item: any, appUrl: string) => {
+    subject: (item: any) => `[TFN Connect] Opportunity: ${item.title}`,
+    html: (item: any, appUrl: string, subscriber?: { firstName?: string }) => {
       const types = Array.isArray(item.types) && item.types.length
         ? `<div style=\"color:#333;font-size:15px;margin-bottom:8px;\"><b>Types:</b> ${item.types.map((t: string) => t.replace('_', ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())).join(', ')}</div>`
         : '';
+      const overviewHtml = item.overview ? `<b>Overview:</b><br>` + marked.parse(item.overview) : '';
+      const greeting = subscriber?.firstName ? `<p style='margin-bottom:0;'>Dear ${subscriber.firstName},</p>\n<p style='margin-bottom:16px;'>Here is an opportunity you might be interested in.</p>` : '';
       return `
         <div style=\"font-family:sans-serif;max-width:600px;margin:auto;\">
           <img src='${LOGO_URL}' alt='TFN Logo' style='height:48px;margin-bottom:16px;'>
+          ${greeting}
           <h2 style='color:#1a237e;'>${item.title}</h2>
           ${types}
-          <p>${item.description || ''}</p>
+          <div>${overviewHtml}</div>
           <a href=\"${appUrl}/opportunities/${item.id}\" style=\"display:inline-block;padding:10px 20px;background:#1a237e;color:#fff;text-decoration:none;border-radius:4px;margin:16px 0;\">View Details</a>
           <hr style=\"margin:24px 0;\">
           <p style=\"font-size:13px;color:#888;\">You are receiving this because you subscribed to <b>Opportunities</b> notifications.<br>
@@ -72,18 +83,25 @@ const TYPE_CONFIG = {
   },
   POST: {
     model: 'post',
-    subject: (item: any) => `[TFN] New Post: ${item.title}`,
-    html: (item: any, appUrl: string) => {
+    subject: (item: any) => `[TFN Connect] Post: ${item.title}`,
+    html: (item: any, appUrl: string, subscriber?: { firstName?: string }) => {
       const postType = item.postType
         ? `<div style=\"color:#333;font-size:15px;margin-bottom:8px;\"><b>Type:</b> ${item.postType.replace('_', ' ').toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}</div>`
+        : '';
+      const postedBy = item.person?.firstName || item.person?.lastName
+        ? `<div style=\"color:#333;font-size:15px;margin-bottom:8px;\"><b>Posted by:</b> ${[item.person?.firstName, item.person?.lastName].filter(Boolean).join(' ')}</div>`
+        : '';
+      const greeting = subscriber?.firstName
+        ? `<p style='margin-bottom:0;'>Hi ${subscriber.firstName},</p>\n<p style='margin-bottom:16px;'>You have a new post update from TFN Connect:</p>`
         : '';
       return `
         <div style=\"font-family:sans-serif;max-width:600px;margin:auto;\">
           <img src='${LOGO_URL}' alt='TFN Logo' style='height:48px;margin-bottom:16px;'>
-          <h2 style='color:#1a237e;'>${item.title}</h2>
+          ${greeting}
+          ${postedBy}
           ${postType}
-          <p>${item.content || ''}</p>
-          <a href=\"${appUrl}/feed/${item.id}\" style=\"display:inline-block;padding:10px 20px;background:#1a237e;color:#fff;text-decoration:none;border-radius:4px;margin:16px 0;\">View Details</a>
+          <div style=\"margin-bottom:12px;\">${item.content || ''}</div>
+          <a href=\"${appUrl}/feed\" style=\"display:inline-block;padding:10px 20px;background:#1a237e;color:#fff;text-decoration:none;border-radius:4px;margin:16px 0;\">Go to Feed</a>
           <hr style=\"margin:24px 0;\">
           <p style=\"font-size:13px;color:#888;\">You are receiving this because you subscribed to <b>Posts</b> notifications.<br>
           <a href=\"${appUrl}/profile/settings\">Update your notification preferences</a></p>
@@ -149,7 +167,9 @@ export async function POST(req: NextRequest) {
 
     const appUrl = process.env.NEXT_PUBLIC_URL || '';
     const subject = TYPE_CONFIG[type as TypeConfigKey].subject(item);
-    const htmlBody = TYPE_CONFIG[type as TypeConfigKey].html(item, appUrl);
+    // Add personalized greeting for all types
+    const firstName = filteredSubscribers[0]?.firstName;
+    const htmlBody = TYPE_CONFIG[type as TypeConfigKey].html(item, appUrl, { firstName });
 
     // Send to Apps Script
     const appsScriptUrl = process.env.APPS_SCRIPT_URL;
