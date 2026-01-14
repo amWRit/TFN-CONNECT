@@ -171,10 +171,10 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                   <option value="">Select type</option>
                   {(personTypes.length ? personTypes : ["FELLOW", "ALUMNI", "STAFF", "ADMIN", "STAFF_ALUMNI", "STAFF_ADMIN", "LEADERSHIP", "GENERAL"]) 
                     .filter((type) => {
-                      if (isAdminUser) return true;
-                      if (type === "ADMIN") {
-                        // For non-admins, only show ADMIN if it's the current value
-                        return formData.type === type;
+                      if (isAdminUser || formData.type === "ADMIN" || formData.type === "STAFF_ADMIN") return true;
+                      if (type === "ADMIN" || type === "STAFF_ADMIN") {
+                        // Only show ADMIN/STAFF_ADMIN if it's the current value or user is admin
+                        return false;
                       }
                       // ALUMNI and other types remain visible for everyone
                       return true;
@@ -373,8 +373,8 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
               );
             })}
               <Badge className="text-xs font-semibold bg-red-100 text-red-700 pointer-events-none">
-                {person.empStatus === "EMPLOYED" && "✓ Employed"}
-                {person.empStatus === "SEEKING" && "🔍 Seeking"}
+                {person.empStatus === "EMPLOYED" && <span className="inline-flex items-center gap-1">💼 Employed</span>}
+                {person.empStatus === "SEEKING" && <span className="inline-flex items-center gap-1">🔍 Seeking</span>}
               </Badge>
             </div>
           </div>
@@ -494,10 +494,10 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                   </div>
                 </div>
               </div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
     </Card>
   );
 }

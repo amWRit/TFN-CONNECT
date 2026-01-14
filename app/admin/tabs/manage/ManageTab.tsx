@@ -8,20 +8,25 @@ import SchoolsTab from './fellowship/SchoolsTab';
 import SchoolGroupsTab from './fellowship/SchoolGroupsTab';
 import CohortsTab from './fellowship/CohortsTab';
 import PlacementsTab from './fellowship/PlacementsTab';
+import SubjectTab from './fellowship/SubjectTab';
 import PeopleTab from './people/PeopleTab';
 import SkillsTab from './talent/SkillsTab';
 import SkillCategoryTab from './talent/SkillCategoryTab';
+import ListingsTab from './listings/ListingsTab';
 
-type ManageView = 'fellowship-program' | 'people' | 'talent';
-type FellowshipSubTab = 'localgovs' | 'schools' | 'schoolgroups' | 'cohorts' | 'placements';
+type ManageView = 'fellowship-program' | 'people' | 'talent' | 'listings';
+type FellowshipSubTab = 'localgovs' | 'schools' | 'schoolgroups' | 'cohorts' | 'placements' | 'subjects';
 
 export default function ManageTab() {
   const [currentView, setCurrentView] = useState<ManageView>('fellowship-program');
   const [fellowshipSubTab, setFellowshipSubTab] = useState<FellowshipSubTab>('localgovs');
+  // Talent sub-tabs
+  type TalentSubTab = 'skills' | 'categories';
+  const [talentSubTab, setTalentSubTab] = useState<TalentSubTab>('skills');
 
   return (
     <div className="space-y-4">
-      {/* Top-level Manage tabs: Fellowship, People, Talent */}
+      {/* Top-level Manage tabs: Fellowship, People, Talent, Listings */}
       <div className="flex gap-2 mb-4 flex-wrap">
         <button
           onClick={() => setCurrentView('fellowship-program')}
@@ -53,6 +58,16 @@ export default function ManageTab() {
         >
           Talent
         </button>
+        <button
+          onClick={() => setCurrentView('listings')}
+          className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+            currentView === 'listings'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'bg-gray-100 text-gray-700 hover:bg-blue-50'
+          }`}
+        >
+          Listings
+        </button>
       </div>
 
       {/* Fellowship Program Group with Sub-Tabs */}
@@ -65,6 +80,7 @@ export default function ManageTab() {
               { id: 'schoolgroups', label: 'School Groups' },
               { id: 'cohorts', label: 'Cohorts' },
               { id: 'placements', label: 'Placements' },
+              { id: 'subjects', label: 'Subjects' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -85,19 +101,47 @@ export default function ManageTab() {
           {fellowshipSubTab === 'schoolgroups' && <SchoolGroupsTab />}
           {fellowshipSubTab === 'cohorts' && <CohortsTab />}
           {fellowshipSubTab === 'placements' && <PlacementsTab />}
+          {fellowshipSubTab === 'subjects' && <SubjectTab />}
         </div>
       )}
 
       {/* People */}
       {currentView === 'people' && <PeopleTab />}
 
-      {/* Talent Group (Skills) */}
+      {/* Talent Group (Skills & Categories) */}
       {currentView === 'talent' && (
         <div className="space-y-8">
-          <SkillCategoryTab />
-          <SkillsTab />
+          {/* Talent sub-tabs */}
+          <div className="flex gap-2 mb-4 flex-wrap">
+            <button
+              onClick={() => setTalentSubTab('skills')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                talentSubTab === 'skills'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-gray-100 text-gray-700 hover:bg-blue-50'
+              }`}
+            >
+              Skills
+            </button>
+            <button
+              onClick={() => setTalentSubTab('categories')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                talentSubTab === 'categories'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-gray-100 text-gray-700 hover:bg-blue-50'
+              }`}
+            >
+              Categories
+            </button>
+          </div>
+          {/* Show only the selected sub-tab content */}
+          {talentSubTab === 'skills' && <SkillsTab />}
+          {talentSubTab === 'categories' && <SkillCategoryTab />}
         </div>
       )}
+
+      {/* Listings Group */}
+      {currentView === 'listings' && <ListingsTab />}
     </div>
   );
 }

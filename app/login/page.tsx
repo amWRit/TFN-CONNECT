@@ -1,10 +1,13 @@
 "use client";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
+import { FcGoogle } from "react-icons/fc";
+import { UserCircle, Home, Activity, User } from "lucide-react";
 
 function LoginPageContent() {
+  const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const error = searchParams?.get("error") || null;
 
@@ -41,12 +44,60 @@ function LoginPageContent() {
 
   const errorMessage = getErrorMessage(error);
 
+  // Show loading state while session is loading
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-indigo-100 to-blue-50">
+        <div className="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md text-center border-0 relative flex flex-col items-center">
+          <p className="text-lg text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If already signed in, show info and options
+  if (session?.user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-indigo-100 to-blue-50">
+        <div className="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md text-center border-0 relative flex flex-col items-center">
+          <span className="bg-green-100 p-4 rounded-full mb-4 flex items-center justify-center">
+            <UserCircle size={40} className="text-green-600" />
+          </span>
+          <h1 className="text-2xl font-bold text-green-700 mb-2">Already Signed In</h1>
+          <p className="text-base text-gray-700 mb-2">You are signed in as</p>
+          <div className="mb-4">
+            <span className="font-semibold text-blue-700">{session.user.name || session.user.email}</span>
+            <div className="text-xs text-gray-500">{session.user.email}</div>
+          </div>
+          <div className="flex flex-col gap-2 w-full">
+            <a href="/feed" className="w-full py-2 rounded bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition-colors text-center flex items-center justify-center gap-2">
+              <Activity size={18} className="text-white" /> Feed
+            </a>
+            <a href="/profile" className="w-full py-2 rounded bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition-colors text-center flex items-center justify-center gap-2">
+              <User size={18} className="text-white" /> Profile
+            </a>
+            <a href="/" className="w-full py-2 rounded bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition-colors text-center flex items-center justify-center gap-2">
+              <Home size={18} className="text-white" /> Home
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Not signed in: show login form
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
-      <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md text-center">
-        <h1 className="text-2xl font-bold mb-4">Sign in to TFN Connect</h1>
-        <p className="text-sm text-gray-600 mb-6">
-          Sign in with your Google account. Only @teachfornepal.org emails or whitelisted emails are allowed.
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-indigo-100 to-blue-50">
+      <div className="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md text-center border-0 relative flex flex-col items-center">
+        <span className="bg-blue-100 p-4 rounded-full mb-4 flex items-center justify-center">
+          <UserCircle size={40} className="text-blue-600" />
+        </span>
+        <h1 className="text-3xl font-extrabold text-blue-700 mb-2 flex items-center justify-center gap-2">
+          Welcome to TFN Connect
+        </h1>
+        <p className="text-base text-gray-600 mb-6 font-medium">
+          Sign in with your Google account.<br />
+          <span className="text-sm text-gray-400">Only <span className="font-semibold">@teachfornepal.org</span> or whitelisted emails are allowed.</span>
         </p>
         {errorMessage && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
@@ -54,10 +105,10 @@ function LoginPageContent() {
           </div>
         )}
         <Button
-          className="w-full py-2 text-base font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+          className="w-full py-2 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg flex items-center justify-center gap-2 shadow-lg"
           onClick={() => signIn("google", { callbackUrl: "/" })}
         >
-          Sign in with Google
+          <FcGoogle size={22} /> Sign in with Google
         </Button>
       </div>
     </div>

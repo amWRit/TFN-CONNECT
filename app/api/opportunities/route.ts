@@ -55,6 +55,20 @@ export async function GET(request: NextRequest) {
   const opportunities = await prisma.opportunity.findMany({
     where,
     orderBy: { createdAt: 'desc' },
+    include: {
+      createdBy: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+        },
+      },
+    },
   });
-  return NextResponse.json(opportunities);
+  // Optionally add createdByName for easier frontend use
+  const mapped = opportunities.map(o => ({
+    ...o,
+    createdByName: o.createdBy ? `${o.createdBy.firstName} ${o.createdBy.lastName}` : null,
+  }));
+  return NextResponse.json(mapped);
 }

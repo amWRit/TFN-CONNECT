@@ -78,6 +78,9 @@ export default function NewJobPage() {
 			<h1 className="text-3xl font-extrabold mb-8 text-blue-700 text-center tracking-tight">
 				Add New Job Posting
 			</h1>
+			<div className="mb-4 text-sm text-gray-700 text-center bg-yellow-100 border border-yellow-300 rounded-lg px-4 py-2">
+				By posting a job, you agree to our <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline text-blue-700 font-semibold">Terms and Conditions</a>.
+			</div>
 			<form onSubmit={handleSubmit} className="space-y-6">
 				<div>
 					<label className="block font-semibold mb-2 text-blue-700">Title</label>
@@ -100,7 +103,7 @@ export default function NewJobPage() {
 						required
 					/>
 					<div className="text-xs text-gray-500 mt-1 italic">
-						Tip: You can use Markdown to format your post.<br />
+						Tip: You can use Markdown to format your description.<br />
 						Supports <b>bold</b>, <i>italics</i>, headings, ordered and unordered lists.<br />
 						You can use <a href="https://markdownlivepreview.com/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Live Preview</a>.
 					</div>

@@ -122,7 +122,7 @@ model Cohort {
 model Placement {
   id            String   @id @default(cuid())
   name          String? // "Kushmawati Placement", "Dang Group Placement"
-  schoolId      String   @unique
+  schoolId      String
   schoolGroupId String?
   managerId     String // Person managing this placement
   fellowCount   Int      @default(0)
@@ -191,6 +191,15 @@ model Fellowship {
   placement Placement @relation(fields: [placementId], references: [id])
 
   createdAt DateTime @default(now())
+}
+
+// ===== SUBJECTS =====
+model Subject {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 // ===== SUPPORTING RECORDS =====

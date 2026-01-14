@@ -108,8 +108,10 @@ export default function EditOpportunityPage({ params }: { params: Promise<{ id: 
           {deleting ? "Deleting..." : "Delete"}
         </button>
       </div>
+      <div className="mb-4 text-sm text-gray-700 text-center bg-yellow-100 border border-yellow-300 rounded-lg px-4 py-2">
+        By posting or editing an opportunity, you agree to our <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline text-purple-700 font-semibold">Terms and Conditions</a>.
+      </div>
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow p-6 flex flex-col gap-4 border-2 border-purple-400">
-        {/* ...existing code... */}
         <label className="font-semibold">Title
           <input name="title" value={form.title} onChange={handleChange} className="block w-full border-2 border-purple-400 rounded px-3 py-2 mt-1 font-normal focus:border-purple-600 focus:ring-purple-500" required />
         </label>
@@ -124,7 +126,6 @@ export default function EditOpportunityPage({ params }: { params: Promise<{ id: 
             Try <a href="https://markdownlivepreview.com/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Live Preview</a> or the <a href="https://www.markdownguide.org/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Guide</a> for syntax and examples.
           </div>
         </label>
-        {/* ...existing code... */}
         <label className="font-semibold">Types
           <div className="flex flex-wrap gap-2 mt-1">
             {opportunityTypes.map((type) => (
