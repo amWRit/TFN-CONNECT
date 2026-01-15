@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import { Users, GraduationCap, Sparkles, List, Wrench, Tags, Landmark, School, Group, Layers, MapPin, BookOpen } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import LocalGovTab from './fellowship/LocalGovTab';
@@ -13,6 +14,7 @@ import PeopleTab from './people/PeopleTab';
 import SkillsTab from './talent/SkillsTab';
 import SkillCategoryTab from './talent/SkillCategoryTab';
 import ListingsTab from './listings/ListingsTab';
+import { UserGroupIcon } from '@heroicons/react/24/outline';
 
 type ManageView = 'fellowship-program' | 'people' | 'talent' | 'listings';
 type FellowshipSubTab = 'localgovs' | 'schools' | 'schoolgroups' | 'cohorts' | 'placements' | 'subjects';
@@ -28,46 +30,29 @@ export default function ManageTab() {
     <div className="space-y-4">
       {/* Top-level Manage tabs: Fellowship, People, Talent, Listings */}
       <div className="flex gap-2 mb-4 flex-wrap">
-        <button
-          onClick={() => setCurrentView('fellowship-program')}
-          className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-            currentView === 'fellowship-program'
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'bg-gray-100 text-gray-700 hover:bg-blue-50'
-          }`}
-        >
-          Fellowship
-        </button>
-        <button
-          onClick={() => setCurrentView('people')}
-          className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-            currentView === 'people'
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'bg-gray-100 text-gray-700 hover:bg-blue-50'
-          }`}
-        >
-          People
-        </button>
-        <button
-          onClick={() => setCurrentView('talent')}
-          className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-            currentView === 'talent'
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'bg-gray-100 text-gray-700 hover:bg-blue-50'
-          }`}
-        >
-          Talent
-        </button>
-        <button
-          onClick={() => setCurrentView('listings')}
-          className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-            currentView === 'listings'
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'bg-gray-100 text-gray-700 hover:bg-blue-50'
-          }`}
-        >
-          Listings
-        </button>
+        {[
+          { key: 'fellowship-program', label: 'Fellowship', icon: GraduationCap },
+          { key: 'people', label: 'People', icon: Users },
+          { key: 'talent', label: 'Talent', icon: Sparkles },
+          { key: 'listings', label: 'Listings', icon: List },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setCurrentView(tab.key as ManageView)}
+              className={`flex flex-row items-center justify-center gap-2 px-2 py-2 sm:px-4 sm:py-2 rounded-lg font-medium text-sm transition-colors min-w-[44px] min-h-[44px] ${
+                currentView === tab.key
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-gray-100 text-gray-700 hover:bg-blue-50'
+              }`}
+              title={tab.label}
+            >
+              <Icon className="w-5 h-5" />
+              <span className="hidden sm:inline text-xs">{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Fellowship Program Group with Sub-Tabs */}
@@ -75,25 +60,30 @@ export default function ManageTab() {
         <div className="space-y-4">
           <div className="flex gap-2 flex-wrap bg-gray-50 p-4 rounded-lg border border-gray-200">
             {[
-              { id: 'localgovs', label: 'Local Governments' },
-              { id: 'schools', label: 'Schools' },
-              { id: 'schoolgroups', label: 'School Groups' },
-              { id: 'cohorts', label: 'Cohorts' },
-              { id: 'placements', label: 'Placements' },
-              { id: 'subjects', label: 'Subjects' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setFellowshipSubTab(tab.id as FellowshipSubTab)}
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                  fellowshipSubTab === tab.id
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+              { id: 'localgovs', label: 'Local Governments', icon: Landmark },
+              { id: 'schools', label: 'Schools', icon: School },
+              { id: 'schoolgroups', label: 'School Groups', icon: Group },
+              { id: 'cohorts', label: 'Cohorts', icon: UserGroupIcon },
+              { id: 'placements', label: 'Placements', icon: MapPin },
+              { id: 'subjects', label: 'Subjects', icon: BookOpen },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setFellowshipSubTab(tab.id as FellowshipSubTab)}
+                  className={`flex flex-row items-center justify-center gap-2 px-2 py-2 sm:px-4 sm:py-2 rounded-lg font-medium text-sm transition-colors min-w-[44px] min-h-[44px] ${
+                    fellowshipSubTab === tab.id
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
+                  }`}
+                  title={tab.label}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="hidden sm:inline text-xs">{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
           {/* Show only the selected sub-tab content */}
           {fellowshipSubTab === 'localgovs' && <LocalGovTab />}
@@ -113,26 +103,27 @@ export default function ManageTab() {
         <div className="space-y-8">
           {/* Talent sub-tabs */}
           <div className="flex gap-2 mb-4 flex-wrap">
-            <button
-              onClick={() => setTalentSubTab('skills')}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                talentSubTab === 'skills'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-gray-100 text-gray-700 hover:bg-blue-50'
-              }`}
-            >
-              Skills
-            </button>
-            <button
-              onClick={() => setTalentSubTab('categories')}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                talentSubTab === 'categories'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-gray-100 text-gray-700 hover:bg-blue-50'
-              }`}
-            >
-              Categories
-            </button>
+            {[
+              { key: 'skills', label: 'Skills', icon: Wrench },
+              { key: 'categories', label: 'Categories', icon: Tags },
+            ].map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setTalentSubTab(tab.key as TalentSubTab)}
+                  className={`flex flex-row items-center justify-center gap-2 px-2 py-2 sm:px-4 sm:py-2 rounded-lg font-medium text-sm transition-colors min-w-[44px] min-h-[44px] ${
+                    talentSubTab === tab.key
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-700 hover:bg-blue-50'
+                  }`}
+                  title={tab.label}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span className="hidden sm:inline text-xs">{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
           {/* Show only the selected sub-tab content */}
           {talentSubTab === 'skills' && <SkillsTab />}

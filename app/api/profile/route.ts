@@ -89,7 +89,11 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    return NextResponse.json(person);
+    // Only return subscriptions array (and other fields) for settings UI
+    return NextResponse.json({
+      ...person,
+      subscriptions: person?.subscriptions || [],
+    });
   } catch (error) {
     console.error("Error fetching profile:", error);
     return NextResponse.json(
@@ -162,6 +166,7 @@ export async function PATCH(request: NextRequest) {
         eduStatus: body.eduStatus,
         empStatus: body.empStatus,
         profileImage: body.profileImage !== undefined ? (body.profileImage || null) : undefined,
+        ...(body.subscriptions ? { subscriptions: body.subscriptions } : {}),
       },
       include: {
         educations: {
@@ -173,7 +178,10 @@ export async function PATCH(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(updatedPerson);
+    return NextResponse.json({
+      ...updatedPerson,
+      subscriptions: updatedPerson.subscriptions || [],
+    });
   } catch (error) {
     console.error("Error updating profile:", error);
     return NextResponse.json(

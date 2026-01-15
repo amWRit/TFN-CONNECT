@@ -18,6 +18,8 @@ import DashboardTab from '../tabs/dashboard/IndexTab';
 import BrowseTab from '../tabs/browse/BrowseTab';
 import ManageTab from '../tabs/manage/ManageTab';
 import SettingsTab from '../tabs/settings/SettingsTab';
+import { Wrench } from 'lucide-react';
+import ToolsTab from '../tabs/tools/ToolsTab';
 
 function AdminDashboardContent() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -55,6 +57,7 @@ function AdminDashboardContent() {
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
     // { id: 'browse', label: 'Browse', icon: <Search size={20} /> },
     { id: 'manage', label: 'Manage', icon: <Settings2 size={20} /> },
+    { id: 'tools', label: 'Tools', icon: <Wrench size={20} /> },
     { id: 'settings', label: 'Settings', icon: <SettingsIcon size={20} /> },
   ];
 
@@ -113,6 +116,7 @@ function AdminDashboardContent() {
         {currentTab === 'dashboard' && <DashboardTab />}
         {/* {currentTab === 'browse' && <BrowseTab />} */}
         {currentTab === 'manage' && <ManageTab />}
+        {currentTab === 'tools' && <ToolsTab />}
         {currentTab === 'settings' && <SettingsTab />}
       </main>
     </div>

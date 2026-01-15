@@ -119,6 +119,20 @@ export async function POST(request: NextRequest) {
         createdById: session.user.id,
       },
     });
+
+    // Auto-trigger notifications (subscription-only)
+    try {
+      const notifyRes = await fetch(`${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/api/events/notify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId: event.id }),
+      });
+      const notifyJson = await notifyRes.json();
+      // Optionally log or attach notifyJson to response
+    } catch (notifyErr) {
+      console.error('Event notification failed:', notifyErr);
+      // Do not block event creation on notification failure
+    }
     return NextResponse.json(event, { status: 201 });
   } catch (err: any) {
     console.error("Failed to create event:", err);

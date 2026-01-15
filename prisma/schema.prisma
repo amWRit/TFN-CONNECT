@@ -173,7 +173,7 @@ model Person {
   opportunities     Opportunity[]    @relation("CreatedOpportunities")
   createdEvents     Event[]          @relation("CreatedEvents")
   eventRsvps        EventRsvp[]
-  subscriptions     Subscription[]
+  subscriptions     SubscriptionType[] @default([])
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
 }
@@ -533,7 +533,6 @@ model Event {
   // Relations
   rsvps         EventRsvp[]
   interests     Interest[]     @relation("EventInterests")
-  subscriptions Subscription[] @relation("EventSubscriptions")
 
   createdBy Person @relation("CreatedEvents", fields: [createdById], references: [id], onDelete: Cascade)
 
@@ -548,25 +547,6 @@ enum SubscriptionType {
   POST
   PERSON // Follow people
   SCHOOL // Follow schools
-}
-
-model Subscription {
-  id                   String           @id @default(cuid())
-  personId             String
-  eventId              String?
-  type                 SubscriptionType
-  targetId             String // Polymorphic ID reference
-  notifications        Boolean          @default(true) // Email/push notifications?
-  notificationSettings Json? // JSON for detailed preferences
-  source               String? // How/where user subscribed
-  createdAt            DateTime         @default(now())
-
-  person Person @relation(fields: [personId], references: [id], onDelete: Cascade)
-  event  Event? @relation("EventSubscriptions", fields: [eventId], references: [id], onDelete: Cascade)
-
-  @@unique([personId, type, targetId])
-  @@index([type])
-  @@index([targetId])
 }
 
 model EventRsvp {

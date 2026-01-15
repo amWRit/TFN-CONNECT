@@ -10,5 +10,3 @@ npx prisma migrate resolve --applied "0_init"
 # 4. Now Vercel deploy works
 npx prisma migrate deploy
 
-
-npx ts-node prisma/seed.ts

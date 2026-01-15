@@ -12,7 +12,7 @@ import { Plus, Edit2, Trash2, Save, X, Upload, Image as ImageIcon, Mail, Phone, 
 
 import { ProfileImage } from "@/components/ProfileImage";
 import { ProfileHeaderCard } from "@/components/profile/ProfileHeaderCard";
-
+import NotificationSettings from "./NotificationSettings";
 
 interface Fellowship {
   id: string;
@@ -1379,6 +1379,11 @@ export default function ProfilePage() {
           )}
         </div>
       </Card>
+
+      {/* Notification Settings - New Section */}
+      <div className="mt-10">
+        <NotificationSettings />
+      </div>
     </div>
   );
 }
