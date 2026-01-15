@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Mail, FileText } from 'lucide-react';
 import AdminEmailForm from '../../../../components/AdminEmailForm';
+import GmailDraftEmailForm from '../../../../components/GmailDraftEmailForm';
 
 export default function ToolsTab() {
   const [mainTab, setMainTab] = useState<'email'>('email');
@@ -46,8 +47,7 @@ export default function ToolsTab() {
           )}
           {emailTab === 'drafts' && (
             <div className="bg-white p-6 rounded-xl border shadow-sm">
-              {/* TODO: Implement Gmail Drafts integration here */}
-              <div className="text-gray-500 text-center py-12">Gmail Drafts integration coming soon.</div>
+              <GmailDraftEmailForm />
             </div>
           )}
         </>
