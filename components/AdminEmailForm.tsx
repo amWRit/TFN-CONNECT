@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { marked } from 'marked';
 import dynamic from 'next/dynamic';
 import { PersonType } from '@prisma/client';
 import { Mail, Eye, Send, Users, AtSign, ChevronDown, Smile, FileText, Hash, Loader2, Settings2 } from 'lucide-react';
@@ -63,23 +64,46 @@ export default function AdminEmailForm() {
     fetchCount();
   }, [personType, emailPreference]);
 
-  // Live preview
+  // Markdown CSS for preview and email
+  const markdownCss = `
+    .markdown-body { font-family: inherit; font-size: 1rem; color: #222; }
+    .markdown-body h1, .markdown-body h2, .markdown-body h3 { font-weight: bold; margin-top: 1.2em; margin-bottom: 0.5em; }
+    .markdown-body ul, .markdown-body ol { margin: 1em 0 1em 2em; padding-left: 2em; }
+    .markdown-body ul { list-style-type: disc; }
+    .markdown-body ol { list-style-type: decimal; }
+    .markdown-body ol ol { list-style-type: lower-alpha; }
+    .markdown-body ol ol ol { list-style-type: lower-roman; }
+    .markdown-body ul, .markdown-body ol { list-style-position: outside; }
+    .markdown-body li { margin-bottom: 0.3em; }
+    .markdown-body p { margin: 0.5em 0; }
+    .markdown-body strong { font-weight: bold; }
+    .markdown-body em { font-style: italic; }
+    .markdown-body code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; font-size: 0.95em; }
+    .markdown-body pre { background: #f4f4f4; padding: 8px; border-radius: 6px; overflow-x: auto; }
+    .markdown-body blockquote { border-left: 4px solid #b3c6e7; margin: 1em 0; padding: 0.5em 1em; color: #555; background: #f7faff; }
+    .markdown-body a { color: #2563eb; text-decoration: underline; }
+    /* Table styles */
+    .markdown-body table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+    .markdown-body th, .markdown-body td { border: 1px solid #b3c6e7; padding: 6px 12px; }
+    .markdown-body th { background: #e6f0fa; font-weight: bold; }
+    .markdown-body tr:nth-child(even) { background: #f7faff; }
+  `;
+
+  // Live preview (convert markdown to HTML with styles)
   useEffect(() => {
-    async function fetchPreview() {
+    let cancelled = false;
+    async function updatePreview() {
       try {
-        const res = await fetch('/api/admin/email/preview', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ subject, body, images: [] }) // No bodyTab
-        });
-        const data = await res.json();
-        setPreviewHtml(data.html || '');
+        const html = await marked.parse(body || '');
+        const styledHtml = `<style>${markdownCss}</style><div class="markdown-body">${html}</div>`;
+        if (!cancelled) setPreviewHtml(styledHtml);
       } catch {
-        setPreviewHtml('<div>Preview error</div>');
+        if (!cancelled) setPreviewHtml('<div>Preview error</div>');
       }
     }
-    fetchPreview();
-  }, [subject, body]);
+    updatePreview();
+    return () => { cancelled = true; };
+  }, [body]);
 
   // Get public image base URL from env
   const PUBLIC_IMAGE_BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'https://tfn-connect.vercel.app';
@@ -92,12 +116,14 @@ export default function AdminEmailForm() {
   const handleSendTest = async () => {
     setSending(true);
     try {
+      const html = await marked.parse(body || '');
+      const htmlBody = `<style>${markdownCss}</style><div class="markdown-body">${html}</div>`;
       const res = await fetch('/api/admin/email/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           subject,
-          body, // send the raw body, not previewHtml
+          body: htmlBody, // send styled HTML body
           recipients: [{ email: 'tfnconnect@gmail.com', name: 'Admin' }],
           cc: ccList,
           bcc: bccList
@@ -130,13 +156,16 @@ export default function AdminEmailForm() {
         email: emailPreference === 'primary' ? u.email1 : emailPreference === 'secondary' ? u.email2 : (u.email1 || u.email2),
         name: u.firstName
       })).filter((r: any) => r.email);
+      // Convert markdown to HTML with styles
+      const html = await marked.parse(body || '');
+      const htmlBody = `<style>${markdownCss}</style><div class="markdown-body">${html}</div>`;
       // Send email
       const res = await fetch('/api/admin/email/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           subject,
-          body, // send the raw body, not previewHtml
+          body: htmlBody, // send styled HTML body
           recipients,
           cc: ccList,
           bcc: bccList
