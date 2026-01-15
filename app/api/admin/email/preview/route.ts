@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
         input[type=\"checkbox\"] { margin-right: 0.5em; }
       </style>
     `;
-    html = style + `<h2>${subject}</h2>` + html;
+    html = style + `<div style="margin-bottom:1em;"><strong>Subject:</strong> ${subject}</div><div style="margin-bottom:0.5em;"><strong>Body:</strong></div>` + html;
     return NextResponse.json({ html });
   } catch (error) {
     const errMsg = (error instanceof Error) ? error.message : 'Preview error';

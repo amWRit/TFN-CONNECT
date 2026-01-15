@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { PersonType } from '@prisma/client';
-import { Mail, Image as ImageIcon, Eye, Send, Users, AtSign, ChevronDown, ChevronUp, Smile, FileText, Hash, Loader2 } from 'lucide-react';
+import { Mail, Eye, Send, Users, AtSign, ChevronDown, Smile, FileText, Hash, Loader2, Settings2 } from 'lucide-react';
+import Email from 'next-auth/providers/email';
 
 const EmailEditor = dynamic(() => import('react-email-editor'), { ssr: false });
 const MarkdownEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
@@ -10,12 +11,11 @@ export default function AdminEmailForm() {
   // Form state
   const [subject, setSubject] = useState('');
   const [ccList, setCcList] = useState('');
+  const [bccList, setBccList] = useState('');
   // Removed recipientType, only use personType
-  const [personType, setPersonType] = useState<PersonType | ''>('');
+  const [personType, setPersonType] = useState<PersonType | ''>('ADMIN');
   const [emailPreference, setEmailPreference] = useState<'primary' | 'secondary' | 'both'>('primary');
-  const [bodyTab, setBodyTab] = useState<'markdown' | 'html'>('markdown');
   const [body, setBody] = useState('');
-  const [images, setImages] = useState<string[]>([]);
   const [previewHtml, setPreviewHtml] = useState('');
   const [recipientCount, setRecipientCount] = useState(0);
   const [sending, setSending] = useState(false);
@@ -24,10 +24,10 @@ export default function AdminEmailForm() {
   // Auto-save draft to localStorage
   useEffect(() => {
     const draft = {
-      subject, ccList, personType, emailPreference, bodyTab, body, images
+      subject, ccList, bccList, personType, emailPreference, body
     };
     localStorage.setItem('adminEmailDraft', JSON.stringify(draft));
-  }, [subject, ccList, personType, emailPreference, bodyTab, body, images]);
+  }, [subject, ccList, bccList, personType, emailPreference, body]);
 
   // Load draft from localStorage
   useEffect(() => {
@@ -37,11 +37,10 @@ export default function AdminEmailForm() {
         const d = JSON.parse(draft);
         setSubject(d.subject || '');
         setCcList(d.ccList || '');
+        setBccList(d.bccList || '');
         setPersonType(d.personType || '');
         setEmailPreference(d.emailPreference || 'primary');
-        setBodyTab(d.bodyTab || 'visual');
         setBody(d.body || '');
-        setImages(d.images || []);
       } catch {}
     }
   }, []);
@@ -71,7 +70,7 @@ export default function AdminEmailForm() {
         const res = await fetch('/api/admin/email/preview', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ subject, body, images, bodyTab })
+          body: JSON.stringify({ subject, body, images: [] }) // No bodyTab
         });
         const data = await res.json();
         setPreviewHtml(data.html || '');
@@ -80,25 +79,14 @@ export default function AdminEmailForm() {
       }
     }
     fetchPreview();
-  }, [subject, body, images, bodyTab]);
+  }, [subject, body]);
 
-  // Handle image upload
-  const handleImageUpload = async (files: FileList) => {
-    const uploaded: string[] = [];
-    for (let i = 0; i < files.length; i++) {
-      const formData = new FormData();
-      formData.append('file', files[i]);
-      try {
-        const res = await fetch('/api/admin/email/temp-upload', {
-          method: 'POST',
-          body: formData
-        });
-        const data = await res.json();
-        if (data.url) uploaded.push(data.url);
-      } catch {}
-    }
-    setImages([...images, ...uploaded]);
-  };
+  // Get public image base URL from env
+  const PUBLIC_IMAGE_BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'https://tfn-connect.vercel.app';
+
+  // ...removed file upload logic...
+
+  // ...removed Google Drive image logic...
 
   // Send test email
   const handleSendTest = async () => {
@@ -109,13 +97,16 @@ export default function AdminEmailForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           subject,
-          body: previewHtml,
+          body, // send the raw body, not previewHtml
           recipients: [{ email: 'tfnconnect@gmail.com', name: 'Admin' }],
           cc: ccList,
-          images
+          bcc: bccList
         })
       });
-      await res.json();
+      const result = await res.json();
+      if (result.logs) {
+        console.log('Apps Script logs:', result.logs);
+      }
       alert('Test email sent to tfnconnect@gmail.com');
     } catch {
       alert('Failed to send test email');
@@ -145,10 +136,10 @@ export default function AdminEmailForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           subject,
-          body: previewHtml,
+          body, // send the raw body, not previewHtml
           recipients,
           cc: ccList,
-          images
+          bcc: bccList
         })
       });
       await res.json();
@@ -188,6 +179,17 @@ export default function AdminEmailForm() {
             className="w-full border-2 border-blue-200 focus:border-pink-400 rounded-lg px-4 py-2 mt-1 transition-all focus:shadow-lg bg-white/80"
           />
         </div>
+        {/* BCC List */}
+        <div>
+          <label className="font-medium flex items-center gap-2 text-blue-700"><AtSign className="w-5 h-5" /> BCC List</label>
+          <input
+            type="text"
+            value={bccList}
+            onChange={e => setBccList(e.target.value)}
+            placeholder="Comma-separated emails (optional)"
+            className="w-full border-2 border-blue-200 focus:border-pink-400 rounded-lg px-4 py-2 mt-1 transition-all focus:shadow-lg bg-white/80"
+          />
+        </div>
         {/* Person Type (Recipient) */}
         <div>
           <label className="font-medium flex items-center gap-2 text-blue-700"><Users className="w-5 h-5" /> Recipient Type</label>
@@ -213,7 +215,7 @@ export default function AdminEmailForm() {
         </div>
         {/* Email Preference */}
         <div>
-          <label className="font-medium flex items-center gap-2 text-blue-700"><FileText className="w-5 h-5" /> Email Preference</label>
+          <label className="font-medium flex items-center gap-2 text-blue-700"><AtSign className="w-5 h-5" /> Email Preference</label>
           <div className="flex gap-4 mt-1">
             <label className={emailPreference==='primary' ? 'bg-blue-100 px-3 py-1 rounded-full flex items-center gap-1 font-semibold text-blue-700' : 'px-3 py-1 rounded-full flex items-center gap-1 text-gray-600 cursor-pointer hover:bg-blue-50'}>
               <input type="radio" checked={emailPreference==='primary'} onChange={()=>setEmailPreference('primary')} className="accent-blue-600" /> Primary
@@ -226,29 +228,23 @@ export default function AdminEmailForm() {
             </label>
           </div>
         </div>
-        {/* Body Editor Tabs */}
+        {/* Body Editor */}
         <div>
-          <label className="font-medium flex items-center gap-2 text-blue-700"><Smile className="w-5 h-5" /> Email Body</label>
-          <div className="flex gap-2 mb-2">
-            <button type="button" className={bodyTab==='markdown' ?"bg-pink-600 text-white px-3 py-1 rounded-full shadow" :"bg-gray-100 px-3 py-1 rounded-full hover:bg-pink-100"} onClick={()=>setBodyTab('markdown')}><FileText className="w-4 h-4 inline mr-1" /> Markdown</button>
-            <button type="button" className={bodyTab==='html' ?"bg-yellow-500 text-white px-3 py-1 rounded-full shadow" :"bg-gray-100 px-3 py-1 rounded-full hover:bg-yellow-100"} onClick={()=>setBodyTab('html')}><Hash className="w-4 h-4 inline mr-1" /> HTML</button>
-          </div>
-          <div className="border-2 border-blue-100 rounded-xl p-2 bg-white/70 shadow-inner">
-            {bodyTab==='markdown' && <MarkdownEditor value={body} onChange={v => setBody(v ?? '')} />}
-            {bodyTab==='html' && <textarea value={body} onChange={e=>setBody(e.target.value)} className="w-full min-h-[200px] border rounded-xl p-2 bg-white/90" placeholder="Paste or write HTML here..." />}
-          </div>
-        </div>
-        {/* Image Attachments */}
-        <div>
-          <label className="font-medium flex items-center gap-2 text-blue-700"><ImageIcon className="w-5 h-5" /> Image Attachments</label>
-          <div className="border-dashed border-2 border-pink-300 rounded-xl p-4 flex flex-col items-center gap-2 bg-pink-50/40">
-            <ImageIcon className="w-10 h-10 text-pink-400 animate-pulse" />
-            <input type="file" accept="image/*" multiple onChange={e => handleImageUpload(e.target.files!)} className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-100 file:text-pink-700 hover:file:bg-pink-200" />
-            <div className="flex gap-2 mt-2 flex-wrap">
-              {images.map((img, i) => <img key={i} src={img} alt="attachment" className="w-16 h-16 object-cover rounded-lg border-2 border-pink-200 shadow" />)}
+          <label className="font-medium flex items-center gap-2 text-blue-700"><FileText className="w-5 h-5" /> Email Body</label>
+          <div className="mb-2 text-sm text-blue-800 bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div>
+              <b>This editor supports <a href="https://www.markdownguide.org/basic-syntax/" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">Markdown syntax</a>.</b>
+            </div>
+            <div className="mt-1">
+              You can use online tools like <a href="https://markdownlivepreview.com/" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">Markdown Live Preview</a> or <a href="https://stackedit.io/app#" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">StackEdit</a> to compose and copy your content here.<br />
+              To convert a Word document to Markdown, try <a href="https://www.word2md.net/" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">word2md.net</a> and paste the result here.
             </div>
           </div>
+          <div className="border-2 border-blue-100 rounded-xl p-2 bg-white/70 shadow-inner">
+            <MarkdownEditor value={body} onChange={v => setBody(v ?? '')} />
+          </div>
         </div>
+        {/* No image upload or inline image support. Only text email supported. */}
         {/* Live Preview */}
         <div>
           <label className="font-medium flex items-center gap-2 text-blue-700"><Eye className="w-5 h-5" /> Live Email Preview</label>
@@ -259,24 +255,28 @@ export default function AdminEmailForm() {
         </div>
         {/* Actions */}
         <div className="flex gap-4 mt-8 justify-center">
-          <button
-            type="button"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full flex items-center gap-2 font-bold shadow-lg transition-all text-lg disabled:opacity-60"
-            onClick={handleSendTest}
-            disabled={sending}
-            title="Send a test email to yourself"
-          >
-            <Eye className="w-5 h-5" /> Send Test
-          </button>
-          <button
-            type="button"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full flex items-center gap-2 font-bold shadow-lg transition-all text-lg disabled:opacity-60"
-            onClick={()=>setShowConfirm(true)}
-            disabled={sending}
-            title="Send to all selected users"
-          >
-            <Send className="w-5 h-5" /> Send to All
-          </button>
+          {!sending && (
+            <>
+              <button
+                type="button"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full flex items-center gap-2 font-bold shadow-lg transition-all text-lg disabled:opacity-60"
+                onClick={handleSendTest}
+                disabled={sending}
+                title="Send a test email to yourself"
+              >
+                <Eye className="w-5 h-5" /> Send Test
+              </button>
+              <button
+                type="button"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full flex items-center gap-2 font-bold shadow-lg transition-all text-lg disabled:opacity-60"
+                onClick={()=>setShowConfirm(true)}
+                disabled={sending}
+                title="Send to all selected users"
+              >
+                <Send className="w-5 h-5" /> Send to All
+              </button>
+            </>
+          )}
         </div>
       </form>
       {/* Confirmation Modal */}
