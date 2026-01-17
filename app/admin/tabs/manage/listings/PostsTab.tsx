@@ -152,46 +152,38 @@ export default function PostsTab() {
             </span>
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border rounded-lg">
-            <thead>
-              <tr className="bg-blue-50">
-                <th className="px-4 py-2 text-left">Content</th>
-                <th className="px-4 py-2 text-left">Posted By</th>
-                <th className="px-4 py-2 text-left">Type</th>
-                <th className="px-4 py-2 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredPosts.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="text-center py-6 text-gray-400">No posts found.</td>
-                </tr>
-              )}
-              {filteredPosts.map(post => (
-                <tr key={post.id} className="border-b">
-                  <td className="px-4 py-2 font-medium max-w-xs truncate" title={post.content}>{post.content}</td>
-                  <td className="px-4 py-2">{post.person ? `${post.person.firstName} ${post.person.lastName}` : <span className="text-xs text-gray-400">---</span>}</td>
-                  <td className="px-4 py-2">
-                    <Badge variant="secondary">{post.postType.replace('_', ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</Badge>
-                  </td>
-                  <td className="px-4 py-2 flex gap-2">
-                    <Link href={`/feed`}>
-                      <Button size="icon" className="bg-blue-600 hover:bg-blue-700 text-white" aria-label="View">
-                        <Eye className="w-4 h-4 text-white" />
-                      </Button>
-                    </Link>
-                    <Button size="icon" className="bg-emerald-600 hover:bg-emerald-700 text-white" aria-label="Email" onClick={() => openEmailModal(post.id)} disabled={loading} title="Email">
-                      <Mail className="w-4 h-4 text-white" />
-                    </Button>
-                    <Button size="icon" variant="destructive" aria-label="Delete" onClick={() => handleDelete(post.id)} disabled={loading}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredPosts.length === 0 && (
+            <div className="col-span-full text-center py-6 text-gray-400">No posts found.</div>
+          )}
+          {filteredPosts.map(post => (
+            <div key={post.id} className="bg-white border border-blue-400 rounded-xl shadow-sm p-4 flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <h3 className="font-bold text-lg text-blue-700 truncate" title={post.content}>{post.content}</h3>
+              </div>
+              <div className="flex flex-wrap gap-2 items-center text-sm">
+                <span className="font-semibold text-gray-600">Type:</span>
+                <Badge variant="gray">{post.postType.replace('_', ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</Badge>
+              </div>
+              <div className="flex flex-wrap gap-2 items-center text-sm">
+                <span className="font-semibold text-gray-600">Posted By:</span>
+                <span>{post.person ? `${post.person.firstName} ${post.person.lastName}` : <span className="text-xs text-gray-400">---</span>}</span>
+              </div>
+              <div className="flex gap-2 mt-2">
+                <Link href={`/feed`}>
+                  <Button size="icon" className="bg-blue-600 hover:bg-blue-700 text-white" aria-label="View">
+                    <Eye className="w-4 h-4 text-white" />
+                  </Button>
+                </Link>
+                <Button size="icon" className="bg-emerald-600 hover:bg-emerald-700 text-white" aria-label="Email" onClick={() => openEmailModal(post.id)} disabled={loading} title="Email">
+                  <Mail className="w-4 h-4 text-white" />
+                </Button>
+                <Button size="icon" variant="destructive" aria-label="Delete" onClick={() => handleDelete(post.id)} disabled={loading}>
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
       {/* Email Modal */}
