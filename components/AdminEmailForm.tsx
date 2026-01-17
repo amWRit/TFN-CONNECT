@@ -179,9 +179,21 @@ export default function AdminEmailForm() {
     setSending(false);
   };
 
+  // Gmail token state (default to false, update as needed)
+  const [hasGmailToken, setHasGmailToken] = useState(false);
+
+  // Example: fetch Gmail token status from API (uncomment and implement if needed)
+  // useEffect(() => {
+  //   fetch('/api/admin/gmail/token-status')
+  //     .then(res => res.json())
+  //     .then(data => setHasGmailToken(data.hasToken))
+  //     .catch(() => setHasGmailToken(false));
+  // }, []);
+
   return (
     <div className="max-w-5xl mx-auto p-8 bg-white rounded-2xl shadow-xl border-2 border-blue-200 animate-fade-in">
       <form className="space-y-8">
+        {/* No Gmail admin authentication required for compose/send */}
         {/* Subject */}
         <div>
           <label className="font-medium flex items-center gap-2 text-blue-700"><Mail className="w-5 h-5" /> Subject</label>
@@ -270,7 +282,7 @@ export default function AdminEmailForm() {
             </div>
           </div>
           <div className="border-2 border-blue-100 rounded-xl p-2 bg-white/70 shadow-inner">
-            <MarkdownEditor value={body} onChange={v => setBody(v ?? '')} />
+            <MarkdownEditor value={body} onChange={v => setBody(v ?? '')} preview="edit" />
           </div>
         </div>
         {/* No image upload or inline image support. Only text email supported. */}

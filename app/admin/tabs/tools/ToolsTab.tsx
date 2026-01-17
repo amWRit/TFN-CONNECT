@@ -30,14 +30,14 @@ export default function ToolsTab() {
               onClick={() => setEmailTab('compose')}
             >
               <Mail className="w-4 h-4" />
-              <span>Compose Email</span>
+              <span>Compose New Email</span>
             </button>
             <button
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${emailTab === 'drafts' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
               onClick={() => setEmailTab('drafts')}
             >
               <FileText className="w-4 h-4" />
-              <span>Gmail Drafts</span>
+              <span>Reuse Gmail Drafts</span>
             </button>
           </div>
           {emailTab === 'compose' && (

@@ -2,21 +2,38 @@ import { useState, useEffect } from 'react';
 import { PersonType } from '@prisma/client';
 import { Mail, Send, Users, AtSign, ChevronDown, Hash, Loader2 } from 'lucide-react';
 
+
+// Checks admin Gmail token via API (supports httpOnly cookie)
+async function fetchAdminGmailTokenStatus(): Promise<boolean> {
+  try {
+    const res = await fetch('/api/admin/gmail/status', { credentials: 'include' });
+    const data = await res.json();
+    return !!data.authenticated;
+  } catch {
+    return false;
+  }
+}
+
+
+
 export default function GmailDraftEmailForm() {
-  // Form state
+  // All hooks must be called unconditionally and in the same order
+  const [hasGmailToken, setHasGmailToken] = useState(false);
   const [subject, setSubject] = useState('');
   const [ccList, setCcList] = useState('');
   const [bccList, setBccList] = useState('');
   const [personType, setPersonType] = useState<PersonType | ''>('ADMIN');
   const [emailPreference, setEmailPreference] = useState<'primary' | 'secondary' | 'both'>('primary');
-  // Removed body and previewHtml state
   const [recipientCount, setRecipientCount] = useState(0);
   const [sending, setSending] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-
-  // Gmail Drafts
   const [drafts, setDrafts] = useState<{id: string, subject: string}[]>([]);
   const [selectedDraftId, setSelectedDraftId] = useState('');
+
+  // All useEffect hooks must be declared before any conditional return
+  useEffect(() => {
+    fetchAdminGmailTokenStatus().then(setHasGmailToken);
+  }, []);
 
   // Fetch Gmail drafts (subject only)
   useEffect(() => {
@@ -63,6 +80,27 @@ export default function GmailDraftEmailForm() {
     fetchCount();
   }, [personType, emailPreference]);
 
+  if (!hasGmailToken) {
+    return (
+      <div className="mb-4 p-4 bg-yellow-50 border border-yellow-300 rounded-lg flex flex-col gap-4">
+        <div className="flex items-center gap-4">
+          <span className="text-yellow-700 font-semibold">Gmail admin authentication required to send using Gmail drafts.</span>
+          <button
+            type="button"
+            className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-full font-bold shadow transition-all"
+            onClick={() => { window.open('/api/admin/gmail/login?prompt=select_account%20consent', '_blank', 'noopener,noreferrer'); }}
+          >
+            Authenticate with Gmail
+          </button>
+        </div>
+        <div className="mt-2 text-yellow-900 text-sm">
+          <b>Tip:</b> For best results, open a Chrome profile using your admin email, or use an incognito/private window to ensure you can select the correct Google account.
+        </div>
+      </div>
+    );
+  }
+
+
   // Removed live preview logic
 
   // Send test email via Gmail API (send draft to self)
@@ -73,12 +111,15 @@ export default function GmailDraftEmailForm() {
       const res = await fetch('/api/gmail/send-draft', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ draftId: selectedDraftId }),
+        body: JSON.stringify({ draftId: selectedDraftId, cc: ccList, bcc: bccList }),
         credentials: 'include'
       });
       const result = await res.json();
       if (result.success) {
-        alert('Draft sent to your Gmail outbox');
+        // Count CC and BCC emails
+        const ccCount = ccList.split(',').map(e => e.trim()).filter(e => e).length;
+        const bccCount = bccList.split(',').map(e => e.trim()).filter(e => e).length;
+        alert(`Test email using draft sent to you${ccCount ? ` and ${ccCount} CC` : ''}${bccCount ? ` and ${bccCount} BCC` : ''} email${(ccCount + bccCount) === 1 ? '' : 's'}.`);
       } else {
         alert('Failed to send draft');
       }

@@ -210,7 +210,7 @@ export default function UserMenu() {
       setAdminPassword("");
       setOpen(false);
       setAdminToggleActive(false); // turn off visual toggle
-      router.refresh();
+      router.push("/admin/home");
     } else {
       setAdminError(data.error || "Login failed");
     }
@@ -318,7 +318,7 @@ export default function UserMenu() {
           {/* Admin password modal */}
           {showAdminModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-              <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-xs relative">
+              <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
                 <button
                   type="button"
                   className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 p-1 rounded-full focus:outline-none"
