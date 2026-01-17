@@ -23,6 +23,20 @@ import ToolsTab from '../tabs/tools/ToolsTab';
 
 function AdminDashboardContent() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Collapse sidebar on small screens
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 640) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [currentTab, setCurrentTab] = useState('dashboard');
