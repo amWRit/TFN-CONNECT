@@ -4,7 +4,7 @@ import UserMenu from "@/components/UserMenu";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { Briefcase, Rocket, Calendar, Activity, Users } from "lucide-react";
+import { Briefcase, Rocket, Calendar, MessageSquareMore, Users } from "lucide-react";
 
 export default function Navbar() {
   const { data: session, status } = useSession();
@@ -59,10 +59,10 @@ export default function Navbar() {
     },
     {
       href: "/feed",
-      icon: <Activity className="h-5 w-5" />,
+      icon: <MessageSquareMore className="h-5 w-5" />,
       label: "Feed",
       active: isActive("/feed"),
-      show: session?.user || isAdmin
+      alwaysShow: true
     }
   ];
 
@@ -85,7 +85,14 @@ export default function Navbar() {
             {/* Top nav links: show on sm+ screens */}
             <div className="hidden sm:flex gap-3 sm:gap-6 items-stretch">
               {navLinks.map((link, i) => {
-                if (link.label === "Feed" && !(session?.user || isAdmin)) return null;
+                if (link.label === "Feed") {
+                  if (status === "loading") {
+                    return (
+                      <span key="feed-skeleton" className="w-16 h-6 rounded bg-gray-200 animate-pulse flex items-center justify-center" />
+                    );
+                  }
+                  if (!(session?.user || isAdmin)) return null;
+                }
                 return (
                   <a
                     key={link.href}
@@ -114,7 +121,11 @@ export default function Navbar() {
               })}
             </div>
             <div className={`flex items-center gap-1 py-3 sm:py-4 -mb-0.5 ${isAdmin && pathname === "/admin/home" ? "border-b-2 border-yellow-700" : ""}`}>
-              <UserMenu />
+              {status === "loading" ? (
+                <span className="w-8 h-8 rounded-full bg-gray-200 animate-pulse block" />
+              ) : (
+                <UserMenu />
+              )}
             </div>
           </div>
         </div>
@@ -123,7 +134,14 @@ export default function Navbar() {
       {!isAdminHome && (
         <nav className="fixed bottom-0 left-0 right-0 z-40 flex sm:hidden justify-around bg-white/95 border-t-2 border-blue-400 shadow-lg h-14 px-2">
           {navLinks.map((link, i) => {
-            if (link.label === "Feed" && !(session?.user || isAdmin)) return null;
+            if (link.label === "Feed") {
+              if (status === "loading") {
+                return (
+                  <span key="feed-skeleton-mobile" className="w-10 h-6 rounded bg-gray-200 animate-pulse flex items-center justify-center" />
+                );
+              }
+              if (!(session?.user || isAdmin)) return null;
+            }
             return (
               <a
                 key={link.href}
