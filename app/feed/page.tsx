@@ -334,7 +334,7 @@ export default function FeedPage() {
       {session && !isAdmin && (
         <button
           onClick={() => setShowModal(true)}
-          className="fixed bottom-8 right-8 z-50 bg-pink-500 hover:bg-pink-600 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"
+          className="fixed bottom-20 sm:bottom-8 right-8 z-50 bg-pink-500 hover:bg-pink-600 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"
           title="Add New Post"
         >
           <span className="text-2xl leading-none">＋</span>

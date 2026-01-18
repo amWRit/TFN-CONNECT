@@ -23,6 +23,20 @@ import ToolsTab from '../tabs/tools/ToolsTab';
 
 function AdminDashboardContent() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  // Collapse sidebar on small screens
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 640) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [currentTab, setCurrentTab] = useState('dashboard');
@@ -63,9 +77,9 @@ function AdminDashboardContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 flex">
-      {/* Sidebar */}
+      {/* Sidebar: hidden on mobile, visible on sm+ */}
       <aside
-        className={`min-h-screen sticky top-0 z-30 flex flex-col transition-all duration-200 ${
+        className={`hidden sm:flex min-h-screen sticky top-0 z-30 flex-col transition-all duration-200 ${
           sidebarOpen ? 'w-40' : 'w-12'
         } bg-white/90 border-r shadow-lg rounded-r-3xl`}
       >
@@ -112,13 +126,37 @@ function AdminDashboardContent() {
         </div>
       </aside>
       {/* Main Content */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-24 sm:pb-8">
         {currentTab === 'dashboard' && <DashboardTab />}
         {/* {currentTab === 'browse' && <BrowseTab />} */}
         {currentTab === 'manage' && <ManageTab />}
         {currentTab === 'tools' && <ToolsTab />}
         {currentTab === 'settings' && <SettingsTab />}
       </main>
+      {/* Floating bottom nav for admin on mobile: general user nav is hidden in admin mode */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex sm:hidden justify-around bg-white/95 border-t border-blue-200 shadow-lg py-2 px-2">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setCurrentTab(tab.id)}
+            className={`flex flex-col items-center justify-center px-2 py-1 rounded-lg transition-colors ${
+              currentTab === tab.id
+                ? 'bg-blue-600 text-white shadow'
+                : 'text-blue-700 hover:bg-blue-50'
+            }`}
+            title={tab.label}
+          >
+            {tab.icon}
+          </button>
+        ))}
+        <button
+          onClick={handleLogout}
+          className="flex flex-col items-center justify-center px-2 py-1 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+          title="Logout"
+        >
+          <LogOut size={20} />
+        </button>
+      </nav>
     </div>
   );
 }

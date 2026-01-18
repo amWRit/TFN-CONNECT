@@ -108,8 +108,8 @@ export default function OpportunitiesTab() {
       const res = await fetch('/api/opportunities/enums');
       if (res.ok) {
         const enums = await res.json();
-        setTypeOptions([{ value: '', label: 'All Types' }, ...enums.opportunityTypes]);
-        setStatusOptions([{ value: '', label: 'All Statuses' }, ...enums.opportunityStatuses]);
+        setTypeOptions([{ value: '', label: 'All' }, ...enums.opportunityTypes]);
+        setStatusOptions([{ value: '', label: 'All ' }, ...enums.opportunityStatuses]);
       }
     } catch (e) {
       // handle error
@@ -145,68 +145,63 @@ export default function OpportunitiesTab() {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex gap-4 items-center mb-4">
-          <label className="font-semibold text-blue-700">Type</label>
-          <div className="relative">
-            <select
-              className="pl-3 pr-10 py-2 w-40 border-2 border-blue-400 rounded-full bg-blue-100/80 font-semibold text-blue-800 focus:ring-2 focus:ring-blue-400 outline-none transition shadow-sm text-base appearance-none"
-              value={typeFilter}
-              onChange={e => setTypeFilter(e.target.value)}
-            >
-              {typeOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-blue-500">
-              <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </span>
-          </div>
-          <label className="font-semibold text-blue-700 ml-6">Status</label>
-          <div className="relative">
-            <select
-              className="pl-3 pr-10 py-2 w-40 border-2 border-blue-400 rounded-full bg-blue-100/80 font-semibold text-blue-800 focus:ring-2 focus:ring-blue-400 outline-none transition shadow-sm text-base appearance-none"
-              value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value)}
-            >
-              {statusOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-blue-500">
-              <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </span>
+        {/* Filters: type and status grouped horizontally, compact like PeopleTab */}
+        <div className="mb-2 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200/60 py-1.5 w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-start gap-2 w-full">
+            <div className="relative flex items-center gap-2 w-full sm:w-auto">
+              <label className="font-semibold text-blue-700">Type</label>
+              <select
+                className="appearance-none pl-3 pr-10 py-2 w-full sm:w-40 border-2 border-blue-400 rounded-full bg-blue-100/80 font-semibold text-blue-800 focus:ring-2 focus:ring-blue-400 outline-none transition shadow-sm text-base"
+                value={typeFilter}
+                onChange={e => setTypeFilter(e.target.value)}
+              >
+                {typeOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-blue-500">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </span>
+            </div>
+            <div className="relative flex items-center gap-2 w-full sm:w-auto">
+              <label className="font-semibold text-blue-700">Status</label>
+              <select
+                className="appearance-none pl-3 pr-10 py-2 w-full sm:w-40 border-2 border-blue-400 rounded-full bg-blue-100/80 font-semibold text-blue-800 focus:ring-2 focus:ring-blue-400 outline-none transition shadow-sm text-base"
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value)}
+              >
+                {statusOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-blue-500">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </span>
+            </div>
           </div>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border rounded-lg">
-            <thead>
-              <tr className="bg-blue-50">
-                <th className="px-4 py-2 text-left">Title</th>
-                <th className="px-4 py-2 text-left">Posted By</th>
-                <th className="px-4 py-2 text-left">Type(s)</th>
-                <th className="px-4 py-2 text-left">Status</th>
-                <th className="px-4 py-2 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredOpps.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="text-center py-6 text-gray-400">No opportunities found.</td>
-                </tr>
+                <div className="col-span-full text-center py-6 text-gray-400">No opportunities found.</div>
               )}
               {filteredOpps.map(o => (
-                <tr key={o.id} className="border-b">
-                  <td className="px-4 py-2 font-medium">{o.title}</td>
-                  <td className="px-4 py-2">{o.createdByName || (o.createdBy ? `${o.createdBy.firstName} ${o.createdBy.lastName}` : <span className="text-xs text-gray-400">---</span>)}</td>
-                  <td className="px-4 py-2">
-                    {Array.isArray(o.types) && o.types.length > 0 ? o.types.map((t, i) => (
-                      <Badge key={t} variant="secondary" className="mr-1 mb-1 inline-block">{t}</Badge>
-                    )) : <span className="text-xs text-gray-400">---</span>}
-                  </td>
-                  <td className="px-4 py-2">
+                <div key={o.id} className="bg-white border border-blue-400 rounded-xl shadow-sm p-4 flex flex-col gap-2">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <h3 className="font-bold text-lg text-blue-700 truncate" title={o.title}>{o.title}</h3>
                     <Badge variant={statusBadgeVariant(o.status)}>{o.status}</Badge>
-                  </td>
-                  <td className="px-4 py-2 flex gap-2">
+                  </div>
+                  <div className="flex flex-wrap gap-2 items-center text-sm">
+                    <span className="font-semibold text-gray-600">Type(s):</span>
+                    {o.types?.map(type => (
+                      <Badge key={type} variant="gray">{type}</Badge>
+                    ))}
+                  </div>
+                  <div className="flex flex-wrap gap-2 items-center text-sm">
+                    <span className="font-semibold text-gray-600">Posted By:</span>
+                    <span>{o.createdByName || (o.createdBy ? `${o.createdBy.firstName} ${o.createdBy.lastName}` : <span className="text-xs text-gray-400">---</span>)}</span>
+                  </div>
+                  <div className="flex gap-2 mt-2">
                     <Link href={`/opportunities/${o.id}`}>
                       <Button size="icon" className="bg-blue-600 hover:bg-blue-700 text-white" aria-label="View">
                         <Eye className="w-4 h-4 text-white" />
@@ -218,11 +213,10 @@ export default function OpportunitiesTab() {
                     <Button size="icon" variant="destructive" aria-label="Delete" onClick={() => handleDelete(o.id)} disabled={loading}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
 
           {/* Email Modal */}
           <ConfirmModal

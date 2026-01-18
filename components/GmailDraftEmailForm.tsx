@@ -1,50 +1,66 @@
 import { useState, useEffect } from 'react';
-import { marked } from 'marked';
-import dynamic from 'next/dynamic';
 import { PersonType } from '@prisma/client';
-import { Mail, Eye, Send, Users, AtSign, ChevronDown, Smile, FileText, Hash, Loader2, Settings2 } from 'lucide-react';
-import Email from 'next-auth/providers/email';
+import { Mail, Send, Users, AtSign, ChevronDown, Hash, Loader2 } from 'lucide-react';
 
-const EmailEditor = dynamic(() => import('react-email-editor'), { ssr: false });
-const MarkdownEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
-export default function AdminEmailForm() {
-  // Form state
+// Checks admin Gmail token via API (supports httpOnly cookie)
+async function fetchAdminGmailTokenStatus(): Promise<boolean> {
+  try {
+    const res = await fetch('/api/admin/gmail/status', { credentials: 'include' });
+    const data = await res.json();
+    return !!data.authenticated;
+  } catch {
+    return false;
+  }
+}
+
+
+
+export default function GmailDraftEmailForm() {
+  // All hooks must be called unconditionally and in the same order
+  const [hasGmailToken, setHasGmailToken] = useState(false);
   const [subject, setSubject] = useState('');
   const [ccList, setCcList] = useState('');
   const [bccList, setBccList] = useState('');
-  // Removed recipientType, only use personType
   const [personType, setPersonType] = useState<PersonType | ''>('ADMIN');
   const [emailPreference, setEmailPreference] = useState<'primary' | 'secondary' | 'both'>('primary');
-  const [body, setBody] = useState('');
-  const [previewHtml, setPreviewHtml] = useState('');
   const [recipientCount, setRecipientCount] = useState(0);
   const [sending, setSending] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [drafts, setDrafts] = useState<{id: string, subject: string}[]>([]);
+  const [selectedDraftId, setSelectedDraftId] = useState('');
 
-  // Auto-save draft to localStorage
+  // All useEffect hooks must be declared before any conditional return
   useEffect(() => {
-    const draft = {
-      subject, ccList, bccList, personType, emailPreference, body
-    };
-    localStorage.setItem('adminEmailDraft', JSON.stringify(draft));
-  }, [subject, ccList, bccList, personType, emailPreference, body]);
+    fetchAdminGmailTokenStatus().then(setHasGmailToken);
+  }, []);
 
-  // Load draft from localStorage
+  // Fetch Gmail drafts (subject only)
   useEffect(() => {
-    const draft = localStorage.getItem('adminEmailDraft');
-    if (draft) {
+    async function fetchDrafts() {
       try {
-        const d = JSON.parse(draft);
-        setSubject(d.subject || '');
-        setCcList(d.ccList || '');
-        setBccList(d.bccList || '');
-        setPersonType(d.personType || '');
-        setEmailPreference(d.emailPreference || 'primary');
-        setBody(d.body || '');
+        const res = await fetch('/api/gmail/drafts');
+        const data = await res.json();
+        setDrafts(data.drafts || []);
+      } catch {
+        setDrafts([]);
+      }
+    }
+    fetchDrafts();
+  }, []);
+
+  // When a draft is selected, fetch its subject only (no body)
+  useEffect(() => {
+    async function fetchDraftSubject() {
+      if (!selectedDraftId) return;
+      try {
+        const res = await fetch(`/api/gmail/draft?id=${selectedDraftId}`);
+        const data = await res.json();
+        setSubject(data.subject || '');
       } catch {}
     }
-  }, []);
+    fetchDraftSubject();
+  }, [selectedDraftId]);
 
   // Fetch live recipient count
   useEffect(() => {
@@ -64,136 +80,117 @@ export default function AdminEmailForm() {
     fetchCount();
   }, [personType, emailPreference]);
 
-  // Markdown CSS for preview and email
-  const markdownCss = `
-    .markdown-body { font-family: inherit; font-size: 1rem; color: #222; }
-    .markdown-body h1, .markdown-body h2, .markdown-body h3 { font-weight: bold; margin-top: 1.2em; margin-bottom: 0.5em; }
-    .markdown-body ul, .markdown-body ol { margin: 1em 0 1em 2em; padding-left: 2em; }
-    .markdown-body ul { list-style-type: disc; }
-    .markdown-body ol { list-style-type: decimal; }
-    .markdown-body ol ol { list-style-type: lower-alpha; }
-    .markdown-body ol ol ol { list-style-type: lower-roman; }
-    .markdown-body ul, .markdown-body ol { list-style-position: outside; }
-    .markdown-body li { margin-bottom: 0.3em; }
-    .markdown-body p { margin: 0.5em 0; }
-    .markdown-body strong { font-weight: bold; }
-    .markdown-body em { font-style: italic; }
-    .markdown-body code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; font-size: 0.95em; }
-    .markdown-body pre { background: #f4f4f4; padding: 8px; border-radius: 6px; overflow-x: auto; }
-    .markdown-body blockquote { border-left: 4px solid #b3c6e7; margin: 1em 0; padding: 0.5em 1em; color: #555; background: #f7faff; }
-    .markdown-body a { color: #2563eb; text-decoration: underline; }
-    /* Table styles */
-    .markdown-body table { border-collapse: collapse; width: 100%; margin: 1em 0; }
-    .markdown-body th, .markdown-body td { border: 1px solid #b3c6e7; padding: 6px 12px; }
-    .markdown-body th { background: #e6f0fa; font-weight: bold; }
-    .markdown-body tr:nth-child(even) { background: #f7faff; }
-  `;
+  if (!hasGmailToken) {
+    return (
+      <div className="mb-4 p-4 bg-yellow-50 border border-yellow-300 rounded-lg flex flex-col gap-4">
+        <div className="flex items-center gap-4">
+          <span className="text-yellow-700 font-semibold">Gmail admin authentication required to send using Gmail drafts.</span>
+          <button
+            type="button"
+            className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-full font-bold shadow transition-all"
+            onClick={() => { window.open('/api/admin/gmail/login?prompt=select_account%20consent', '_blank', 'noopener,noreferrer'); }}
+          >
+            Authenticate with Gmail
+          </button>
+        </div>
+        <div className="mt-2 text-yellow-900 text-sm">
+          <b>Tip:</b> For best results, open a Chrome profile using your admin email, or use an incognito/private window to ensure you can select the correct Google account.
+        </div>
+      </div>
+    );
+  }
 
-  // Live preview (convert markdown to HTML with styles)
-  useEffect(() => {
-    let cancelled = false;
-    async function updatePreview() {
-      try {
-        const html = await marked.parse(body || '');
-        const styledHtml = `<style>${markdownCss}</style><div class="markdown-body">${html}</div>`;
-        if (!cancelled) setPreviewHtml(styledHtml);
-      } catch {
-        if (!cancelled) setPreviewHtml('<div>Preview error</div>');
-      }
-    }
-    updatePreview();
-    return () => { cancelled = true; };
-  }, [body]);
 
-  // Get public image base URL from env
-  const PUBLIC_IMAGE_BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'https://tfn-connect.vercel.app';
+  // Removed live preview logic
 
-  // ...removed file upload logic...
-
-  // ...removed Google Drive image logic...
-
-  // Send test email
+  // Send test email via Gmail API (send draft to self)
   const handleSendTest = async () => {
+    if (!selectedDraftId) return alert('Select a draft first');
     setSending(true);
     try {
-      const html = await marked.parse(body || '');
-      const htmlBody = `<style>${markdownCss}</style><div class="markdown-body">${html}</div>`;
-      const res = await fetch('/api/admin/email/send', {
+      const res = await fetch('/api/gmail/send-draft', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          subject,
-          body: htmlBody, // send styled HTML body
-          recipients: [{ email: 'tfnconnect@gmail.com', name: 'Admin' }],
-          cc: ccList,
-          bcc: bccList
-        })
+        body: JSON.stringify({ draftId: selectedDraftId, cc: ccList, bcc: bccList }),
+        credentials: 'include'
       });
       const result = await res.json();
-      if (result.logs) {
-        console.log('Apps Script logs:', result.logs);
+      if (result.success) {
+        // Count CC and BCC emails
+        const ccCount = ccList.split(',').map(e => e.trim()).filter(e => e).length;
+        const bccCount = bccList.split(',').map(e => e.trim()).filter(e => e).length;
+        alert(`Test email using draft sent to you${ccCount ? ` and ${ccCount} CC` : ''}${bccCount ? ` and ${bccCount} BCC` : ''} email${(ccCount + bccCount) === 1 ? '' : 's'}.`);
+      } else {
+        alert('Failed to send draft');
       }
-      alert('Test email sent to tfnconnect@gmail.com');
     } catch {
-      alert('Failed to send test email');
+      alert('Failed to send draft');
     }
     setSending(false);
   };
 
-  // Send to all
+  // Send draft content to all recipients via new API
   const handleSendAll = async () => {
+    if (!selectedDraftId) return alert('Select a draft first');
     setShowConfirm(false);
     setSending(true);
     try {
-      // Fetch all recipients
+      // Fetch recipients from API
       const params = new URLSearchParams({
         personType: personType || '',
         emailPreference
       });
       const resRecipients = await fetch(`/api/admin/email/recipients?${params}`);
       const dataRecipients = await resRecipients.json();
-      const recipients = (dataRecipients.users || []).map((u: any) => ({
-        email: emailPreference === 'primary' ? u.email1 : emailPreference === 'secondary' ? u.email2 : (u.email1 || u.email2),
-        name: u.firstName
-      })).filter((r: any) => r.email);
-      // Convert markdown to HTML with styles
-      const html = await marked.parse(body || '');
-      const htmlBody = `<style>${markdownCss}</style><div class="markdown-body">${html}</div>`;
-      // Send email
-      const res = await fetch('/api/admin/email/send', {
+      const recipients = (dataRecipients.users || []).map((u: any) => {
+        let email = '';
+        if (emailPreference === 'primary') email = u.email1;
+        else if (emailPreference === 'secondary') email = u.email2;
+        else if (emailPreference === 'both') email = u.email1 || u.email2;
+        return { email, name: u.firstName };
+      }).filter((r: any) => r.email && typeof r.email === 'string' && r.email.includes('@'));
+      if (recipients.length === 0) {
+        alert('No recipients found.');
+        setSending(false);
+        return;
+      }
+      // Send draft content to all recipients
+      const res = await fetch('/api/gmail/send-draft-multi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          subject,
-          body: htmlBody, // send styled HTML body
-          recipients,
-          cc: ccList,
-          bcc: bccList
-        })
+        body: JSON.stringify({ draftId: selectedDraftId, recipients, cc: ccList, bcc: bccList }),
+        credentials: 'include'
       });
-      await res.json();
-      alert(`Email sent to ${recipients.length} users.`);
+      const result = await res.json();
+      if (result.success) {
+        alert(`Draft sent to ${recipients.length} users!`);
+      } else {
+        alert('Failed to send draft to all recipients');
+      }
     } catch {
-      alert('Failed to send email');
+      alert('Failed to send draft');
     }
     setSending(false);
   };
 
-  // Gmail token state (default to false, update as needed)
-  const [hasGmailToken, setHasGmailToken] = useState(false);
-
-  // Example: fetch Gmail token status from API (uncomment and implement if needed)
-  // useEffect(() => {
-  //   fetch('/api/admin/gmail/token-status')
-  //     .then(res => res.json())
-  //     .then(data => setHasGmailToken(data.hasToken))
-  //     .catch(() => setHasGmailToken(false));
-  // }, []);
-
   return (
     <div className="max-w-5xl mx-auto p-8 bg-white rounded-2xl shadow-xl border-2 border-blue-200 animate-fade-in">
       <form className="space-y-8">
-        {/* No Gmail admin authentication required for compose/send */}
+        {/* Gmail Draft Selection */}
+        <div>
+          <label className="font-medium flex items-center gap-2 text-blue-700"><Mail className="w-5 h-5" /> Select Gmail Draft</label>
+          <select
+            value={selectedDraftId}
+            onChange={e => setSelectedDraftId(e.target.value)}
+            className="w-full border-2 border-blue-200 focus:border-pink-400 rounded-lg px-4 py-2 mt-1 appearance-none text-base bg-white/80 focus:shadow-lg transition-all"
+          >
+            <option value="">-- Choose a draft --</option>
+            {drafts.map(d => (
+              <option key={d.id} value={d.id}>{d.subject}</option>
+            ))}
+          </select>
+          <div className="text-xs text-gray-500 mt-1">Selecting a draft will load its subject and body below.</div>
+        </div>
         {/* Subject */}
         <div>
           <label className="font-medium flex items-center gap-2 text-blue-700"><Mail className="w-5 h-5" /> Subject</label>
@@ -269,31 +266,7 @@ export default function AdminEmailForm() {
             </label>
           </div>
         </div>
-        {/* Body Editor */}
-        <div>
-          <label className="font-medium flex items-center gap-2 text-blue-700"><FileText className="w-5 h-5" /> Email Body</label>
-          <div className="mb-2 text-sm text-blue-800 bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <div>
-              <b>This editor supports <a href="https://www.markdownguide.org/basic-syntax/" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">Markdown syntax</a>.</b>
-            </div>
-            <div className="mt-1">
-              You can use online tools like <a href="https://markdownlivepreview.com/" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">Markdown Live Preview</a> or <a href="https://stackedit.io/app#" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">StackEdit</a> to compose and copy your content here.<br />
-              To convert a Word document to Markdown, try <a href="https://www.word2md.net/" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">word2md.net</a> and paste the result here.
-            </div>
-          </div>
-          <div className="border-2 border-blue-100 rounded-xl p-2 bg-white/70 shadow-inner">
-            <MarkdownEditor value={body} onChange={v => setBody(v ?? '')} preview="edit" />
-          </div>
-        </div>
-        {/* No image upload or inline image support. Only text email supported. */}
-        {/* Live Preview */}
-        <div>
-          <label className="font-medium flex items-center gap-2 text-blue-700"><Eye className="w-5 h-5" /> Live Email Preview</label>
-          <div className="border-2 border-blue-200 rounded-xl p-4 bg-blue-50/60 min-h-[120px] shadow-inner mt-1 relative">
-            <div className="absolute right-3 top-3 text-blue-300 animate-spin" style={{display: sending ? 'block' : 'none'}}><Loader2 className="w-5 h-5" /></div>
-            <div dangerouslySetInnerHTML={{__html: previewHtml}} />
-          </div>
-        </div>
+        {/* Removed body editor and live preview UI */}
         {/* Actions */}
         <div className="flex gap-4 mt-8 justify-center">
           {!sending && (
@@ -302,17 +275,17 @@ export default function AdminEmailForm() {
                 type="button"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full flex items-center gap-2 font-bold shadow-lg transition-all text-lg disabled:opacity-60"
                 onClick={handleSendTest}
-                disabled={sending}
-                title="Send a test email to yourself"
+                disabled={sending || !selectedDraftId}
+                title="Send this draft to yourself"
               >
-                <Eye className="w-5 h-5" /> Send Test
+                <Send className="w-5 h-5" /> Send Test
               </button>
               <button
                 type="button"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full flex items-center gap-2 font-bold shadow-lg transition-all text-lg disabled:opacity-60"
                 onClick={()=>setShowConfirm(true)}
-                disabled={sending}
-                title="Send to all selected users"
+                disabled={sending || !selectedDraftId}
+                title="Send this draft to all selected users"
               >
                 <Send className="w-5 h-5" /> Send to All
               </button>

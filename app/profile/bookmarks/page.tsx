@@ -179,11 +179,11 @@ export default function BookmarksPage() {
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-8 text-center text-blue-700">My Bookmarks</h1>
+      <h1 className="text-3xl font-bold mb-4 text-center text-blue-700">My Bookmarks</h1>
       {loading && <p className="text-center text-gray-500">Loading bookmarks...</p>}
       {error && <p className="text-center text-red-500">{error}</p>}
       {bookmarks && (
-        <div className="space-y-10">
+        <div className="space-y-3">
           {['people', 'jobs', 'posts', 'opportunities', 'events']
             .filter((type) => bookmarks[type as keyof BookmarksResponse])
             .map((type) => {
@@ -198,17 +198,17 @@ export default function BookmarksPage() {
               return (
                 <section
                   key={type}
-                  className={`rounded-xl border-2 ${border} bg-blue-50 px-6 py-5 shadow-sm`}
+                  className={`rounded-xl border-2 ${border} bg-blue-50 px-4 py-3 shadow-sm`}
                 >
-                  <h2 className={`text-xl font-semibold mb-4 capitalize ${border} ${label}`}>{type.replace(/([A-Z])/g, ' $1')}</h2>
+                  <h2 className={`text-xl font-semibold mb-2 capitalize ${border} ${label}`}>{type.replace(/([A-Z])/g, ' $1')}</h2>
                   {Array.isArray(items) && items.length > 0 ? (
-                    <div className="grid gap-4">
+                    <div className="grid gap-2">
                       {type === "people"
                         ? items.map((bm) => {
                             const person = personDetails[bm.targetId];
                             return (
-                              <Card key={bm.id} className="flex items-center gap-4 p-4 hover:shadow-lg transition-shadow bg-white border-l-4 border-blue-300">
-                                <CardHeader className="flex flex-row items-center gap-4 p-0 pr-4 bg-transparent w-full">
+                              <Card key={bm.id} className="flex items-center gap-3 p-3 hover:shadow transition-shadow bg-white border-l-4 border-blue-300">
+                                <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
                                   {person ? (
                                     <ProfileImage
                                       src={person.profileImage}

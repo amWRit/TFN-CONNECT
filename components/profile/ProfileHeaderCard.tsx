@@ -340,7 +340,7 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
             <ProfileImage
               src={person.profileImage}
               name={[person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ")}
-              className="h-28 w-28 rounded-2xl border-4 border-indigo-200 shadow-md object-cover"
+              className="h-24 w-24 rounded-2xl border-4 border-indigo-200 shadow-md object-cover"
               alt={[person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ")}
             />
           </div>
