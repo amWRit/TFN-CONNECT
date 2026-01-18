@@ -152,54 +152,54 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
             adminView={isAdminView}
           />
         </div>
-
-        {/* People Interested Sidebar (right column, only for owner/admin) */}
-        {canEdit && (
-          <div className="w-full md:w-64 flex-shrink-0">
-            <h2 className="text-lg font-semibold mb-4 bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
-              People Interested
-            </h2>
-            {event.interests && event.interests.length > 0 ? (
-              (() => {
-                const validInterests = event.interests.filter(interest => interest.user && interest.user.id);
-                if (validInterests.length > 0) {
-                  return (
-                    <div className="grid grid-cols-1 gap-4">
-                      {validInterests.map((interest) => (
-                        <Link
-                          key={interest.id}
-                          href={`/profile/${interest.user!.id}`}
-                          className="block"
-                        >
-                          <div className="flex items-center gap-4 p-4 bg-white rounded-xl shadow border-2 border-emerald-400 hover:shadow-lg transition-all duration-150">
-                            <ProfileImage
-                              src={interest.user!.profileImage}
-                              name={`${interest.user!.firstName} ${interest.user!.lastName}`}
-                              className="h-12 w-12 rounded-full border-2 border-emerald-200 object-cover"
-                              alt={`${interest.user!.firstName} ${interest.user!.lastName}`}
-                            />
-                            <div className="flex flex-col">
-                              <span className="font-semibold text-emerald-700 text-base">
-                                {interest.user!.firstName} {interest.user!.lastName}
-                              </span>
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  );
-                } else {
-                  return (
-                    <div className="text-gray-500">No interested people yet.</div>
-                  );
-                }
-              })()
-            ) : (
-              <div className="text-gray-500">No interested people yet.</div>
-            )}
-          </div>
-        )}
       </div>
+
+      {/* People Interested Section: below main card on mobile, sidebar on desktop */}
+      {canEdit && (
+        <div className="w-full md:w-64 mt-8 md:mt-0 md:absolute md:right-8 md:top-8">
+          <h2 className="text-lg font-semibold mb-4 bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
+            People Interested
+          </h2>
+          {event.interests && event.interests.length > 0 ? (
+            (() => {
+              const validInterests = event.interests.filter(interest => interest.user && interest.user.id);
+              if (validInterests.length > 0) {
+                return (
+                  <div className="grid grid-cols-1 gap-4">
+                    {validInterests.map((interest) => (
+                      <Link
+                        key={interest.id}
+                        href={`/profile/${interest.user!.id}`}
+                        className="block"
+                      >
+                        <div className="flex items-center gap-4 p-4 bg-white rounded-xl shadow border-2 border-emerald-400 hover:shadow-lg transition-all duration-150">
+                          <ProfileImage
+                            src={interest.user!.profileImage}
+                            name={`${interest.user!.firstName} ${interest.user!.lastName}`}
+                            className="h-12 w-12 rounded-full border-2 border-emerald-200 object-cover"
+                            alt={`${interest.user!.firstName} ${interest.user!.lastName}`}
+                          />
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-emerald-700 text-base">
+                              {interest.user!.firstName} {interest.user!.lastName}
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                );
+              } else {
+                return (
+                  <div className="text-gray-500">No interested people yet.</div>
+                );
+              }
+            })()
+          ) : (
+            <div className="text-gray-500">No interested people yet.</div>
+          )}
+        </div>
+      )}
 
       {/* Floating I'm Interested Button (if signed in and not owner, and not in admin view) */}
       {!isAdminView && session?.user?.id && event?.createdById !== session.user.id && (

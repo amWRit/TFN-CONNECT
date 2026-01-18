@@ -261,7 +261,7 @@ export default function EventsPage() {
       {status === "authenticated" && !isAdminView && (
         <button
           onClick={handleAddEvent}
-          className="fixed bottom-8 right-8 z-50 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"
+          className="fixed bottom-20 sm:bottom-8 right-8 z-50 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"
           title="Add New Event"
         >
           <span className="text-2xl leading-none">＋</span>

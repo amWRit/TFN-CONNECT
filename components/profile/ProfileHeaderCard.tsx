@@ -340,12 +340,12 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
             <ProfileImage
               src={person.profileImage}
               name={[person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ")}
-              className="h-28 w-28 rounded-2xl border-4 border-indigo-200 shadow-md object-cover"
+              className="h-14 w-14 sm:h-28 sm:w-28 rounded-2xl border-4 border-indigo-200 shadow-md object-cover"
               alt={[person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ")}
             />
           </div>
           <div className="flex flex-col justify-end pb-2 flex-1">
-            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-0">
+            <h1 className="text-xl sm:text-4xl font-bold text-white mb-0">
               {[person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ")}
             </h1>
             {person.pronouns && (
