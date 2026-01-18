@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { PersonType } from '@prisma/client';
 import { Mail, Send, Users, AtSign, ChevronDown, Hash, Loader2 } from 'lucide-react';
 
@@ -14,8 +14,6 @@ async function fetchAdminGmailTokenStatus(): Promise<boolean> {
   }
 }
 
-
-
 export default function GmailDraftEmailForm() {
   // All hooks must be called unconditionally and in the same order
   const [hasGmailToken, setHasGmailToken] = useState(false);
@@ -27,8 +25,33 @@ export default function GmailDraftEmailForm() {
   const [recipientCount, setRecipientCount] = useState(0);
   const [sending, setSending] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<{sent:number, failed:string[], batchResults:any[]}|null>(null);
+  const [sentCsvUrl, setSentCsvUrl] = useState<{url: string, filename: string} | null>(null);
   const [drafts, setDrafts] = useState<{id: string, subject: string}[]>([]);
   const [selectedDraftId, setSelectedDraftId] = useState('');
+
+    // Ref for auto-download anchor
+  const csvDownloadRef = useRef<HTMLAnchorElement | null>(null);
+  // Auto-download CSV when sentCsvUrl is set
+  useEffect(() => {
+    if (sentCsvUrl && batchProgress && !sending) {
+      // Trigger download
+      setTimeout(() => {
+        csvDownloadRef.current?.click();
+      }, 500); // slight delay to ensure DOM is ready
+    }
+  }, [sentCsvUrl, batchProgress, sending]);
+
+  // Auto-hide batch progress bar after sending is complete
+  useEffect(() => {
+    if (batchProgress && !sending) {
+      const timeout = setTimeout(() => {
+        setBatchProgress(null);
+        setSentCsvUrl(null);
+      }, 5000);
+      return () => clearTimeout(timeout);
+    }
+  }, [batchProgress, sending]);
 
   // All useEffect hooks must be declared before any conditional return
   useEffect(() => {
@@ -134,6 +157,8 @@ export default function GmailDraftEmailForm() {
     if (!selectedDraftId) return alert('Select a draft first');
     setShowConfirm(false);
     setSending(true);
+    setBatchProgress(null);
+    setSentCsvUrl(null);
     try {
       // Fetch recipients from API
       const params = new URLSearchParams({
@@ -163,11 +188,25 @@ export default function GmailDraftEmailForm() {
       });
       const result = await res.json();
       if (result.success) {
-        alert(`Draft sent to ${recipients.length} users!`);
+        setBatchProgress({sent: result.sent, failed: result.failed, batchResults: result.batchResults||[]});
+        // Prepare CSV of sent emails
+        const sentEmails = recipients.filter((r: { email: string; name: string }) => !result.failed.includes(r.email));
+        function getCsvTimestamp() {
+          // Only used for filenames, never for class names
+          return new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 12);
+        }
+        const csv = 'email,name\n' + sentEmails.map((r: {email: string, name: string}) => `${r.email},${r.name}`).join('\n');
+        const blob = new Blob([csv], {type:'text/csv'});
+        setSentCsvUrl({
+          url: URL.createObjectURL(blob),
+          filename: `sent-emails-${getCsvTimestamp()}.csv`
+        });
       } else {
+        setBatchProgress({sent: 0, failed: [], batchResults: []});
         alert('Failed to send draft to all recipients');
       }
     } catch {
+      setBatchProgress({sent: 0, failed: [], batchResults: []});
       alert('Failed to send draft');
     }
     setSending(false);
@@ -175,6 +214,10 @@ export default function GmailDraftEmailForm() {
 
   return (
     <div className="max-w-5xl mx-auto p-8 bg-white rounded-2xl shadow-xl border-2 border-blue-200 animate-fade-in">
+      <div className="mb-6 p-4 bg-yellow-50 border border-yellow-300 rounded-lg text-yellow-900 text-base font-semibold flex items-center gap-3">
+        <span className="text-yellow-700 font-bold">⚠️</span>
+        This bulk email feature is experimental and may not work as expected. Please verify results and proceed with care.
+      </div>
       <form className="space-y-8">
         {/* Gmail Draft Selection */}
         <div>
@@ -307,8 +350,38 @@ export default function GmailDraftEmailForm() {
           </div>
         </div>
       )}
-      {/* Progress Bar */}
-      {sending && <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-8 py-3 rounded-full shadow-lg text-lg font-bold flex items-center gap-2 animate-pulse z-50"><Loader2 className="w-5 h-5 animate-spin" /> Sending...</div>}
+      {/* Batch Progress Bar & CSV Download */}
+      {(sending || batchProgress) && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-8 py-3 rounded-full shadow-lg text-lg font-bold flex items-center gap-2 animate-pulse z-50">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          {sending ? 'Sending...' : (
+            <>
+              Sent: {batchProgress?.sent} &nbsp;|
+              Failed: {batchProgress?.failed.length} &nbsp;|
+              Remaining: {recipientCount - (batchProgress?.sent ?? 0) - (batchProgress?.failed.length ?? 0)}
+              {sentCsvUrl && (
+                <>
+                  &nbsp;|&nbsp;
+                  <a
+                    href={sentCsvUrl.url}
+                    download={sentCsvUrl.filename}
+                    className="underline text-white font-bold"
+                    ref={csvDownloadRef}
+                    style={{ display: 'none' }}
+                  >Download Sent CSV</a>
+                  <span className="underline text-white font-bold">CSV Downloaded</span>
+                </>
+              )}
+            </>
+          )}
+        </div>
+      )}
+      {/* Success summary message */}
+      {batchProgress && !sending && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-green-600 text-white px-8 py-3 rounded-full shadow-lg text-lg font-bold flex items-center gap-2 z-50 animate-fade-in">
+          ✅ Sent: {batchProgress.sent} | Failed: {batchProgress.failed.length}
+        </div>
+      )}
     </div>
   );
 }

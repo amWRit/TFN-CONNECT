@@ -46,20 +46,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    for (const recipient of recipients) {
-      const raw = Buffer.from(makeEmail({
-        to: recipient.email,
-        cc,
-        bcc,
-        subject,
-        body
-      })).toString('base64').replace(/\+/g, '-').replace(/\//g, '_');
-      await gmail.users.messages.send({
-        userId: 'me',
-        requestBody: { raw }
-      });
+    // Batch send logic
+    const BATCH_SIZE = 100;
+    let sentCount = 0;
+    let failed = [];
+    let batchResults = [];
+    for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+      const batch = recipients.slice(i, i + BATCH_SIZE);
+      let batchSent = 0;
+      let batchFailed = [];
+      for (const recipient of batch) {
+        try {
+          const raw = Buffer.from(makeEmail({
+            to: recipient.email,
+            cc,
+            bcc,
+            subject,
+            body
+          })).toString('base64').replace(/\+/g, '-').replace(/\//g, '_');
+          await gmail.users.messages.send({
+            userId: 'me',
+            requestBody: { raw }
+          });
+          batchSent++;
+        } catch (err) {
+          batchFailed.push(recipient.email);
+        }
+      }
+      sentCount += batchSent;
+      failed.push(...batchFailed);
+      batchResults.push({ batch: i/BATCH_SIZE+1, sent: batchSent, failed: batchFailed });
     }
-    res.status(200).json({ success: true });
+    res.status(200).json({ success: true, sent: sentCount, failed, batchResults });
   } catch (err) {
     const errorMessage = (err instanceof Error) ? err.message : String(err);
     res.status(500).json({ error: 'Failed to send email', details: errorMessage });

@@ -41,6 +41,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } catch {
       userEmail = null;
     }
+    // Fallback: fetch profile if email not found
+    if (!userEmail) {
+      try {
+        const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+        const profile = await gmail.users.getProfile({ userId: 'me' });
+        userEmail = profile.data.emailAddress || null;
+      } catch {
+        userEmail = null;
+      }
+    }
   } else {
     // Fallback to NextAuth session (user login)
     const session = await getServerSession(req, res, authOptions) as (Session & { accessToken?: string, user?: { email?: string } });
@@ -50,6 +60,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     oauth2Client = new google.auth.OAuth2();
     oauth2Client.setCredentials({ access_token: session.accessToken });
     userEmail = session.user?.email;
+    // Fallback: fetch profile if email not found
+    if (!userEmail) {
+      try {
+        const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+        const profile = await gmail.users.getProfile({ userId: 'me' });
+        userEmail = profile.data.emailAddress || null;
+      } catch {
+        userEmail = null;
+      }
+    }
   }
   if (!userEmail) {
     return res.status(400).json({ error: 'No user email available' });

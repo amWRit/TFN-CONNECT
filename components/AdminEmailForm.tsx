@@ -13,7 +13,6 @@ export default function AdminEmailForm() {
   const [subject, setSubject] = useState('');
   const [ccList, setCcList] = useState('');
   const [bccList, setBccList] = useState('');
-  // Removed recipientType, only use personType
   const [personType, setPersonType] = useState<PersonType | ''>('ADMIN');
   const [emailPreference, setEmailPreference] = useState<'primary' | 'secondary' | 'both'>('primary');
   const [body, setBody] = useState('');
@@ -21,6 +20,20 @@ export default function AdminEmailForm() {
   const [recipientCount, setRecipientCount] = useState(0);
   const [sending, setSending] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<{sent:number, failed:string[], batchResults:any[]}|null>(null);
+  const [sentCsvUrl, setSentCsvUrl] = useState<{ url: string; filename: string } | null>(null);
+  const [csvDownloadTriggered, setCsvDownloadTriggered] = useState(false);
+
+  // Auto-hide batch progress bar after sending is complete (like GmailDraftEmailForm)
+  useEffect(() => {
+    if (batchProgress && !sending) {
+      const timeout = setTimeout(() => {
+        setBatchProgress(null);
+        setSentCsvUrl(null);
+      }, 5000);
+      return () => clearTimeout(timeout);
+    }
+  }, [batchProgress, sending]);
 
   // Auto-save draft to localStorage
   useEffect(() => {
@@ -144,6 +157,9 @@ export default function AdminEmailForm() {
   const handleSendAll = async () => {
     setShowConfirm(false);
     setSending(true);
+    setBatchProgress(null);
+    setSentCsvUrl(null);
+    setCsvDownloadTriggered(false);
     try {
       // Fetch all recipients
       const params = new URLSearchParams({
@@ -158,8 +174,8 @@ export default function AdminEmailForm() {
       })).filter((r: any) => r.email);
       // Convert markdown to HTML with styles
       const html = await marked.parse(body || '');
-      const htmlBody = `<style>${markdownCss}</style><div class="markdown-body">${html}</div>`;
-      // Send email
+      const htmlBody = `<style>${markdownCss}</style><div class=\"markdown-body\">${html}</div>`;
+      // Send email (batch progress)
       const res = await fetch('/api/admin/email/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -171,9 +187,31 @@ export default function AdminEmailForm() {
           bcc: bccList
         })
       });
-      await res.json();
-      alert(`Email sent to ${recipients.length} users.`);
+      const result = await res.json();
+      // Handle new response format from Apps Script
+      let sent = 0;
+      let failed: string[] = [];
+      if (result.success && result.result && result.result.success) {
+        sent = result.result.count || 0;
+        // If we sent to all, and no error, failed is empty
+        failed = [];
+        setBatchProgress({sent, failed, batchResults: [result.result]});
+        // Prepare CSV of sent emails
+        const sentEmails = recipients.filter((r: { email: string; name: string }) => !failed.includes(r.email));
+        const csv = 'email,name\n' + sentEmails.map((r: { email: string; name: string }) => `${r.email},${r.name}`).join('\n');
+        const blob = new Blob([csv], {type:'text/csv'});
+        function getCsvTimestamp() {
+          // Only used for filenames, never for class names
+          return new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 12);
+        }
+        const filename = `sent-emails-${getCsvTimestamp()}.csv`;
+        setSentCsvUrl({ url: URL.createObjectURL(blob), filename });
+      } else {
+        setBatchProgress({sent: 0, failed: [], batchResults: [result.result]});
+        alert('Failed to send email');
+      }
     } catch {
+      setBatchProgress({sent: 0, failed: [], batchResults: []});
       alert('Failed to send email');
     }
     setSending(false);
@@ -334,8 +372,54 @@ export default function AdminEmailForm() {
           </div>
         </div>
       )}
-      {/* Progress Bar */}
-      {sending && <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-8 py-3 rounded-full shadow-lg text-lg font-bold flex items-center gap-2 animate-pulse z-50"><Loader2 className="w-5 h-5 animate-spin" /> Sending...</div>}
+      {/* Batch Progress Bar & CSV Download */}
+      {(sending || batchProgress) && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-8 py-3 rounded-full shadow-lg text-lg font-bold flex items-center gap-2 animate-pulse z-50">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          {sending ? 'Sending...' : (
+            <>
+              Sent: {batchProgress?.sent} &nbsp;|
+              Failed: {batchProgress?.failed.length} &nbsp;|
+              Remaining: {recipientCount - (batchProgress?.sent ?? 0) - (batchProgress?.failed.length ?? 0)}
+              {sentCsvUrl && (
+                <>
+                  &nbsp;|&nbsp;
+                  <a
+                    href={sentCsvUrl.url}
+                    download={sentCsvUrl.filename}
+                    className="underline text-white font-bold"
+                    style={{ display: 'inline' }}
+                    ref={el => {
+                      // nothing here, auto-download handled in useEffect
+                    }}
+                  >Download Sent CSV</a>
+                  <a
+                    href={sentCsvUrl.url}
+                    download={sentCsvUrl.filename}
+                    style={{ display: 'none' }}
+                    id="admin-sent-csv-download"
+                  >hidden</a>
+                </>
+              )}
+            </>
+          )}
+        </div>
+      )}
+      {/* Auto-download CSV when ready */}
+      {sentCsvUrl && !csvDownloadTriggered && (
+        <span style={{display:'none'}}>
+          {(() => {
+            setTimeout(() => {
+              const a = document.getElementById('admin-sent-csv-download') as HTMLAnchorElement;
+              if (a) {
+                a.click();
+                setCsvDownloadTriggered(true);
+              }
+            }, 300);
+            return null;
+          })()}
+        </span>
+      )}
     </div>
   );
 }

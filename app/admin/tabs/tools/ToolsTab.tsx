@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Mail, FileText } from 'lucide-react';
+import { Mail, MailPlus, FileText } from 'lucide-react';
 import AdminEmailForm from '../../../../components/AdminEmailForm';
 import GmailDraftEmailForm from '../../../../components/GmailDraftEmailForm';
 
@@ -16,7 +16,7 @@ export default function ToolsTab() {
           className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-colors ${mainTab === 'email' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-blue-50'}`}
           onClick={() => setMainTab('email')}
         >
-          <Mail className="w-4 h-4" />
+            <MailPlus className="w-4 h-4" />
           <span>Email</span>
         </button>
         {/* Add more main tool tabs here if needed */}
