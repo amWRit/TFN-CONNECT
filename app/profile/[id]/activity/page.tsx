@@ -1127,8 +1127,8 @@ export default function ProfileActivityPage() {
                 }`}
                 onClick={() => setTab(t.key)}
               >
-                {Icon && <Icon className="w-4 h-4" aria-hidden />}
-                <span>{t.label}</span>
+                {Icon && <Icon className="w-5 h-5" aria-hidden />}
+                <span className="hidden sm:inline">{t.label}</span>
               </button>
             );
           })}

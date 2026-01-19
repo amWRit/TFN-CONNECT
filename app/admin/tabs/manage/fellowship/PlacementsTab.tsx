@@ -252,7 +252,7 @@ export default function PlacementsTab() {
 		   <div className="flex justify-between items-center mb-2">
 			   <h2 className="text-xl font-bold">Placements</h2>
 			   <Button onClick={() => setShowAddModal(true)} className="bg-blue-600 text-white hover:bg-blue-700">
-			   	   + Create Placement
+			   	   + Add Placement
 			   </Button>
 		   </div>
 
@@ -395,7 +395,7 @@ export default function PlacementsTab() {
 										className="flex-1 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
 										disabled={editSubmitting}
 									>
-										{editAction === 'save' && editSubmitting ? 'Creating...' : 'Create Placement'}
+										{editAction === 'save' && editSubmitting ? 'Saving...' : 'Add Placement'}
 									</button>
 									<button
 										type="button"

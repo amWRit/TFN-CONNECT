@@ -138,7 +138,7 @@ export default function LocalGovTab() {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">Local Governments</h2>
           <Button onClick={() => setShowLocalGovForm(!showLocalGovForm)} className="bg-blue-600 text-white hover:bg-blue-700">
-            {showLocalGovForm ? 'Cancel' : '+ Add Local Government'}
+            {showLocalGovForm ? 'Cancel' : '+ Add Local Gov'}
           </Button>
         </div>
 

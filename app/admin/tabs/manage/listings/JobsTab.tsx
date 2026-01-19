@@ -32,8 +32,8 @@ function statusBadgeVariant(status: string) {
   }
 }
 
-function typeBadgeVariant(type: string): "default" | "secondary" | "destructive" | "outline" {
-  return "secondary"; // always use secondary for type
+function typeBadgeVariant(type: string): "default" | "secondary" | "destructive" | "outline" | "gray" {
+  return "gray";
 }
 
 
@@ -125,8 +125,8 @@ export default function JobsTab() {
       const res = await fetch('/api/jobs/enums');
       if (res.ok) {
         const enums = await res.json();
-        setJobTypeOptions([{ value: '', label: 'All Types' }, ...enums.jobTypes]);
-        setJobStatusOptions([{ value: '', label: 'All Statuses' }, ...enums.jobStatuses]);
+        setJobTypeOptions([{ value: '', label: 'All' }, ...enums.jobTypes]);
+        setJobStatusOptions([{ value: '', label: 'All' }, ...enums.jobStatuses]);
       }
     } catch (e) {
       // handle error
@@ -154,66 +154,60 @@ export default function JobsTab() {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex gap-4 items-center mb-4">
-          <label className="font-semibold text-blue-700">Type</label>
-          <div className="relative">
-            <select
-              className="pl-3 pr-10 py-2 w-40 border-2 border-blue-400 rounded-full bg-blue-100/80 font-semibold text-blue-800 focus:ring-2 focus:ring-blue-400 outline-none transition shadow-sm text-base appearance-none"
-              value={typeFilter}
-              onChange={e => setTypeFilter(e.target.value)}
-            >
-              {jobTypeOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-blue-500">
-              <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </span>
-          </div>
-          <label className="font-semibold text-blue-700 ml-6">Status</label>
-          <div className="relative">
-            <select
-              className="pl-3 pr-10 py-2 w-40 border-2 border-blue-400 rounded-full bg-blue-100/80 font-semibold text-blue-800 focus:ring-2 focus:ring-blue-400 outline-none transition shadow-sm text-base appearance-none"
-              value={statusFilter}
-              onChange={e => setStatusFilter(e.target.value)}
-            >
-              {jobStatusOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-blue-500">
-              <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </span>
+        {/* Filters: type and status, responsive layout */}
+        <div className="mb-2 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200/60 py-1.5 w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-start gap-2 w-full">
+            <div className="relative flex items-center gap-2 w-full sm:w-auto">
+              <label className="font-semibold text-blue-700">Type</label>
+              <select
+                className="appearance-none pl-3 pr-10 py-2 w-full sm:w-40 border-2 border-blue-400 rounded-full bg-blue-100/80 font-semibold text-blue-800 focus:ring-2 focus:ring-blue-400 outline-none transition shadow-sm text-base"
+                value={typeFilter}
+                onChange={e => setTypeFilter(e.target.value)}
+              >
+                {jobTypeOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-blue-500">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </span>
+            </div>
+            <div className="relative flex items-center gap-2 w-full sm:w-auto">
+              <label className="font-semibold text-blue-700">Status</label>
+              <select
+                className="appearance-none pl-3 pr-10 py-2 w-full sm:w-40 border-2 border-blue-400 rounded-full bg-blue-100/80 font-semibold text-blue-800 focus:ring-2 focus:ring-blue-400 outline-none transition shadow-sm text-base"
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value)}
+              >
+                {jobStatusOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-blue-500">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </span>
+            </div>
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border rounded-lg">
-            <thead>
-              <tr className="bg-blue-50">
-                <th className="px-4 py-2 text-left">Title</th>
-                <th className="px-4 py-2 text-left">Posted By</th>
-                <th className="px-4 py-2 text-left">Status</th>
-                <th className="px-4 py-2 text-left">Type</th>
-                <th className="px-4 py-2 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredJobs.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="text-center py-6 text-gray-400">No job postings found.</td>
-                </tr>
+                <div className="col-span-full text-center py-6 text-gray-400">No jobs found.</div>
               )}
               {filteredJobs.map(job => (
-                <tr key={job.id} className="border-b">
-                  <td className="px-4 py-2 font-medium">{job.title}</td>
-                  <td className="px-4 py-2">{job.createdBy ? `${job.createdBy.firstName} ${job.createdBy.lastName}` : <span className="text-xs text-gray-400">---</span>}</td>
-                  <td className="px-4 py-2">
+                <div key={job.id} className="bg-white border border-blue-400 rounded-xl shadow-sm p-4 flex flex-col gap-2">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <h3 className="font-bold text-lg text-blue-700 truncate" title={job.title}>{job.title}</h3>
                     <Badge variant={statusBadgeVariant(job.status)}>{job.status}</Badge>
-                  </td>
-                  <td className="px-4 py-2">
+                  </div>
+                  <div className="flex flex-wrap gap-2 items-center text-sm">
+                    <span className="font-semibold text-gray-600">Type:</span>
                     <Badge variant={typeBadgeVariant(job.jobType)}>{job.jobType}</Badge>
-                  </td>
-                  <td className="px-4 py-2 flex gap-2">
+                  </div>
+                  <div className="flex flex-wrap gap-2 items-center text-sm">
+                    <span className="font-semibold text-gray-600">Posted By:</span>
+                    <span>{job.createdBy ? `${job.createdBy.firstName} ${job.createdBy.lastName}` : <span className="text-xs text-gray-400">---</span>}</span>
+                  </div>
+                  <div className="flex gap-2 mt-2">
                     <Link href={`/jobs/${job.id}`}>
                       <Button size="icon" className="bg-blue-600 hover:bg-blue-700 text-white" aria-label="View">
                         <Eye className="w-4 h-4 text-white" />
@@ -225,12 +219,10 @@ export default function JobsTab() {
                     <Button size="icon" variant="destructive" aria-label="Delete" onClick={() => handleDelete(job.id)} disabled={loading}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
       </div>
       {/* Email Modal */}
       <ConfirmModal

@@ -32,30 +32,34 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID || "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      authorization: {
+        params: {
+          scope: "openid email profile"
+        }
+      }
     }),
   ],
   debug: process.env.NODE_ENV === "development",
+  session: {
+    strategy: 'jwt'
+  },
   callbacks: {
     async signIn({ user, account, profile }) {
       try {
         const email = user.email || "";
-        
         if (!email) {
           console.error("No email provided by Google");
           return false;
         }
-        
         // Check if email ends with @teachfornepal.org
         if (email.endsWith("@teachfornepal.org")) {
           return true;
         }
-        
         // Check against custom whitelist in DB
         try {
           const found = await prisma.whitelistEmail.findUnique({ 
             where: { email } 
           });
-          
           if (found) {
             return true;
           }
@@ -64,7 +68,6 @@ export const authOptions: NextAuthOptions = {
           // If DB check fails, deny access
           return false;
         }
-        
         // Email not whitelisted
         console.log(`Access denied for email: ${email}`);
         return false;
@@ -72,6 +75,12 @@ export const authOptions: NextAuthOptions = {
         console.error("Error in signIn callback:", error);
         return false;
       }
+    },
+    async jwt({ token, account }) {
+      if (account?.access_token) {
+        token.accessToken = account.access_token;
+      }
+      return token;
     },
     async session({ session, token }) {
       // Attach user id/email/type to session
@@ -94,6 +103,9 @@ export const authOptions: NextAuthOptions = {
         }
       }
       session.user.email = session.user.email || "";
+      if (token?.accessToken) {
+        (session as any).accessToken = token.accessToken;
+      }
       return session;
     },
   },

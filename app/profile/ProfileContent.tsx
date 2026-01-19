@@ -12,7 +12,6 @@ import { Plus, Edit2, Trash2, Save, X, Upload, Image as ImageIcon, Mail, Phone, 
 
 import { ProfileImage } from "@/components/ProfileImage";
 import { ProfileHeaderCard } from "@/components/profile/ProfileHeaderCard";
-import NotificationSettings from "./NotificationSettings";
 
 interface Fellowship {
   id: string;
@@ -142,8 +141,7 @@ export default function ProfilePage() {
   const [editingExperience, setEditingExperience] = useState<string | null>(null);
   const [showEducationForm, setShowEducationForm] = useState(false);
   const [showExperienceForm, setShowExperienceForm] = useState(false);
-  const [uploadingImage, setUploadingImage] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // ...existing code...
   const [readOnly, setReadOnly] = useState(false);
 
   useEffect(() => {
@@ -545,43 +543,7 @@ export default function ProfilePage() {
     }
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploadingImage(true);
-    try {
-      const formData = new FormData();
-      formData.append("image", file);
-
-      const res = await fetch("/api/profile/upload-image", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        // Update profile immediately with new image URL for instant feedback
-        if (data.imageUrl && person) {
-          setPerson((prev) => prev ? { ...prev, profileImage: data.imageUrl } : null);
-        }
-        // Also fetch full profile to ensure everything is in sync
-        await fetchProfile();
-        try { router.refresh(); } catch {}
-      } else {
-        const errorData = await res.json();
-        alert(errorData.error || "Failed to upload image");
-      }
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      alert("An error occurred while uploading image");
-    } finally {
-      setUploadingImage(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    }
-  };
+  // ...existing code...
 
   const handleRemoveImage = async () => {
     if (!confirm("Are you sure you want to remove your profile image?")) return;
@@ -1379,11 +1341,6 @@ export default function ProfilePage() {
           )}
         </div>
       </Card>
-
-      {/* Notification Settings - New Section */}
-      <div className="mt-10">
-        <NotificationSettings />
-      </div>
     </div>
   );
 }
@@ -1395,7 +1352,7 @@ function ViewActivityButton({ personId }: { personId: string }) {
     <button
       aria-label="View Activity"
       onClick={() => router.push(`/profile/${personId}/activity`)}
-      className="fixed bottom-8 right-8 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"
+      className="fixed bottom-20 sm:bottom-8 right-8 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"
       title="View Activity"
     >
       <Activity size={28} strokeWidth={2.5} className="text-white" />

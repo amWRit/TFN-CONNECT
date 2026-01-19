@@ -125,3 +125,9 @@ function doPost(e) {
     ).setMimeType(ContentService.MimeType.JSON);
   }
 }
+
+// If you want only test users to access Gmail features, but allow all users to sign in:
+
+// You must conditionally request Gmail scopes only for test users, which is not supported by default in NextAuth/GoogleProvider.
+// The simplest approach is to run two separate OAuth apps: one for general sign-in, one for Gmail features.
+// Let me know your preferred behavior and I can guide you on the best setup!
