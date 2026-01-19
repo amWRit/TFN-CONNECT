@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import OkModal from './OkModal';
 import { marked } from 'marked';
 import dynamic from 'next/dynamic';
 import { PersonType } from '@prisma/client';
@@ -23,6 +24,7 @@ export default function AdminEmailForm() {
   const [batchProgress, setBatchProgress] = useState<{sent:number, failed:string[], batchResults:any[]}|null>(null);
   const [sentCsvUrl, setSentCsvUrl] = useState<{ url: string; filename: string } | null>(null);
   const [csvDownloadTriggered, setCsvDownloadTriggered] = useState(false);
+  const [okModal, setOkModal] = useState<{ open: boolean; message: string; title?: string }>({ open: false, message: '', title: '' });
 
   // Auto-hide batch progress bar after sending is complete (like GmailDraftEmailForm)
   useEffect(() => {
@@ -35,6 +37,20 @@ export default function AdminEmailForm() {
     }
   }, [batchProgress, sending]);
 
+    // Auto-download CSV when ready (avoid double download in React StrictMode)
+  useEffect(() => {
+    if (sentCsvUrl && !csvDownloadTriggered) {
+      const timeout = setTimeout(() => {
+        const a = document.getElementById('admin-sent-csv-download') as HTMLAnchorElement;
+        if (a) {
+          a.click();
+          setCsvDownloadTriggered(true);
+        }
+      }, 300);
+      return () => clearTimeout(timeout);
+    }
+  }, [sentCsvUrl, csvDownloadTriggered]);
+  
   // Auto-save draft to localStorage
   useEffect(() => {
     const draft = {
@@ -120,24 +136,31 @@ export default function AdminEmailForm() {
 
   // Get public image base URL from env
   const PUBLIC_IMAGE_BASE_URL = process.env.NEXT_PUBLIC_IMAGE_BASE_URL || 'https://tfn-connect.vercel.app';
-
-  // ...removed file upload logic...
-
-  // ...removed Google Drive image logic...
-
   // Send test email
   const handleSendTest = async () => {
     setSending(true);
     try {
+      // Fetch signed-in admin's email
+      const sessionRes = await fetch('/api/admin-session');
+      const sessionData = await sessionRes.json();
+      const adminEmail = sessionData?.user?.email || 'tfnconnect@gmail.com';
+      const adminName = sessionData?.user?.name || 'Admin';
+      const accessToken = sessionData?.accessToken;
       const html = await marked.parse(body || '');
-      const htmlBody = `<style>${markdownCss}</style><div class="markdown-body">${html}</div>`;
+      const htmlBody = `<style>${markdownCss}</style><div class=\"markdown-body\">${html}</div>`;
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json'
+      };
+      if (accessToken) {
+        headers['Authorization'] = `Bearer ${accessToken}`;
+      }
       const res = await fetch('/api/admin/email/send', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           subject,
           body: htmlBody, // send styled HTML body
-          recipients: [{ email: 'tfnconnect@gmail.com', name: 'Admin' }],
+          recipients: [{ email: adminEmail, name: adminName }],
           cc: ccList,
           bcc: bccList
         })
@@ -146,9 +169,9 @@ export default function AdminEmailForm() {
       if (result.logs) {
         console.log('Apps Script logs:', result.logs);
       }
-      alert('Test email sent to tfnconnect@gmail.com');
+      setOkModal({ open: true, message: `Test email sent to ${adminEmail}`, title: 'Success' });
     } catch {
-      alert('Failed to send test email');
+      setOkModal({ open: true, message: 'Failed to send test email', title: 'Error' });
     }
     setSending(false);
   };
@@ -201,18 +224,26 @@ export default function AdminEmailForm() {
         const csv = 'email,name\n' + sentEmails.map((r: { email: string; name: string }) => `${r.email},${r.name}`).join('\n');
         const blob = new Blob([csv], {type:'text/csv'});
         function getCsvTimestamp() {
-          // Only used for filenames, never for class names
-          return new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 12);
+          // Use Date parts directly to avoid regex and special characters
+          const d = new Date();
+          const yyyy = d.getFullYear();
+          const MM = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          const hh = String(d.getHours()).padStart(2, '0');
+          const mm = String(d.getMinutes()).padStart(2, '0');
+          const ss = String(d.getSeconds()).padStart(2, '0');
+          return `${yyyy}${MM}${dd}${hh}${mm}${ss}`;
         }
         const filename = `sent-emails-${getCsvTimestamp()}.csv`;
         setSentCsvUrl({ url: URL.createObjectURL(blob), filename });
+        setOkModal({ open: true, message: `Sent to ${sent} users.`, title: 'Success' });
       } else {
         setBatchProgress({sent: 0, failed: [], batchResults: [result.result]});
-        alert('Failed to send email');
+        setOkModal({ open: true, message: 'Failed to send email', title: 'Error' });
       }
     } catch {
       setBatchProgress({sent: 0, failed: [], batchResults: []});
-      alert('Failed to send email');
+      setOkModal({ open: true, message: 'Failed to send email', title: 'Error' });
     }
     setSending(false);
   };
@@ -363,8 +394,12 @@ export default function AdminEmailForm() {
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 animate-fade-in">
           <div className="bg-white rounded-2xl p-8 shadow-2xl max-w-sm w-full border-2 border-pink-200 flex flex-col items-center">
             <Send className="w-10 h-10 text-pink-500 mb-2 animate-bounce" />
-            <h2 className="text-xl font-bold mb-2 text-blue-700">Send to {recipientCount} users?</h2>
-            <p className="mb-4 text-gray-600 text-center">This can't be undone. Are you sure you want to send this email to <span className="font-bold text-pink-600">{recipientCount}</span> users?</p>
+            <h2 className="text-xl font-bold mb-2 text-blue-700">
+              Send to {recipientCount} {personType ? `${personType.charAt(0) + personType.slice(1).toLowerCase()}` : ''} users?
+            </h2>
+            <p className="mb-4 text-gray-600 text-center">
+              This can't be undone. Are you sure you want to send this email to <span className="font-bold text-pink-600">{recipientCount}</span> {personType ? `${personType.charAt(0) + personType.slice(1).toLowerCase()}` : ''} users?
+            </p>
             <div className="flex gap-4 mt-2">
               <button className="bg-gray-100 px-4 py-2 rounded-full font-semibold text-gray-700 hover:bg-gray-200 transition-all" onClick={()=>setShowConfirm(false)}>Cancel</button>
               <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full font-bold shadow transition-all" onClick={handleSendAll}>Send</button>
@@ -405,21 +440,14 @@ export default function AdminEmailForm() {
           )}
         </div>
       )}
-      {/* Auto-download CSV when ready */}
-      {sentCsvUrl && !csvDownloadTriggered && (
-        <span style={{display:'none'}}>
-          {(() => {
-            setTimeout(() => {
-              const a = document.getElementById('admin-sent-csv-download') as HTMLAnchorElement;
-              if (a) {
-                a.click();
-                setCsvDownloadTriggered(true);
-              }
-            }, 300);
-            return null;
-          })()}
-        </span>
-      )}
+      {/* OkModal for alerts */}
+      <OkModal
+        open={okModal.open}
+        title={okModal.title}
+        message={okModal.message}
+        onOk={() => setOkModal({ ...okModal, open: false })}
+      />
+      
     </div>
   );
 }

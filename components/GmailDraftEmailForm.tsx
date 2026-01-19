@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import OkModal from './OkModal';
 import { PersonType } from '@prisma/client';
 import { Mail, Send, Users, AtSign, ChevronDown, Hash, Loader2 } from 'lucide-react';
 
@@ -29,6 +30,7 @@ export default function GmailDraftEmailForm() {
   const [sentCsvUrl, setSentCsvUrl] = useState<{url: string, filename: string} | null>(null);
   const [drafts, setDrafts] = useState<{id: string, subject: string}[]>([]);
   const [selectedDraftId, setSelectedDraftId] = useState('');
+  const [okModal, setOkModal] = useState<{ open: boolean; message: string; title?: string }>({ open: false, message: '', title: '' });
 
     // Ref for auto-download anchor
   const csvDownloadRef = useRef<HTMLAnchorElement | null>(null);
@@ -128,7 +130,10 @@ export default function GmailDraftEmailForm() {
 
   // Send test email via Gmail API (send draft to self)
   const handleSendTest = async () => {
-    if (!selectedDraftId) return alert('Select a draft first');
+    if (!selectedDraftId) {
+      setOkModal({ open: true, message: 'Select a draft first', title: 'Error' });
+      return;
+    }
     setSending(true);
     try {
       const res = await fetch('/api/gmail/send-draft', {
@@ -142,12 +147,16 @@ export default function GmailDraftEmailForm() {
         // Count CC and BCC emails
         const ccCount = ccList.split(',').map(e => e.trim()).filter(e => e).length;
         const bccCount = bccList.split(',').map(e => e.trim()).filter(e => e).length;
-        alert(`Test email using draft sent to you${ccCount ? ` and ${ccCount} CC` : ''}${bccCount ? ` and ${bccCount} BCC` : ''} email${(ccCount + bccCount) === 1 ? '' : 's'}.`);
+        setOkModal({
+          open: true,
+          message: `Test email using draft sent to you${ccCount ? ` and ${ccCount} CC` : ''}${bccCount ? ` and ${bccCount} BCC` : ''} email${(ccCount + bccCount) === 1 ? '' : 's'}.`,
+          title: 'Success'
+        });
       } else {
-        alert('Failed to send draft');
+        setOkModal({ open: true, message: 'Failed to send draft', title: 'Error' });
       }
     } catch {
-      alert('Failed to send draft');
+      setOkModal({ open: true, message: 'Failed to send draft', title: 'Error' });
     }
     setSending(false);
   };
@@ -175,7 +184,7 @@ export default function GmailDraftEmailForm() {
         return { email, name: u.firstName };
       }).filter((r: any) => r.email && typeof r.email === 'string' && r.email.includes('@'));
       if (recipients.length === 0) {
-        alert('No recipients found.');
+        setOkModal({ open: true, message: 'No recipients found.', title: 'Error' });
         setSending(false);
         return;
       }
@@ -192,8 +201,15 @@ export default function GmailDraftEmailForm() {
         // Prepare CSV of sent emails
         const sentEmails = recipients.filter((r: { email: string; name: string }) => !result.failed.includes(r.email));
         function getCsvTimestamp() {
-          // Only used for filenames, never for class names
-          return new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 12);
+          // Use Date parts directly to avoid regex and special characters
+          const d = new Date();
+          const yyyy = d.getFullYear();
+          const MM = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          const hh = String(d.getHours()).padStart(2, '0');
+          const mm = String(d.getMinutes()).padStart(2, '0');
+          const ss = String(d.getSeconds()).padStart(2, '0');
+          return `${yyyy}${MM}${dd}${hh}${mm}${ss}`;
         }
         const csv = 'email,name\n' + sentEmails.map((r: {email: string, name: string}) => `${r.email},${r.name}`).join('\n');
         const blob = new Blob([csv], {type:'text/csv'});
@@ -201,13 +217,14 @@ export default function GmailDraftEmailForm() {
           url: URL.createObjectURL(blob),
           filename: `sent-emails-${getCsvTimestamp()}.csv`
         });
+        setOkModal({ open: true, message: `Sent to ${result.sent} users.`, title: 'Success' });
       } else {
         setBatchProgress({sent: 0, failed: [], batchResults: []});
-        alert('Failed to send draft to all recipients');
+        setOkModal({ open: true, message: 'Failed to send draft to all recipients', title: 'Error' });
       }
     } catch {
       setBatchProgress({sent: 0, failed: [], batchResults: []});
-      alert('Failed to send draft');
+      setOkModal({ open: true, message: 'Failed to send draft', title: 'Error' });
     }
     setSending(false);
   };
@@ -341,8 +358,12 @@ export default function GmailDraftEmailForm() {
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 animate-fade-in">
           <div className="bg-white rounded-2xl p-8 shadow-2xl max-w-sm w-full border-2 border-pink-200 flex flex-col items-center">
             <Send className="w-10 h-10 text-pink-500 mb-2 animate-bounce" />
-            <h2 className="text-xl font-bold mb-2 text-blue-700">Send to {recipientCount} users?</h2>
-            <p className="mb-4 text-gray-600 text-center">This can't be undone. Are you sure you want to send this email to <span className="font-bold text-pink-600">{recipientCount}</span> users?</p>
+            <h2 className="text-xl font-bold mb-2 text-blue-700">
+              Send to {recipientCount} {personType ? `${personType.charAt(0) + personType.slice(1).toLowerCase()}` : ''} users?
+            </h2>
+            <p className="mb-4 text-gray-600 text-center">
+              This can't be undone. Are you sure you want to send this email to <span className="font-bold text-pink-600">{recipientCount}</span> {personType ? `${personType.charAt(0) + personType.slice(1).toLowerCase()}` : ''} users?
+            </p>
             <div className="flex gap-4 mt-2">
               <button className="bg-gray-100 px-4 py-2 rounded-full font-semibold text-gray-700 hover:bg-gray-200 transition-all" onClick={()=>setShowConfirm(false)}>Cancel</button>
               <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full font-bold shadow transition-all" onClick={handleSendAll}>Send</button>
@@ -382,6 +403,13 @@ export default function GmailDraftEmailForm() {
           ✅ Sent: {batchProgress.sent} | Failed: {batchProgress.failed.length}
         </div>
       )}
+    {/* OkModal for alerts */}
+    <OkModal
+      open={okModal.open}
+      title={okModal.title}
+      message={okModal.message}
+      onOk={() => setOkModal({ ...okModal, open: false })}
+    />
     </div>
   );
 }
