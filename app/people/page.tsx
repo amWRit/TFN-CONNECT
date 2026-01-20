@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ProfileImage } from "@/components/ProfileImage"
 import Link from "next/link"
-import { Bookmark, BookmarkCheck, Users } from "lucide-react"
+import { Bookmark, BookmarkCheck, Users, Filter } from "lucide-react"
 
 interface Person {
 	id: string
@@ -53,6 +53,8 @@ export default function PeoplePage() {
 	const { data: session } = useSession();
 	const [bookmarkStates, setBookmarkStates] = useState<Record<string, { bookmarked: boolean; loading: boolean }>>({});
 	const [isAdmin, setIsAdmin] = useState(false);
+	// Collapsible filter state for small screens
+	const [showFilters, setShowFilters] = useState(false);
 
 	useEffect(() => {
 		fetch("/api/people")
@@ -196,23 +198,39 @@ export default function PeoplePage() {
 	return (
 		<div className="w-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 min-h-screen">
 			<div className="max-w-7xl mx-auto px-4 pt-2 pb-8 sm:pt-4 sm:pb-10">
-				{/* Filters */}
-				<div className="sticky top-16 z-20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200/60 py-3">
-					<div className="flex-1 flex items-center sm:justify-start justify-center">
-						<div className="flex items-center gap-4">
-							<span>
-								<span className="sr-only">Community</span>
-								<Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 px-4 py-2 text-base font-bold tracking-wide uppercase pointer-events-none">Community</Badge>
-							</span>
-							<div className="relative flex items-center">
-								<span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500 pointer-events-none">
-									<Users size={18} />
-								</span>
-								<select
+				{/* Filters - Collapsible on small screens */}
+				<div className="sticky top-16 z-20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-0 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200/60 py-2">
+					{/* Row for Community label and Show Filters button on small screens */}
+					<div className="flex flex-row items-center justify-between w-full sm:w-auto mb-1 sm:mb-0">
+						<span>
+							<span className="sr-only">Community</span>
+							<Badge className="bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 px-4 py-2 font-bold tracking-wide uppercase pointer-events-none text-base text-sm px-4 sm:px-6 py-2">Community</Badge>
+						</span>
+						{/* Collapsible filter toggle for small screens */}
+						<button
+							type="button"
+							className="px-3 py-1 rounded border border-purple-300 text-purple-700 bg-white text-sm font-medium shadow-sm hover:bg-purple-50 transition sm:hidden ml-2 flex items-center gap-2"
+							onClick={() => setShowFilters((v) => !v)}
+						>
+							<Filter size={16} className="inline-block" />
+							{showFilters ? "Hide Filters" : "Show Filters"}
+						</button>
+					</div>
+					<div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-2">
+						{/* Filter section: always visible on sm+, collapsible on small screens */}
+						<div
+							className={`w-full sm:flex-1 flex justify-center ${showFilters ? "" : "hidden"} sm:flex`}
+						>
+							<div className="bg-white/80 border border-purple-100 rounded-xl shadow-sm px-4 py-3 flex flex-row flex-wrap md:flex-nowrap items-center gap-3 w-full">
+								<div className="relative flex items-center w-full sm:w-auto">
+									<span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500 pointer-events-none">
+										<Users size={18} />
+									</span>
+									<select
 										className="appearance-none pl-9 pr-12 py-2 w-52 border-2 border-blue-400 rounded-full bg-blue-100/80 font-semibold text-blue-800 focus:ring-2 focus:ring-blue-400 outline-none transition shadow-sm text-base"
-									value={tab}
-									onChange={e => setTab(e.target.value)}
-								>
+										value={tab}
+										onChange={e => setTab(e.target.value)}
+									>
 										<option value="ALL">All</option>
 										{personTypes
 											.filter((t) => t !== "ADMIN")
@@ -221,90 +239,87 @@ export default function PeoplePage() {
 												{TYPE_META[t]?.label ?? t.toLowerCase().replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}
 											</option>
 											))}
-								</select>
-								<span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-blue-500">
-									<svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-								</span>
+									</select>
+									<span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-blue-500">
+										<svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+									</span>
+								</div>
+								{tab === "ALUMNI" && (
+									<>
+										<div className="flex items-center gap-2 w-full sm:w-auto">
+											<label className="font-semibold text-purple-700">Cohort</label>
+											<select
+												className="border border-purple-200 rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition min-w-[140px]"
+												value={cohortFilter}
+												onChange={e => setCohortFilter(e.target.value)}
+											>
+												<option value="">All</option>
+												{allCohorts.map((c) => {
+													return (
+														<option key={c.id} value={c.id}>
+															{c.name}
+														</option>
+													);
+												})}
+											</select>
+										</div>
+										<div className="flex items-center gap-2 w-full sm:w-auto">
+											<label className="font-semibold text-purple-700">Employment</label>
+											<select
+												className="border border-purple-200 rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition"
+												value={empStatusFilter}
+												onChange={e => setEmpStatusFilter(e.target.value)}
+											>
+												<option value="">All</option>
+												<option value="EMPLOYED">Employed</option>
+												<option value="SEEKING">Seeking</option>
+												<option value="UNEMPLOYED">Unemployed</option>
+											</select>
+										</div>
+									</>
+								)}
+								<div className="flex items-center gap-2 w-full sm:flex-1">
+									<label className="font-semibold text-purple-700">Name</label>
+									<input
+										type="text"
+										className="border border-purple-300 rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition w-full min-w-[160px]"
+										placeholder="Search by name"
+										value={nameFilter}
+										onChange={e => setNameFilter(e.target.value)}
+									/>
+								</div>
 							</div>
 						</div>
-					</div>
-					<div className="flex-1 flex justify-center">
-						<div className="bg-white/80 border border-purple-100 rounded-xl shadow-sm px-4 py-3 flex flex-row flex-wrap md:flex-nowrap items-center gap-3 w-full">
-							{tab === "ALUMNI" && (
-								<>
-									<div className="flex items-center gap-2 w-full sm:w-auto">
-										<label className="font-semibold text-purple-700">Cohort</label>
-										<select
-											className="border border-purple-200 rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition min-w-[140px]"
-											value={cohortFilter}
-											onChange={e => setCohortFilter(e.target.value)}
-										>
-											<option value="">All</option>
-											{allCohorts.map((c) => {
-												return (
-													<option key={c.id} value={c.id}>
-														{c.name}
-													</option>
-												);
-											})}
-										</select>
-									</div>
-									<div className="flex items-center gap-2 w-full sm:w-auto">
-										<label className="font-semibold text-purple-700">Employment</label>
-										<select
-											className="border border-purple-200 rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition"
-											value={empStatusFilter}
-											onChange={e => setEmpStatusFilter(e.target.value)}
-										>
-											<option value="">All</option>
-											<option value="EMPLOYED">Employed</option>
-											<option value="SEEKING">Seeking</option>
-											<option value="UNEMPLOYED">Unemployed</option>
-										</select>
-									</div>
-								</>
+						<div className="w-full sm:w-auto flex items-center justify-end gap-2 mt-1 sm:mt-0">
+							{filteredPeople.length > 0 && (
+								<div className="flex items-center gap-2 text-xs text-gray-600">
+									<button
+										type="button"
+										disabled={page === 1}
+										onClick={() => setPage((p) => Math.max(1, p - 1))}
+										className={`px-3 py-1 rounded border text-xs font-medium transition-colors ${
+											page === 1
+												? "border-gray-200 text-gray-300 cursor-not-allowed"
+												: "border-blue-300 text-blue-700 hover:bg-blue-50"
+											}`}
+									>
+										Prev
+									</button>
+									<button
+										type="button"
+										disabled={page >= totalPages}
+										onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+										className={`px-3 py-1 rounded border text-xs font-medium transition-colors ${
+											page >= totalPages
+												? "border-gray-200 text-gray-300 cursor-not-allowed"
+												: "border-blue-300 text-blue-700 hover:bg-blue-50"
+											}`}
+									>
+										Next
+									</button>
+								</div>
 							)}
-							<div className="flex items-center gap-2 w-full sm:flex-1">
-								<label className="font-semibold text-purple-700">Name</label>
-								<input
-									type="text"
-									className="border border-purple-300 rounded px-2 py-1 focus:ring-2 focus:ring-purple-300 outline-none transition w-full min-w-[160px]"
-									placeholder="Search by name"
-									value={nameFilter}
-									onChange={e => setNameFilter(e.target.value)}
-								/>
-							</div>
 						</div>
-					</div>
-					<div className="flex-1 flex items-center sm:justify-end justify-center">
-						{filteredPeople.length > 0 && (
-							<div className="flex items-center gap-2 text-xs text-gray-600">
-								<button
-									type="button"
-									disabled={page === 1}
-									onClick={() => setPage((p) => Math.max(1, p - 1))}
-									className={`px-3 py-1 rounded border text-xs font-medium transition-colors ${
-										page === 1
-											? "border-gray-200 text-gray-300 cursor-not-allowed"
-											: "border-blue-300 text-blue-700 hover:bg-blue-50"
-										}`}
-								>
-									Prev
-								</button>
-								<button
-									type="button"
-									disabled={page >= totalPages}
-									onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-									className={`px-3 py-1 rounded border text-xs font-medium transition-colors ${
-										page >= totalPages
-											? "border-gray-200 text-gray-300 cursor-not-allowed"
-											: "border-blue-300 text-blue-700 hover:bg-blue-50"
-										}`}
-								>
-									Next
-								</button>
-							</div>
-						)}
 					</div>
 				</div>
 
