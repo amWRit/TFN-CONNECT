@@ -319,7 +319,7 @@ export default function FeedPage() {
               hideStats
               hideBookmark={false}
               adminView={isAdmin}
-              onEdit={isAdmin ? () => handleEdit(post) : undefined}
+              onEdit={() => handleEdit(post)}
             />
           ))}
         </div>
