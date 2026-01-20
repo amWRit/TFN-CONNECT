@@ -226,9 +226,10 @@ export function PostCard({
                     <span>Unknown Author</span>
                   )}
                 </CardTitle>
+                {/* Responsive: show only icon on small screens, icon+text on sm+ */}
                 <Badge className={`${getPostTypeColor(postType)} flex-shrink-0 text-xs px-3 py-1 rounded-full font-semibold flex items-center gap-1`} style={{ background: undefined, color: undefined }}>
-                  {getPostTypeIcon(postType)}
-                  <span>{postType.replace(/_/g, " ")}</span>
+                  <span className="sm:hidden">{getPostTypeIcon(postType)}</span>
+                  <span className="hidden sm:flex items-center gap-1">{getPostTypeIcon(postType)}<span>{postType.replace(/_/g, " ")}</span></span>
                 </Badge>
               </div>
               {!hideDate && (

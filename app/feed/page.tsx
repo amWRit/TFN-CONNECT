@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useMemo } from "react"
+import { Plus } from "lucide-react"
 import { useSession, signIn } from "next-auth/react"
 import { PostCard } from "@/components/PostCard"
 import NotFound from "@/components/NotFound"
@@ -186,7 +187,7 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="w-full bg-gradient-to-br from-blue-100 via-white to-blue-200 min-h-screen py-6">
+    <div className="w-full bg-gradient-to-br from-blue-100 via-white to-blue-200 min-h-screen py-6 pb-20 sm:pb-6">
       <div className="max-w-4xl mx-auto px-2 sm:px-4">
         {/* Header Section */}
         <div className="mb-2 sm:mb-3 relative flex items-center justify-between gap-2 sm:gap-4">
@@ -318,7 +319,7 @@ export default function FeedPage() {
               hideStats
               hideBookmark={false}
               adminView={isAdmin}
-              onEdit={isAdmin ? () => handleEdit(post) : undefined}
+              onEdit={() => handleEdit(post)}
             />
           ))}
         </div>
@@ -337,7 +338,7 @@ export default function FeedPage() {
           className="fixed bottom-20 sm:bottom-8 right-8 z-50 bg-pink-500 hover:bg-pink-600 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"
           title="Add New Post"
         >
-          <span className="text-2xl leading-none">＋</span>
+          <Plus className="w-7 h-7" />
           <span className="hidden sm:inline">New Post</span>
         </button>
       )}

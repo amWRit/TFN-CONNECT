@@ -5,6 +5,7 @@ import Select from "react-select"
 import { useSession } from "next-auth/react"
 import { Badge } from "@/components/ui/badge"
 import { JobPostingCard } from "@/components/JobPostingCard"
+import { Filter, Plus } from "lucide-react"
 
 interface JobPosting {
   id: string
@@ -41,6 +42,8 @@ export default function JobsPage() {
   const [allSkills, setAllSkills] = useState<{ value: string; label: string }[]>([]);
   const [page, setPage] = useState(1);
   const pageSize = 18;
+  // Collapsible filter state for small screens
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -110,13 +113,25 @@ export default function JobsPage() {
     <div className="w-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 pt-2 pb-8 sm:pt-4 sm:pb-10">
         {/* Header Section */}
-      <div className="sticky top-16 z-30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200/60 py-3">
-          <div className="inline-block mb-2 sm:mb-0">
-            <Badge className="bg-blue-600 text-white border-0 px-4 py-2 text-base font-bold tracking-wide uppercase shadow pointer-events-none text-lg px-6 py-2">Jobs</Badge>
+        <div className="sticky top-16 z-30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-0 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200/60 py-2">
+          {/* Row for Jobs label and Show Filters button on small screens */}
+          <div className="flex flex-row items-center justify-between w-full sm:w-auto mb-1 sm:mb-0">
+            <Badge className="bg-blue-600 text-white border-0 px-4 py-2 font-bold tracking-wide uppercase shadow pointer-events-none text-base text-sm px-4 sm:px-6 py-2">Jobs</Badge>
+            {/* Collapsible filter toggle for small screens */}
+            <button
+              type="button"
+              className="px-3 py-1 rounded border border-blue-300 text-blue-700 bg-white text-sm font-medium shadow-sm hover:bg-blue-50 transition sm:hidden ml-2 flex items-center gap-2"
+              onClick={() => setShowFilters((v) => !v)}
+            >
+              <Filter size={16} className="inline-block" />
+              {showFilters ? "Hide Filters" : "Show Filters"}
+            </button>
           </div>
-          <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="w-full sm:flex-1 flex justify-center">
-              {/* Filter container: allow wrap and make children full-width on small screens */}
+          <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-2">
+            {/* Filter section: always visible on sm+, collapsible on small screens */}
+            <div
+              className={`w-full sm:flex-1 flex justify-center ${showFilters ? "" : "hidden"} sm:flex`}
+            >
               <div className="bg-white/80 border border-blue-100 rounded-xl shadow-sm px-4 py-3 flex flex-row flex-wrap items-center gap-3 w-full">
                 <div className="w-full sm:w-auto">
                   <label className="block sm:inline mr-2 font-semibold text-blue-700">Type</label>
@@ -169,20 +184,21 @@ export default function JobsPage() {
                     />
                   </div>
                 </div>
+                {/* Show Only Mine filter inside filters */}
+                {session?.user && (
+                  <label className="flex items-center gap-2 select-none text-sm font-medium text-gray-700 whitespace-nowrap w-full sm:w-auto">
+                    <input
+                      type="checkbox"
+                      className="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      checked={showOnlyMine}
+                      onChange={e => setShowOnlyMine(e.target.checked)}
+                    />
+                    Show Only Mine
+                  </label>
+                )}
               </div>
             </div>
-            <div className="w-full sm:w-auto flex items-center justify-end gap-4 mt-2 sm:mt-0">
-              {session?.user && (
-                <label className="flex items-center gap-2 select-none text-sm font-medium text-gray-700 whitespace-nowrap">
-                  <input
-                    type="checkbox"
-                    className="form-checkbox h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    checked={showOnlyMine}
-                    onChange={e => setShowOnlyMine(e.target.checked)}
-                  />
-                  Show Only Mine
-                </label>
-              )}
+            <div className="w-full sm:w-auto flex items-center justify-end gap-2 mt-1 sm:mt-0">
               {filteredJobs.length > 0 && (
                 <div className="flex items-center gap-2 text-xs text-gray-600">
                   <span className="hidden sm:inline">
@@ -300,7 +316,7 @@ export default function JobsPage() {
           className="fixed bottom-20 sm:bottom-8 right-8 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"
           title="Add New Job"
         >
-          <span className="text-2xl leading-none">＋</span>
+          <Plus className="w-7 h-7" />
           <span className="hidden sm:inline">Add Job</span>
         </button>
       )}
