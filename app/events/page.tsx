@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { EventType, EventStatus } from "@prisma/client";
 import EventCard from "@/components/EventCard";
 import { Badge } from "@/components/ui/badge";
-import { Filter } from "lucide-react"
+import { Filter, Plus } from "lucide-react"
 
 interface Event {
   id: string;
@@ -282,7 +282,7 @@ export default function EventsPage() {
           className="fixed bottom-20 sm:bottom-8 right-8 z-50 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"
           title="Add New Event"
         >
-          <span className="text-2xl leading-none">＋</span>
+          <Plus className="w-7 h-7" />
           <span className="hidden sm:inline">Add Event</span>
         </button>
       )}

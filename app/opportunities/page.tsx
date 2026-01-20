@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import OpportunityCard from "../../components/OpportunityCard";
 import { Badge } from "@/components/ui/badge";
-import { Filter } from "lucide-react"
+import { Filter, Plus } from "lucide-react"
 
 const handleAddOpportunity = () => {
 // TODO: Navigate to opportunity creation page or open modal
@@ -250,7 +250,7 @@ export default function OpportunitiesPage() {
           className="fixed bottom-20 sm:bottom-8 right-8 z-50 bg-purple-600 hover:bg-purple-700 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"
           title="Add New Opportunity"
         >
-          <span className="text-2xl leading-none">＋</span>
+          <Plus className="w-7 h-7" />
           <span className="hidden sm:inline">Add Opportunity</span>
         </button>
       )}

@@ -67,7 +67,7 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ id, title, descriptio
   }, [userId, isOwner, id, isEffectiveAdmin]);
 
   return (
-    <Card className="relative border-2 border-purple-400 hover:border-purple-600 transition-all duration-300 rounded-xl overflow-hidden pt-5 px-6 pb-4 bg-white shadow-sm">
+    <Card className="relative border-2 border-purple-400 hover:border-purple-600 transition-all duration-300 rounded-xl overflow-hidden pt-5 px-4 pb-4 bg-white shadow-sm w-full" style={{boxSizing: 'border-box', minWidth: 0}}>
       {/* Top Status Bar - absolutely positioned */}
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-400 rounded-t-xl" />
       {/* Edit or Bookmark Button (top right) */}

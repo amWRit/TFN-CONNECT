@@ -5,7 +5,7 @@ import Select from "react-select"
 import { useSession } from "next-auth/react"
 import { Badge } from "@/components/ui/badge"
 import { JobPostingCard } from "@/components/JobPostingCard"
-import { Filter } from "lucide-react"
+import { Filter, Plus } from "lucide-react"
 
 interface JobPosting {
   id: string
@@ -316,7 +316,7 @@ export default function JobsPage() {
           className="fixed bottom-20 sm:bottom-8 right-8 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg p-4 flex items-center gap-2 text-lg font-semibold transition-all duration-200"
           title="Add New Job"
         >
-          <span className="text-2xl leading-none">＋</span>
+          <Plus className="w-7 h-7" />
           <span className="hidden sm:inline">Add Job</span>
         </button>
       )}

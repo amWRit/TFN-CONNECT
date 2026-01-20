@@ -9,7 +9,7 @@ import NotFound from "@/components/NotFound";
 import { ProfileImage } from "@/components/ProfileImage";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Mail, Phone, Briefcase, Rocket, MessageSquare, Bookmark as BookmarkIcon, Heart, Users, Calendar } from "lucide-react";
+import { Trash2, Mail, Phone, Briefcase, Rocket, MessageSquare, Bookmark as BookmarkIcon, Heart, Users, Calendar, Filter } from "lucide-react";
 import { JobPostingCard } from "@/components/JobPostingCard";
 import OpportunityCard from "@/components/OpportunityCard";
 import { PostCard } from "@/components/PostCard";
@@ -26,6 +26,8 @@ const TYPE_META: Record<string, { bg: string; text: string; icon: string; label:
 };
 
 export default function ProfileActivityPage() {
+  // Collapsible filter state for small screens (for jobs and opportunities tabs)
+  const [showFilters, setShowFilters] = useState(false);
   const params = useParams();
   const id = params?.id as string;
   const [profile, setProfile] = useState<any>(null);
@@ -546,7 +548,7 @@ export default function ProfileActivityPage() {
                   <span>{headingText || type.replace(/([A-Z])/g, ' $1')}</span>
                 </h2>
                 {Array.isArray(items) && items.length > 0 ? (
-                  <div className="grid gap-3">
+                  <div className="flex flex-col gap-3 w-full max-w-full overflow-x-visible">
                     {type === "people"
                       ? items.map((bm) => {
                           const person = personDetails[bm.targetId];
@@ -652,15 +654,17 @@ export default function ProfileActivityPage() {
                               return (
                                 <Card key={bm.id} className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-green-300">
                                   <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
-                                    <CardTitle className="text-lg font-semibold text-green-700 flex-1 flex items-center gap-2">
+                                    <CardTitle className="text-lg font-semibold text-green-700 flex-1 flex flex-col items-start gap-1">
                                       {job ? (
                                         <>
                                           <Link href={`/jobs/${job.id}`} className="hover:underline">
                                             {job.title}
                                           </Link>
-                                          <span className="ml-2 px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold uppercase">
-                                            {job.jobType.replace(/_/g, ' ')}
-                                          </span>
+                                          <div className="mt-1">
+                                            <span className="px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold uppercase">
+                                              {job.jobType.replace(/_/g, ' ')}
+                                            </span>
+                                          </div>
                                         </>
                                       ) : (
                                         <span>Job ID: {bm.targetId}</span>
@@ -687,16 +691,18 @@ export default function ProfileActivityPage() {
                                 return (
                                   <Card key={bm.id} className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-orange-300">
                                     <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
-                                      <CardTitle className="text-lg font-semibold text-orange-700 flex-1 flex items-center gap-2">
+                                      <CardTitle className="text-lg font-semibold text-orange-700 flex-1 flex flex-col items-start gap-1">
                                         {opp ? (
                                           <>
                                             <Link href={`/opportunities/${opp.id}`} className="hover:underline">
                                               {opp.title || "Untitled Opportunity"}
                                             </Link>
                                             {opp.status && (
-                                              <span className="ml-2 px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-xs font-semibold uppercase">
-                                                {opp.status}
-                                              </span>
+                                              <div className="mt-1">
+                                                <span className="px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-xs font-semibold uppercase">
+                                                  {opp.status}
+                                                </span>
+                                              </div>
                                             )}
                                           </>
                                         ) : (
@@ -721,18 +727,20 @@ export default function ProfileActivityPage() {
                             : items.map((bm: any) => {
                                 const evt = eventDetails[bm.targetId];
                                 return (
-                                  <Card key={bm.id} className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-emerald-300">
+                                  <Card key={bm.id} className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-emerald-300 max-w-full">
                                     <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
-                                      <CardTitle className="text-lg font-semibold text-emerald-700 flex-1 flex items-center gap-2">
+                                      <CardTitle className="text-lg font-semibold text-emerald-700 flex-1 flex flex-col items-start gap-1 break-words max-w-full">
                                         {evt ? (
                                           <>
-                                            <Link href={`/events/${evt.id}`} className="hover:underline">
+                                            <Link href={`/events/${evt.id}`} className="hover:underline break-words max-w-full">
                                               {evt.title || "Untitled Event"}
                                             </Link>
                                             {evt.status && (
-                                              <span className="ml-2 px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase">
-                                                {evt.status}
-                                              </span>
+                                              <div className="mt-1">
+                                                <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase">
+                                                  {evt.status}
+                                                </span>
+                                              </div>
                                             )}
                                           </>
                                         ) : (
@@ -743,7 +751,7 @@ export default function ProfileActivityPage() {
                                         <Button
                                           variant="ghost"
                                           size="icon"
-                                          className="text-red-500 hover:bg-red-100 ml-2 self-start"
+                                          className="text-red-500 hover:bg-red-100 ml-2"
                                           title="Remove bookmark"
                                           onClick={() => handleDelete(bm, type)}
                                         >
@@ -814,15 +822,17 @@ export default function ProfileActivityPage() {
                                 className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-green-300"
                               >
                                 <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
-                                  <CardTitle className="text-lg font-semibold text-green-700 flex-1 flex items-center gap-2">
+                                  <CardTitle className="text-lg font-semibold text-green-700 flex-1 flex flex-col items-start gap-1">
                                     {job ? (
                                       <>
                                         <Link href={`/jobs/${job.id}`} className="hover:underline">
                                           {job.title}
                                         </Link>
-                                        <span className="ml-2 px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold uppercase">
-                                          {job.jobType.replace(/_/g, " ")}
-                                        </span>
+                                        <div className="mt-1">
+                                          <span className="px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold uppercase">
+                                            {job.jobType.replace(/_/g, " ")}
+                                          </span>
+                                        </div>
                                       </>
                                     ) : (
                                       <span>Job ID: {interest.targetId}</span>
@@ -852,7 +862,7 @@ export default function ProfileActivityPage() {
                                   className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-orange-300"
                                 >
                                   <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
-                                    <CardTitle className="text-lg font-semibold text-orange-700 flex-1 flex items-center gap-2">
+                                    <CardTitle className="text-lg font-semibold text-orange-700 flex-1 flex flex-col items-start gap-1">
                                       {opp ? (
                                         <>
                                           <Link
@@ -862,9 +872,11 @@ export default function ProfileActivityPage() {
                                             {opp.title || "Untitled Opportunity"}
                                           </Link>
                                           {opp.status && (
-                                            <span className="ml-2 px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-xs font-semibold uppercase">
-                                              {opp.status}
-                                            </span>
+                                            <div className="mt-1">
+                                              <span className="px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-xs font-semibold uppercase">
+                                                {opp.status}
+                                              </span>
+                                            </div>
                                           )}
                                         </>
                                       ) : (
@@ -894,21 +906,25 @@ export default function ProfileActivityPage() {
                                   className="flex flex-col gap-1 p-3 hover:shadow bg-white border-l-4 border-emerald-300"
                                 >
                                   <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
-                                    <CardTitle className="text-lg font-semibold text-emerald-700 flex-1 flex items-center gap-2">
+                                    <CardTitle className="text-lg font-semibold text-emerald-700 flex-1 flex flex-col items-start gap-1">
                                       {evt ? (
                                         <>
                                           <Link href={`/events/${evt.id}`} className="hover:underline">
                                             {evt.title || "Untitled Event"}
                                           </Link>
                                           {evt.type && (
-                                            <span className="ml-2 px-2 py-0.5 rounded bg-teal-100 text-teal-700 text-xs font-semibold uppercase">
-                                              {evt.type.replace(/_/g, " ")}
-                                            </span>
+                                            <div className="mt-1">
+                                              <span className="px-2 py-0.5 rounded bg-teal-100 text-teal-700 text-xs font-semibold uppercase">
+                                                {evt.type.replace(/_/g, " ")}
+                                              </span>
+                                            </div>
                                           )}
                                           {evt.status && (
-                                            <span className="ml-2 px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase">
-                                              {evt.status}
-                                            </span>
+                                            <div className="mt-1">
+                                              <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase">
+                                                {evt.status}
+                                              </span>
+                                            </div>
                                           )}
                                         </>
                                       ) : (
@@ -1020,7 +1036,7 @@ export default function ProfileActivityPage() {
 
   if (notFound) return <NotFound />;
   return (
-    <div className="max-w-4xl mx-auto px-4 py-4">
+    <div className="max-w-4xl mx-auto px-4 py-4 pb-20 sm:pb-4">
       <EditPostModal
         open={!!editPost}
         editContent={editContent}
@@ -1153,75 +1169,92 @@ export default function ProfileActivityPage() {
           </div>
         )}
 
-        {/* Jobs Filter (shown only when Jobs tab is active) - styled like Posts filter */}
+        {/* Jobs Filter (shown only when Jobs tab is active) - collapsible on small screens */}
         {tab === 'jobs' && (
-          <div className="flex justify-end mb-2">
-            <div className="flex items-center gap-3">
-              <label className="hidden sm:inline font-semibold text-blue-700">Type</label>
-              <select
-                className="border border-blue-300 rounded px-3 py-1 bg-white/90 font-semibold text-blue-700 focus:ring-2 focus:ring-blue-200 outline-none transition"
-                value={jobTypeFilter}
-                onChange={e => setJobTypeFilter(e.target.value)}
+          <div className="mb-2">
+            {/* Show Filters button for small screens */}
+            <div className="flex sm:hidden justify-end mb-2">
+              <button
+                type="button"
+                className="px-3 py-1 rounded border border-blue-300 text-blue-700 bg-white text-sm font-medium shadow-sm hover:bg-blue-50 transition flex items-center gap-2"
+                onClick={() => setShowFilters((v) => !v)}
               >
-                <option value="">All</option>
-                {jobTypeOptions.map(t => (
-                  <option key={t} value={t}>{t.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</option>
-                ))}
-              </select>
-              <label className="hidden sm:inline font-semibold text-blue-700">Status</label>
-              <select
-                className="border border-blue-300 rounded px-3 py-1 bg-white/90 font-semibold text-blue-700 focus:ring-2 focus:ring-blue-200 outline-none transition"
-                value={jobStatusFilter}
-                onChange={e => setJobStatusFilter(e.target.value)}
-              >
-                <option value="">All</option>
-                <option value="OPEN">Open</option>
-                <option value="FILLED">Filled</option>
-                <option value="CLOSED">Closed</option>
-                <option value="PAUSED">Paused</option>
-                <option value="DRAFT">Draft</option>
-              </select>
-              <div className="min-w-[220px]">
-                <Select
-                  instanceId="job-skills-select"
-                  isMulti
-                  options={allSkillsOptions}
-                  value={jobSkillsFilter}
-                  onChange={(nv) => setJobSkillsFilter(Array.isArray(nv) ? [...nv] : [])}
-                  classNamePrefix="react-select"
-                  placeholder="Skills"
-                  styles={{ menu: base => ({ ...base, zIndex: 9999 }), control: base => ({ ...base, minHeight: '32px', borderColor: '#bfdbfe', boxShadow: 'none' }) }}
-                />
+                <Filter size={16} className="inline-block" />
+                {showFilters ? "Hide Filters" : "Show Filters"}
+              </button>
+            </div>
+            {/* Filter section: always visible on sm+, collapsible on small screens */}
+            <div className={`w-full flex justify-end ${showFilters ? '' : 'hidden'} sm:flex`}>
+              <div className="flex items-center gap-3 w-full sm:w-auto overflow-x-auto scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-transparent">
+                <label className="hidden sm:inline font-semibold text-blue-700">Type</label>
+                <select
+                  className="border border-blue-300 rounded px-3 py-1 bg-white/90 font-semibold text-blue-700 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                  value={jobTypeFilter}
+                  onChange={e => setJobTypeFilter(e.target.value)}
+                >
+                  <option value="">All</option>
+                  {jobTypeOptions.map(t => (
+                    <option key={t} value={t}>{t.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</option>
+                  ))}
+                </select>
+                <label className="hidden sm:inline font-semibold text-blue-700">Status</label>
+                <select
+                  className="border border-blue-300 rounded px-3 py-1 bg-white/90 font-semibold text-blue-700 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                  value={jobStatusFilter}
+                  onChange={e => setJobStatusFilter(e.target.value)}
+                >
+                  <option value="">All</option>
+                  <option value="OPEN">Open</option>
+                  <option value="FILLED">Filled</option>
+                  <option value="CLOSED">Closed</option>
+                  <option value="PAUSED">Paused</option>
+                  <option value="DRAFT">Draft</option>
+                </select>
+                {/* Skills filter removed */}
               </div>
             </div>
           </div>
         )}
 
-        {/* Opportunities Filter (shown only when Opportunities tab is active) - styled like Posts filter */}
+        {/* Opportunities Filter (shown only when Opportunities tab is active) - collapsible on small screens */}
         {tab === 'opportunities' && (
-          <div className="flex justify-end mb-2">
-            <div className="flex items-center gap-3">
-              <label className="hidden sm:inline font-semibold text-blue-700">Type</label>
-              <select
-                className="border border-blue-300 rounded px-3 py-1 bg-white/90 font-semibold text-blue-700 focus:ring-2 focus:ring-blue-200 outline-none transition"
-                value={oppTypeFilter}
-                onChange={e => setOppTypeFilter(e.target.value)}
+          <div className="mb-2">
+            {/* Show Filters button for small screens */}
+            <div className="flex sm:hidden justify-end mb-2">
+              <button
+                type="button"
+                className="px-3 py-1 rounded border border-purple-300 text-purple-700 bg-white text-sm font-medium shadow-sm hover:bg-purple-50 transition flex items-center gap-2"
+                onClick={() => setShowFilters((v) => !v)}
               >
-                <option value="">All</option>
-                {opportunityTypes.map(t => (
-                  <option key={t} value={t}>{t.charAt(0) + t.slice(1).toLowerCase()}</option>
-                ))}
-              </select>
-              <label className="hidden sm:inline font-semibold text-blue-700">Status</label>
-              <select
-                className="border border-blue-300 rounded px-3 py-1 bg-white/90 font-semibold text-blue-700 focus:ring-2 focus:ring-blue-200 outline-none transition"
-                value={oppStatusFilter}
-                onChange={e => setOppStatusFilter(e.target.value)}
-              >
-                <option value="">All</option>
-                <option value="OPEN">Open</option>
-                <option value="CLOSED">Closed</option>
-              </select>
+                <Filter size={16} className="inline-block" />
+                {showFilters ? "Hide Filters" : "Show Filters"}
+              </button>
+            </div>
+            {/* Filter section: always visible on sm+, collapsible on small screens */}
+            <div className={`w-full flex justify-end ${showFilters ? '' : 'hidden'} sm:flex`}>
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <label className="hidden sm:inline font-semibold text-blue-700">Type</label>
+                <select
+                  className="border border-blue-300 rounded px-3 py-1 bg-white/90 font-semibold text-blue-700 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                  value={oppTypeFilter}
+                  onChange={e => setOppTypeFilter(e.target.value)}
+                >
+                  <option value="">All</option>
+                  {opportunityTypes.map(t => (
+                    <option key={t} value={t}>{t.charAt(0) + t.slice(1).toLowerCase()}</option>
+                  ))}
+                </select>
+                <label className="hidden sm:inline font-semibold text-blue-700">Status</label>
+                <select
+                  className="border border-blue-300 rounded px-3 py-1 bg-white/90 font-semibold text-blue-700 focus:ring-2 focus:ring-blue-200 outline-none transition"
+                  value={oppStatusFilter}
+                  onChange={e => setOppStatusFilter(e.target.value)}
+                >
+                  <option value="">All</option>
+                  <option value="OPEN">Open</option>
+                  <option value="CLOSED">Closed</option>
+                </select>
+              </div>
             </div>
           </div>
         )}
