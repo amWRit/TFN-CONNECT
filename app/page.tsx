@@ -15,7 +15,7 @@ export default async function Home() {
 
   // Live stats from the database
   const now = new Date()
-  const [alumniCount, openJobCount, opportunityCount, postCount, activeCohortCount] = await Promise.all([
+  const [alumniCount, openJobCount, opportunityCount, postCount, activeCohortCount, upcomingEventsCount] = await Promise.all([
     // Treat ALUMNI as part of the alumni & fellows network
     prisma.person.count({
       where: {
@@ -36,10 +36,17 @@ export default async function Home() {
         OR: [{ end: null }, { end: { gte: now } }],
       },
     }),
+    prisma.event.count({
+      where: {
+        startDateTime: {
+          gte: now,
+        },
+      },
+    }),
   ])
 
   return (
-    <div className="w-full bg-gray-50">
+    <div className="w-full bg-gray-50 pb-[88px] sm:pb-6 md:pb-8 lg:pb-0">
       {/* Hero Section */}
       <section className="bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900 text-white py-6 sm:py-8 md:py-10 px-4">
         <div className="max-w-5xl mx-auto text-center">
@@ -102,7 +109,7 @@ export default async function Home() {
       <section className="bg-white py-3 sm:py-4 md:py-6 px-4 border-t border-gray-200">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-lg sm:text-2xl font-bold mb-4 sm:mb-6 text-center text-gray-900">Quick Stats</h2>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3 sm:gap-4">
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 sm:p-6 rounded-xl border-2 border-blue-500 text-center hover:shadow-md transition">
               <div className="text-2xl sm:text-3xl font-bold text-blue-600">{alumniCount}</div>
               <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Alumni & Fellows in the network</p>
@@ -122,6 +129,10 @@ export default async function Home() {
             <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 sm:p-6 rounded-xl border-2 border-orange-500 text-center hover:shadow-md transition">
               <div className="text-2xl sm:text-3xl font-bold text-orange-600">{activeCohortCount}</div>
               <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Active cohorts</p>
+            </div>
+            <div className="bg-gradient-to-br from-pink-50 to-pink-100 p-4 sm:p-6 rounded-xl border-2 border-pink-500 text-center hover:shadow-md transition">
+              <div className="text-2xl sm:text-3xl font-bold text-pink-600">{upcomingEventsCount}</div>
+              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Upcoming events</p>
             </div>
           </div>
         </div>

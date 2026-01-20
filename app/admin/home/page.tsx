@@ -134,7 +134,7 @@ function AdminDashboardContent() {
         {currentTab === 'settings' && <SettingsTab />}
       </main>
       {/* Floating bottom nav for admin on mobile: general user nav is hidden in admin mode */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex sm:hidden justify-around bg-white/95 border-t border-blue-200 shadow-lg py-2 px-2">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex sm:hidden justify-around bg-white/95 border-t border-blue-200 shadow-lg h-14 px-2">
         {tabs.map((tab) => (
           <button
             key={tab.id}
