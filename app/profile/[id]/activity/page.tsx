@@ -479,36 +479,48 @@ export default function ProfileActivityPage() {
     if (tab === "jobs") {
       const skillIdToName = Object.fromEntries(skills.map((s: any) => [s.id, s.name]));
       return filteredJobs.length > 0
-        ? filteredJobs.map((job: any) => {
-            const skillNames = Array.isArray(job.requiredSkills)
-              ? job.requiredSkills.map((id: string) => skillIdToName[id] || id)
-              : [];
-            return <JobPostingCard key={job.id} {...job} requiredSkills={skillNames} adminView={isAdmin} />;
-          })
+        ? (
+            <div className="flex flex-col gap-3">
+              {filteredJobs.map((job: any) => {
+                const skillNames = Array.isArray(job.requiredSkills)
+                  ? job.requiredSkills.map((id: string) => skillIdToName[id] || id)
+                  : [];
+                return <JobPostingCard key={job.id} {...job} requiredSkills={skillNames} adminView={isAdmin} />;
+              })}
+            </div>
+          )
         : <div className="text-gray-500">No jobs found.</div>;
     }
     if (tab === "opportunities") {
       const list = filteredOpps;
       return list.length > 0
-        ? list.map((opp: any) => (
-            <OpportunityCard key={opp.id} {...opp} adminView={isAdmin} />
-          ))
+        ? (
+            <div className="flex flex-col gap-3">
+              {list.map((opp: any) => (
+                <OpportunityCard key={opp.id} {...opp} adminView={isAdmin} />
+              ))}
+            </div>
+          )
         : <div className="text-gray-500">No opportunities found.</div>;
     }
     if (tab === "posts") {
       const myPosts = posts.filter((post: any) => post.person?.id === profile?.id);
       const filtered = selectedPostType ? myPosts.filter((p: any) => p.postType === selectedPostType) : myPosts;
       return filtered.length > 0
-        ? filtered.map((post: any) => (
-            <PostCard
-              key={post.id}
-              {...post}
-              author={post.person}
-              hideBookmark={false}
-              hideStats
-              onEdit={() => handleEdit(post)}
-            />
-          ))
+        ? (
+            <div className="flex flex-col gap-3">
+              {filtered.map((post: any) => (
+                <PostCard
+                  key={post.id}
+                  {...post}
+                  author={post.person}
+                  hideBookmark={false}
+                  hideStats
+                  onEdit={() => handleEdit(post)}
+                />
+              ))}
+            </div>
+          )
         : <div className="text-gray-500">No posts found.</div>;
     }
     if (tab === "bookmarks" && (isProfileOwner || isAdmin)) {
@@ -1055,16 +1067,21 @@ export default function ProfileActivityPage() {
       {/* Profile Header Card */}
       <div className="mb-2">  {/* reduced bottom margin */}
         {profile && (
-          <div className="rounded-xl border-2 border-blue-400 bg-white shadow p-4 flex items-center gap-4"> {/* reduced padding and gap */}
-            <ProfileImage src={profile.profileImage} name={profile.firstName + ' ' + profile.lastName} className="h-20 w-20" alt={profile.firstName + ' ' + profile.lastName} /> {/* smaller image */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  {/* Name and person type on a single line */}
-                  <div className="flex items-center gap-3">
-                    <div className="text-xl font-bold text-blue-700 truncate">{profile.firstName} {profile.lastName}</div>
+          <div className="rounded-xl border-2 border-blue-400 bg-white shadow p-4 flex flex-row items-center gap-3">
+            <ProfileImage src={profile.profileImage} name={profile.firstName + ' ' + profile.lastName} className="h-16 w-16" alt={profile.firstName + ' ' + profile.lastName} />
+            <div className="flex-1 min-w-0 w-full">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-3 w-full">
+                <div className="min-w-0 w-full">
+                  {/* Name and person type as a link */}
+                  {/* View Profile Button */}
+                  <div className="mt-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 w-full">
+                    <Link href={`/profile/${profile.id}`} passHref legacyBehavior>
+                      <a className="text-xl font-bold text-blue-700 hover:underline truncate">
+                        {profile.firstName} {profile.lastName}
+                      </a>
+                    </Link>
                     {profile.type && (
-                      <div className="flex flex-wrap gap-1 ml-1">
+                      <div className="flex flex-wrap gap-1 ml-0 sm:ml-1">
                         {String(profile.type).split("_").map((part, index) => {
                           const meta = TYPE_META[part] || {
                             bg: "bg-gray-100",
@@ -1082,19 +1099,6 @@ export default function ProfileActivityPage() {
                             </Badge>
                           );
                         })}
-                      </div>
-                    )}
-                  </div>
-                  {/* Email and phone on the next line with icons */}
-                  <div className="mt-1 flex items-center text-sm text-gray-600 truncate gap-4 min-w-0">
-                    <div className="flex items-center gap-2 min-w-0 truncate">
-                      <Mail className="text-gray-500" size={14} aria-hidden />
-                      <span className="truncate">{profile.email1 || profile.email || 'No email provided'}</span>
-                    </div>
-                    {(profile.phone1 || profile.phone) && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600 min-w-0 truncate">
-                        <Phone className="text-gray-500" size={14} aria-hidden />
-                        <span className="truncate">{profile.phone1 || profile.phone}</span>
                       </div>
                     )}
                   </div>
