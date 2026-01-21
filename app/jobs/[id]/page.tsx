@@ -105,7 +105,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
   }
 
   return (
-    <div className="w-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 min-h-screen">
+    <div className="w-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 min-h-screen pb-24">
       <div className="max-w-5xl mx-auto px-4 md:p-8">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Main Card (left column) */}
@@ -148,9 +148,6 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                           />
                           <div className="flex flex-col">
                             <span className="font-semibold text-blue-700 text-base">{interest.user.firstName} {interest.user.lastName}</span>
-                            {interest.user.type && (
-                              <span className="inline-block mt-1 text-xs font-bold px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 border border-yellow-300">{interest.user.type}</span>
-                            )}
                           </div>
                         </div>
                       </a>
@@ -173,7 +170,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
         const alreadyInterested = optimisticInterested || interests.some((i: { personId?: string }) => i.personId === session.user.id);
         if (!alreadyInterested) {
           return (
-            <div className="fixed bottom-8 right-8 z-30 group">
+            <div className="fixed bottom-20 sm:bottom-8 right-4 sm:right-8 z-30 group">
               <button
                 className="flex items-center gap-2 px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white rounded-full font-semibold shadow-lg text-lg transition-all duration-200"
                 style={{ boxShadow: "0 4px 24px 0 rgba(236, 72, 153, 0.15)" }}
@@ -216,7 +213,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
           );
         } else {
           return (
-            <div className="fixed bottom-8 right-8 z-30 group">
+            <div className="fixed bottom-20 sm:bottom-8 right-4 sm:right-8 z-30 group">
               <button
                 className="flex items-center gap-2 px-6 py-3 border border-red-400 text-red-600 bg-white hover:bg-red-50 rounded-full font-semibold shadow-lg text-lg transition-all duration-200"
                 style={{ boxShadow: "0 4px 24px 0 rgba(236, 72, 153, 0.10)" }}

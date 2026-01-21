@@ -133,26 +133,33 @@ function AdminDashboardContent() {
         {currentTab === 'tools' && <ToolsTab />}
         {currentTab === 'settings' && <SettingsTab />}
       </main>
-      {/* Floating bottom nav for admin on mobile: general user nav is hidden in admin mode */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex sm:hidden justify-around bg-white/95 border-t border-blue-200 shadow-lg py-2 px-2">
+      {/* Floating bottom nav for admin on mobile: match general user nav style */}
+      <nav className="fixed bottom-0 left-0 right-0 z-40 flex sm:hidden justify-around bg-white/95 border-t-2 border-blue-400 shadow-lg h-14 px-2">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setCurrentTab(tab.id)}
-            className={`flex flex-col items-center justify-center px-2 py-1 rounded-lg transition-colors ${
+            className={`relative flex flex-col items-center justify-center px-2 h-full w-full transition-colors ${
               currentTab === tab.id
-                ? 'bg-blue-600 text-white shadow'
+                ? 'text-white'
                 : 'text-blue-700 hover:bg-blue-50'
             }`}
             title={tab.label}
+            style={{ minWidth: '56px' }}
           >
+            {currentTab === tab.id && (
+              <span
+                className="absolute left-0 top-0 w-full h-full -z-10 bg-blue-600 shadow"
+              />
+            )}
             {tab.icon}
           </button>
         ))}
         <button
           onClick={handleLogout}
-          className="flex flex-col items-center justify-center px-2 py-1 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+          className="relative flex flex-col items-center justify-center px-2 h-full w-full rounded-lg text-red-600 hover:bg-red-50 transition-colors"
           title="Logout"
+          style={{ minWidth: '56px' }}
         >
           <LogOut size={20} />
         </button>

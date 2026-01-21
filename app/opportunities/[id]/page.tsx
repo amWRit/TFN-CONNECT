@@ -90,7 +90,7 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
 
           // ...existing code...
   return (
-    <div className="max-w-5xl mx-auto p-4 md:p-8">
+    <div className="max-w-5xl mx-auto p-4 md:p-8 pb-24">
       <div className="flex flex-col md:flex-row gap-8">
         {/* Main Card (left column) */}
         <div className="flex-1 min-w-0">
@@ -158,7 +158,7 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
           const alreadyInterested = optimisticInterested || opportunity.interests.some((i: { user?: { id: string } }) => i.user && i.user.id === session.user.id);
           if (!alreadyInterested) {
             return (
-              <div className="fixed bottom-8 right-8 z-30 group">
+              <div className="fixed bottom-20 sm:bottom-8 right-4 sm:right-8 z-30 group">
                 <button
                   className="flex items-center gap-2 px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white rounded-full font-semibold shadow-lg text-lg transition-all duration-200"
                   style={{ boxShadow: "0 4px 24px 0 rgba(236, 72, 153, 0.15)" }}
@@ -201,7 +201,7 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
             );
           } else {
             return (
-              <div className="fixed bottom-8 right-8 z-30 group">
+              <div className="fixed bottom-20 sm:bottom-8 right-4 sm:right-8 z-30 group">
                 <button
                   className="flex items-center gap-2 px-6 py-3 border border-red-400 text-red-600 bg-white hover:bg-red-50 rounded-full font-semibold shadow-lg text-lg transition-all duration-200"
                   style={{ boxShadow: "0 4px 24px 0 rgba(236, 72, 153, 0.10)" }}

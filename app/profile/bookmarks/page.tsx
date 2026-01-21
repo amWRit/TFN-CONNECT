@@ -178,7 +178,7 @@ export default function BookmarksPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
+    <div className="max-w-2xl mx-auto p-6 pb-24 sm:pb-6">
       <h1 className="text-3xl font-bold mb-4 text-center text-blue-700">My Bookmarks</h1>
       {loading && <p className="text-center text-gray-500">Loading bookmarks...</p>}
       {error && <p className="text-center text-red-500">{error}</p>}
@@ -204,50 +204,54 @@ export default function BookmarksPage() {
                   {Array.isArray(items) && items.length > 0 ? (
                     <div className="grid gap-2">
                       {type === "people"
-                        ? items.map((bm) => {
-                            const person = personDetails[bm.targetId];
-                            return (
-                              <Card key={bm.id} className="flex items-center gap-3 p-3 hover:shadow transition-shadow bg-white border-l-4 border-blue-300">
-                                <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
-                                  {person ? (
-                                    <ProfileImage
-                                      src={person.profileImage}
-                                      name={person.firstName + " " + person.lastName}
-                                      className="h-12 w-12"
-                                      alt={person.firstName + " " + person.lastName}
-                                    />
-                                  ) : (
-                                    <div className="h-12 w-12 rounded-full bg-gray-200" />
-                                  )}
-                                  <CardTitle className="text-lg font-semibold text-blue-700 flex-1 flex items-center gap-2">
-                                    {person ? (
-                                      <>
-                                        <Link href={`/profile?id=${person.id}`} className="hover:underline">
-                                          {person.firstName} {person.lastName}
-                                        </Link>
-                                        {person.type && (
-                                          <span className="ml-2 px-2 py-0.5 rounded-full text-xs font-bold bg-blue-200 text-blue-800 border border-blue-300 uppercase tracking-wide">
-                                            {person.type}
-                                          </span>
+                        ? (
+                            <div className="grid gap-2">
+                              {items.map((bm) => {
+                                const person = personDetails[bm.targetId];
+                                return (
+                                  <Card key={bm.id} className="flex items-center gap-3 p-3 hover:shadow transition-shadow bg-white border-l-4 border-blue-300 w-full min-w-0 max-w-full">
+                                    <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full min-w-0 max-w-full">
+                                      {person ? (
+                                        <ProfileImage
+                                          src={person.profileImage}
+                                          name={person.firstName + " " + person.lastName}
+                                          className="h-12 w-12"
+                                          alt={person.firstName + " " + person.lastName}
+                                        />
+                                      ) : (
+                                        <div className="h-12 w-12 rounded-full bg-gray-200" />
+                                      )}
+                                      <CardTitle className="text-lg font-semibold text-blue-700 flex-1 flex flex-col items-start gap-1 w-full min-w-0 max-w-full truncate">
+                                        {person ? (
+                                          <>
+                                            <Link href={`/profile?id=${person.id}`} className="hover:underline truncate w-full min-w-0 max-w-full block">
+                                              <span className="truncate w-full min-w-0 max-w-full block">{person.firstName} {person.lastName}</span>
+                                            </Link>
+                                            {person.type && (
+                                              <span className="mt-1 px-2 py-0.5 rounded-full text-xs font-bold bg-blue-200 text-blue-800 border border-blue-300 uppercase tracking-wide">
+                                                {person.type}
+                                              </span>
+                                            )}
+                                          </>
+                                        ) : (
+                                          <span>Person ID: {bm.targetId}</span>
                                         )}
-                                      </>
-                                    ) : (
-                                      <span>Person ID: {bm.targetId}</span>
-                                    )}
-                                  </CardTitle>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="text-red-500 hover:bg-red-100 ml-2"
-                                    title="Remove bookmark"
-                                    onClick={() => handleDelete(bm, type)}
-                                  >
-                                    <Trash2 />
-                                  </Button>
-                                </CardHeader>
-                              </Card>
-                            );
-                          })
+                                      </CardTitle>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="text-red-500 hover:bg-red-100 ml-2"
+                                        title="Remove bookmark"
+                                        onClick={() => handleDelete(bm, type)}
+                                      >
+                                        <Trash2 />
+                                      </Button>
+                                    </CardHeader>
+                                  </Card>
+                                );
+                              })}
+                            </div>
+                          )
                         : type === "posts"
                           ? items.map((bm) => {
                               const post = postDetails[bm.targetId];
@@ -317,90 +321,102 @@ export default function BookmarksPage() {
                               );
                             })
                           : type === "jobs"
-                            ? items.map((bm) => {
-                                const job = jobDetails[bm.targetId];
-                                return (
-                                  <Card key={bm.id} className="p-4 bg-white border-l-4 border-green-300 flex items-center">
-                                    <CardHeader className="p-0 flex-1">
-                                      <CardTitle className="text-lg font-semibold text-green-700 flex items-center gap-2">
-                                        {job ? (
-                                          <>
-                                            <Link href={`/jobs/${job.id}`} className="hover:underline">
-                                              {job.title}
-                                            </Link>
-                                            <span className="ml-2 px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold uppercase">
-                                              {job.jobType.replace(/_/g, ' ')}
-                                            </span>
-                                          </>
-                                        ) : (
-                                          <span>Job ID: {bm.targetId}</span>
-                                        )}
-                                      </CardTitle>
-                                    </CardHeader>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="text-red-500 hover:bg-red-100 ml-2"
-                                      title="Remove bookmark"
-                                      onClick={() => handleDelete(bm, type)}
-                                    >
-                                      <Trash2 />
-                                    </Button>
-                                  </Card>
-                                );
-                              })
+                            ? (
+                                <div className="grid gap-2">
+                                  {items.map((bm) => {
+                                    const job = jobDetails[bm.targetId];
+                                    return (
+                                      <Card key={bm.id} className="p-4 bg-white border-l-4 border-green-300 flex items-center w-full min-w-0 max-w-full">
+                                        <CardHeader className="p-0 flex-1 w-full min-w-0 max-w-full">
+                                          <CardTitle className="text-lg font-semibold text-green-700 flex items-center gap-2 w-full min-w-0 max-w-full truncate">
+                                            {job ? (
+                                              <>
+                                                <Link href={`/jobs/${job.id}`} className="hover:underline truncate w-full min-w-0 max-w-full block">
+                                                  <span className="truncate w-full min-w-0 max-w-full block">{job.title}</span>
+                                                </Link>
+                                                <span className="ml-2 px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold uppercase">
+                                                  {job.jobType.replace(/_/g, ' ')}
+                                                </span>
+                                              </>
+                                            ) : (
+                                              <span>Job ID: {bm.targetId}</span>
+                                            )}
+                                          </CardTitle>
+                                        </CardHeader>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="text-red-500 hover:bg-red-100 ml-2"
+                                          title="Remove bookmark"
+                                          onClick={() => handleDelete(bm, type)}
+                                        >
+                                          <Trash2 />
+                                        </Button>
+                                      </Card>
+                                    );
+                                  })}
+                                </div>
+                              )
                             : type === "opportunities"
-                              ? items.map((bm) => (
-                                  <Card key={bm.id} className="p-4 bg-white border-l-4 border-orange-300 flex items-center">
-                                    <CardHeader className="p-0 flex-1">
-                                      <CardTitle className="text-lg font-semibold text-orange-700 flex items-center gap-2">
-                                        <Link href={`/opportunities/${bm.targetId}`} className="hover:underline">
-                                          {bm.title || `Opportunity ID: ${bm.targetId}`}
-                                        </Link>
-                                        {bm.status && (
-                                          <span className="ml-2 px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-xs font-semibold uppercase">
-                                            {bm.status}
-                                          </span>
-                                        )}
-                                      </CardTitle>
-                                    </CardHeader>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      className="text-red-500 hover:bg-red-100 ml-2"
-                                      title="Remove bookmark"
-                                      onClick={() => handleDelete(bm, type)}
-                                    >
-                                      <Trash2 />
-                                    </Button>
-                                  </Card>
-                                ))
+                              ? (
+                                  <div className="grid gap-2">
+                                    {items.map((bm) => (
+                                      <Card key={bm.id} className="p-4 bg-white border-l-4 border-orange-300 flex items-center w-full min-w-0 max-w-full">
+                                        <CardHeader className="p-0 flex-1 w-full min-w-0 max-w-full">
+                                          <CardTitle className="text-lg font-semibold text-orange-700 flex items-center gap-2 w-full min-w-0 max-w-full truncate">
+                                            <Link href={`/opportunities/${bm.targetId}`} className="hover:underline truncate w-full min-w-0 max-w-full block">
+                                              <span className="truncate w-full min-w-0 max-w-full block">{bm.title || `Opportunity ID: ${bm.targetId}`}</span>
+                                            </Link>
+                                            {bm.status && (
+                                              <span className="ml-2 px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-xs font-semibold uppercase">
+                                                {bm.status}
+                                              </span>
+                                            )}
+                                          </CardTitle>
+                                        </CardHeader>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="text-red-500 hover:bg-red-100 ml-2"
+                                          title="Remove bookmark"
+                                          onClick={() => handleDelete(bm, type)}
+                                        >
+                                          <Trash2 />
+                                        </Button>
+                                      </Card>
+                                    ))}
+                                  </div>
+                                )
                               : type === "events"
-                                ? items.map((bm) => (
-                                    <Card key={bm.id} className="p-4 bg-white border-l-4 border-emerald-300 flex items-center">
-                                      <CardHeader className="p-0 flex-1">
-                                        <CardTitle className="text-lg font-semibold text-emerald-700 flex items-center gap-2">
-                                          <Link href={`/events/${bm.targetId}`} className="hover:underline">
-                                            {bm.title || `Event ID: ${bm.targetId}`}
-                                          </Link>
-                                          {bm.status && (
-                                            <span className="ml-2 px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase">
-                                              {bm.status}
-                                            </span>
-                                          )}
-                                        </CardTitle>
-                                      </CardHeader>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="text-red-500 hover:bg-red-100 ml-2"
-                                        title="Remove bookmark"
-                                        onClick={() => handleDelete(bm, type)}
-                                      >
-                                        <Trash2 />
-                                      </Button>
-                                    </Card>
-                                  ))
+                                ? (
+                                    <div className="grid gap-2">
+                                      {items.map((bm) => (
+                                        <Card key={bm.id} className="p-4 bg-white border-l-4 border-emerald-300 flex items-center w-full min-w-0 max-w-full">
+                                          <CardHeader className="p-0 flex-1 w-full min-w-0 max-w-full">
+                                            <CardTitle className="text-lg font-semibold text-emerald-700 flex items-center gap-2 w-full min-w-0 max-w-full truncate">
+                                              <Link href={`/events/${bm.targetId}`} className="hover:underline truncate w-full min-w-0 max-w-full block">
+                                                <span className="truncate w-full min-w-0 max-w-full block">{bm.title || `Event ID: ${bm.targetId}`}</span>
+                                              </Link>
+                                              {bm.status && (
+                                                <span className="ml-2 px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase">
+                                                  {bm.status}
+                                                </span>
+                                              )}
+                                            </CardTitle>
+                                          </CardHeader>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="text-red-500 hover:bg-red-100 ml-2"
+                                            title="Remove bookmark"
+                                            onClick={() => handleDelete(bm, type)}
+                                          >
+                                            <Trash2 />
+                                          </Button>
+                                        </Card>
+                                      ))}
+                                    </div>
+                                  )
                                 : null}
                     </div>
                   ) : (

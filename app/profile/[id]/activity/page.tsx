@@ -14,6 +14,7 @@ import { JobPostingCard } from "@/components/JobPostingCard";
 import OpportunityCard from "@/components/OpportunityCard";
 import { PostCard } from "@/components/PostCard";
 import { EditPostModal } from "@/components/EditPostModal";
+import EventCard from "@/components/EventCard";
 import Link from "next/link";
 import { PostType } from "@prisma/client";
 
@@ -39,6 +40,7 @@ export default function ProfileActivityPage() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [opportunities, setOpportunities] = useState<any[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
   const postTypeOptions = Object.entries(PostType).map(([key, value]) => ({ key, value }));
   const [selectedPostType, setSelectedPostType] = useState<string>("");
   // Opportunities filters
@@ -127,6 +129,9 @@ export default function ProfileActivityPage() {
       // Fetch posts
       const postsRes = await fetch(`/api/feed?personId=${id}`);
       if (postsRes.ok) setPosts(await postsRes.json());
+      // Fetch events
+      const eventsRes = await fetch(`/api/events?personId=${id}`);
+      if (eventsRes.ok) setEvents(await eventsRes.json());
       setLoading(false);
     }
     fetchProfileAndActivity();
@@ -391,6 +396,7 @@ export default function ProfileActivityPage() {
   const tabs = [
     { key: "jobs", label: "Jobs", icon: Briefcase },
     { key: "opportunities", label: "Opportunities", icon: Rocket },
+    { key: "events", label: "Events", icon: Calendar },
     { key: "posts", label: "Posts", icon: MessageSquare },
     ...((isProfileOwner || isAdmin)
       ? [
@@ -479,36 +485,65 @@ export default function ProfileActivityPage() {
     if (tab === "jobs") {
       const skillIdToName = Object.fromEntries(skills.map((s: any) => [s.id, s.name]));
       return filteredJobs.length > 0
-        ? filteredJobs.map((job: any) => {
-            const skillNames = Array.isArray(job.requiredSkills)
-              ? job.requiredSkills.map((id: string) => skillIdToName[id] || id)
-              : [];
-            return <JobPostingCard key={job.id} {...job} requiredSkills={skillNames} adminView={isAdmin} />;
-          })
+        ? (
+            <div className="flex flex-col gap-3">
+              {filteredJobs.map((job: any) => {
+                const skillNames = Array.isArray(job.requiredSkills)
+                  ? job.requiredSkills.map((id: string) => skillIdToName[id] || id)
+                  : [];
+                return <JobPostingCard key={job.id} {...job} requiredSkills={skillNames} adminView={isAdmin} showOverviewOnly href={`/jobs/${job.id}`} />;
+              })}
+            </div>
+          )
         : <div className="text-gray-500">No jobs found.</div>;
     }
     if (tab === "opportunities") {
       const list = filteredOpps;
       return list.length > 0
-        ? list.map((opp: any) => (
-            <OpportunityCard key={opp.id} {...opp} adminView={isAdmin} />
-          ))
+        ? (
+            <div className="flex flex-col gap-3">
+              {list.map((opp: any) => (
+                <OpportunityCard key={opp.id} {...opp} adminView={isAdmin} showOverviewOnly />
+              ))}
+            </div>
+          )
         : <div className="text-gray-500">No opportunities found.</div>;
+    }
+    if (tab === "events") {
+      const myEvents = events.filter((evt: any) => evt.createdById === profile?.id);
+      return myEvents.length > 0
+        ? (
+            <div className="flex flex-col gap-3">
+              {myEvents.map((evt: any) => (
+                <EventCard
+                  key={evt.id}
+                  {...evt}
+                  adminView={isAdmin}
+                  showOverviewOnly
+                />
+              ))}
+            </div>
+          )
+        : <div className="text-gray-500">No events found.</div>;
     }
     if (tab === "posts") {
       const myPosts = posts.filter((post: any) => post.person?.id === profile?.id);
       const filtered = selectedPostType ? myPosts.filter((p: any) => p.postType === selectedPostType) : myPosts;
       return filtered.length > 0
-        ? filtered.map((post: any) => (
-            <PostCard
-              key={post.id}
-              {...post}
-              author={post.person}
-              hideBookmark={false}
-              hideStats
-              onEdit={() => handleEdit(post)}
-            />
-          ))
+        ? (
+            <div className="flex flex-col gap-3">
+              {filtered.map((post: any) => (
+                <PostCard
+                  key={post.id}
+                  {...post}
+                  author={post.person}
+                  hideBookmark={false}
+                  hideStats
+                  onEdit={() => handleEdit(post)}
+                />
+              ))}
+            </div>
+          )
         : <div className="text-gray-500">No posts found.</div>;
     }
     if (tab === "bookmarks" && (isProfileOwner || isAdmin)) {
@@ -565,11 +600,11 @@ export default function ProfileActivityPage() {
                                 ) : (
                                   <div className="h-12 w-12 rounded-full bg-gray-200" />
                                 )}
-                                <CardTitle className="text-lg font-semibold text-blue-700 flex-1 flex items-center gap-2">
+                                <CardTitle className="text-lg font-semibold text-blue-700 flex-1 flex items-center gap-2 truncate max-w-[70vw] sm:max-w-full">
                                   {person ? (
                                     <>
-                                      <Link href={`/profile?id=${person.id}`} className="hover:underline">
-                                        {person.firstName} {person.lastName}
+                                      <Link href={`/profile?id=${person.id}`} className="hover:underline truncate max-w-[50vw] sm:max-w-full block">
+                                        <span className="truncate">{person.firstName} {person.lastName}</span>
                                       </Link>
                                       {person.type && (
                                         <span className="ml-2 px-2 py-0.5 rounded-full text-xs font-bold bg-blue-200 text-blue-800 border border-blue-300 uppercase tracking-wide">
@@ -744,7 +779,9 @@ export default function ProfileActivityPage() {
                                             )}
                                           </>
                                         ) : (
-                                          <span>Event ID: {bm.targetId}</span>
+                                          <div className="flex overflow-hidden w-full">
+                                            <span className="truncate block max-w-[50vw] sm:max-w-full" title={"Event ID: " + bm.targetId}>Event ID: {bm.targetId}</span>
+                                          </div>
                                         )}
                                       </CardTitle>
                                       {(isProfileOwner || isAdmin) && (
@@ -822,22 +859,22 @@ export default function ProfileActivityPage() {
                                 className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-green-300"
                               >
                                 <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
-                                  <CardTitle className="text-lg font-semibold text-green-700 flex-1 flex flex-col items-start gap-1">
-                                    {job ? (
-                                      <>
-                                        <Link href={`/jobs/${job.id}`} className="hover:underline">
-                                          {job.title}
-                                        </Link>
-                                        <div className="mt-1">
-                                          <span className="px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold uppercase">
-                                            {job.jobType.replace(/_/g, " ")}
-                                          </span>
-                                        </div>
-                                      </>
-                                    ) : (
-                                      <span>Job ID: {interest.targetId}</span>
-                                    )}
-                                  </CardTitle>
+                                    <CardTitle className="text-lg font-semibold text-green-700 flex-1 flex flex-col items-start gap-1 truncate max-w-[70vw] sm:max-w-full">
+                                      {job ? (
+                                        <>
+                                          <Link href={`/jobs/${job.id}`} className="hover:underline truncate max-w-[50vw] sm:max-w-full block">
+                                            <span className="truncate max-w-[50vw] sm:max-w-full block">{job.title}</span>
+                                          </Link>
+                                          <div className="mt-1">
+                                            <span className="px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold uppercase">
+                                              {job.jobType.replace(/_/g, " ")}
+                                            </span>
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <span className="truncate max-w-[50vw] sm:max-w-full block" title={"Job ID: " + interest.targetId}>Job ID: {interest.targetId}</span>
+                                      )}
+                                    </CardTitle>
                                   {isProfileOwner && (
                                     <Button
                                       variant="ghost"
@@ -862,14 +899,14 @@ export default function ProfileActivityPage() {
                                   className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-orange-300"
                                 >
                                   <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
-                                    <CardTitle className="text-lg font-semibold text-orange-700 flex-1 flex flex-col items-start gap-1">
+                                    <CardTitle className="text-lg font-semibold text-orange-700 flex-1 flex flex-col items-start gap-1 truncate max-w-[70vw] sm:max-w-full">
                                       {opp ? (
                                         <>
                                           <Link
                                             href={`/opportunities/${opp.id}`}
-                                            className="hover:underline"
+                                            className="hover:underline truncate max-w-[50vw] sm:max-w-full block"
                                           >
-                                            {opp.title || "Untitled Opportunity"}
+                                            <span className="truncate max-w-[50vw] sm:max-w-full block">{opp.title || "Untitled Opportunity"}</span>
                                           </Link>
                                           {opp.status && (
                                             <div className="mt-1">
@@ -880,7 +917,7 @@ export default function ProfileActivityPage() {
                                           )}
                                         </>
                                       ) : (
-                                        <span>Opportunity ID: {interest.targetId}</span>
+                                        <span className="truncate max-w-[50vw] sm:max-w-full block" title={"Opportunity ID: " + interest.targetId}>Opportunity ID: {interest.targetId}</span>
                                       )}
                                     </CardTitle>
                                     {isProfileOwner && (
@@ -906,11 +943,11 @@ export default function ProfileActivityPage() {
                                   className="flex flex-col gap-1 p-3 hover:shadow bg-white border-l-4 border-emerald-300"
                                 >
                                   <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
-                                    <CardTitle className="text-lg font-semibold text-emerald-700 flex-1 flex flex-col items-start gap-1">
+                                    <CardTitle className="text-lg font-semibold text-emerald-700 flex-1 flex flex-col items-start gap-1 truncate max-w-[70vw] sm:max-w-full">
                                       {evt ? (
                                         <>
-                                          <Link href={`/events/${evt.id}`} className="hover:underline">
-                                            {evt.title || "Untitled Event"}
+                                          <Link href={`/events/${evt.id}`} className="hover:underline truncate max-w-[50vw] sm:max-w-full block">
+                                            <span className="truncate max-w-[50vw] sm:max-w-full block">{evt.title || "Untitled Event"}</span>
                                           </Link>
                                           {evt.type && (
                                             <div className="mt-1">
@@ -928,7 +965,7 @@ export default function ProfileActivityPage() {
                                           )}
                                         </>
                                       ) : (
-                                        <span>Event ID: {interest.targetId}</span>
+                                        <span className="truncate max-w-[50vw] sm:max-w-full block" title={"Event ID: " + interest.targetId}>Event ID: {interest.targetId}</span>
                                       )}
                                     </CardTitle>
                                     {isProfileOwner && (
@@ -1055,16 +1092,19 @@ export default function ProfileActivityPage() {
       {/* Profile Header Card */}
       <div className="mb-2">  {/* reduced bottom margin */}
         {profile && (
-          <div className="rounded-xl border-2 border-blue-400 bg-white shadow p-4 flex items-center gap-4"> {/* reduced padding and gap */}
-            <ProfileImage src={profile.profileImage} name={profile.firstName + ' ' + profile.lastName} className="h-20 w-20" alt={profile.firstName + ' ' + profile.lastName} /> {/* smaller image */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  {/* Name and person type on a single line */}
-                  <div className="flex items-center gap-3">
-                    <div className="text-xl font-bold text-blue-700 truncate">{profile.firstName} {profile.lastName}</div>
+          <div className="rounded-xl border-2 border-blue-400 bg-white shadow p-4 flex flex-row items-center gap-3">
+            <ProfileImage src={profile.profileImage} name={profile.firstName + ' ' + profile.lastName} className="h-16 w-16" alt={profile.firstName + ' ' + profile.lastName} />
+            <div className="flex-1 min-w-0 w-full">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-3 w-full">
+                <div className="min-w-0 w-full">
+                  {/* Name and person type as a link */}
+                  {/* View Profile Button */}
+                  <div className="mt-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 w-full">
+                    <Link href={`/profile/${profile.id}`} className="text-xl font-bold text-blue-700 hover:underline truncate">
+                      {profile.firstName} {profile.lastName}
+                    </Link>
                     {profile.type && (
-                      <div className="flex flex-wrap gap-1 ml-1">
+                      <div className="flex flex-wrap gap-1 ml-0 sm:ml-1">
                         {String(profile.type).split("_").map((part, index) => {
                           const meta = TYPE_META[part] || {
                             bg: "bg-gray-100",
@@ -1082,19 +1122,6 @@ export default function ProfileActivityPage() {
                             </Badge>
                           );
                         })}
-                      </div>
-                    )}
-                  </div>
-                  {/* Email and phone on the next line with icons */}
-                  <div className="mt-1 flex items-center text-sm text-gray-600 truncate gap-4 min-w-0">
-                    <div className="flex items-center gap-2 min-w-0 truncate">
-                      <Mail className="text-gray-500" size={14} aria-hidden />
-                      <span className="truncate">{profile.email1 || profile.email || 'No email provided'}</span>
-                    </div>
-                    {(profile.phone1 || profile.phone) && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600 min-w-0 truncate">
-                        <Phone className="text-gray-500" size={14} aria-hidden />
-                        <span className="truncate">{profile.phone1 || profile.phone}</span>
                       </div>
                     )}
                   </div>

@@ -121,85 +121,72 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
   const isOwner = session?.user?.id === event.createdById;
   const canEdit = isOwner || isAdminView;
 
-  return (
-    <div className="max-w-5xl mx-auto p-4 md:p-8">
-      <div className="flex flex-col md:flex-row gap-8">
-        {/* Main Card (left column) */}
-        <div className="flex-1 min-w-0">
-          <EventCard
-            id={event.id}
-            title={event.title}
-            overview={event.overview}
-            description={event.description}
-            location={event.location}
-            address={event.address}
-            type={event.type}
-            status={event.status}
-            startDateTime={event.startDateTime}
-            endDateTime={event.endDateTime}
-            capacity={event.capacity}
-            rsvpCount={event.rsvpCount}
-            isFree={event.isFree}
-            price={event.price}
-            externalLink={event.externalLink}
-            tags={event.tags}
-            sponsors={event.sponsors}
-            organizerName={event.organizerName}
-            organizerLink={event.organizerLink}
-            createdById={event.createdById}
-            createdByName={event.createdByName || (event.createdBy ? `${event.createdBy.firstName} ${event.createdBy.lastName}` : undefined)}
-            showOverviewOnly={false}
-            adminView={isAdminView}
-          />
-        </div>
-      </div>
 
-      {/* People Interested Section: below main card on mobile, sidebar on desktop */}
-      {canEdit && (
-        <div className="w-full md:w-64 mt-8 md:mt-0 md:absolute md:right-8 md:top-8">
-          <h2 className="text-lg font-semibold mb-4 bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">
-            People Interested
-          </h2>
-          {event.interests && event.interests.length > 0 ? (
-            (() => {
-              const validInterests = event.interests.filter(interest => interest.user && interest.user.id);
-              if (validInterests.length > 0) {
-                return (
-                  <div className="grid grid-cols-1 gap-4">
-                    {validInterests.map((interest) => (
-                      <Link
-                        key={interest.id}
-                        href={`/profile/${interest.user!.id}`}
-                        className="block"
-                      >
-                        <div className="flex items-center gap-4 p-4 bg-white rounded-xl shadow border-2 border-emerald-400 hover:shadow-lg transition-all duration-150">
-                          <ProfileImage
-                            src={interest.user!.profileImage}
-                            name={`${interest.user!.firstName} ${interest.user!.lastName}`}
-                            className="h-12 w-12 rounded-full border-2 border-emerald-200 object-cover"
-                            alt={`${interest.user!.firstName} ${interest.user!.lastName}`}
-                          />
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-emerald-700 text-base">
-                              {interest.user!.firstName} {interest.user!.lastName}
-                            </span>
-                          </div>
+  return (
+    <div className="w-full bg-gradient-to-br from-slate-50 via-emerald-50 to-slate-50 min-h-screen pb-24">
+      <div className="max-w-5xl mx-auto px-4 md:p-8">
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Main Card (left column) */}
+          <div className="flex-1 min-w-0">
+            <EventCard
+              id={event.id}
+              title={event.title}
+              overview={event.overview}
+              description={event.description}
+              location={event.location}
+              address={event.address}
+              type={event.type}
+              status={event.status}
+              startDateTime={event.startDateTime}
+              endDateTime={event.endDateTime}
+              capacity={event.capacity}
+              rsvpCount={event.rsvpCount}
+              isFree={event.isFree}
+              price={event.price}
+              externalLink={event.externalLink}
+              tags={event.tags}
+              sponsors={event.sponsors}
+              organizerName={event.organizerName}
+              organizerLink={event.organizerLink}
+              createdById={event.createdById}
+              createdByName={event.createdByName || (event.createdBy ? `${event.createdBy.firstName} ${event.createdBy.lastName}` : undefined)}
+              showOverviewOnly={false}
+              adminView={isAdminView}
+            />
+          </div>
+          {/* People Interested (right column, only for owner or admin) */}
+          {canEdit && (
+            <div className="w-full md:w-64 flex-shrink-0">
+              <h2 className="text-lg font-semibold mb-4 bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent">People Interested</h2>
+              {event.interests && event.interests.length > 0 ? (
+                <div className="grid grid-cols-1 gap-4">
+                  {event.interests.filter(interest => interest.user && interest.user.id).map((interest) => (
+                    <Link
+                      key={interest.id}
+                      href={`/profile/${interest.user!.id}`}
+                      className="block"
+                    >
+                      <div className="flex items-center gap-4 p-4 bg-white rounded-xl shadow border-2 border-emerald-400 hover:shadow-lg transition-all duration-150">
+                        <ProfileImage
+                          src={interest.user!.profileImage}
+                          name={`${interest.user!.firstName} ${interest.user!.lastName}`}
+                          className="h-12 w-12 rounded-full border-2 border-emerald-200 object-cover"
+                          alt={`${interest.user!.firstName} ${interest.user!.lastName}`}
+                        />
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-emerald-700 text-base">{interest.user!.firstName} {interest.user!.lastName}</span>
                         </div>
-                      </Link>
-                    ))}
-                  </div>
-                );
-              } else {
-                return (
-                  <div className="text-gray-500">No interested people yet.</div>
-                );
-              }
-            })()
-          ) : (
-            <div className="text-gray-500">No interested people yet.</div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-gray-500">No interested people yet.</div>
+              )}
+            </div>
           )}
         </div>
-      )}
+      </div>
 
       {/* Floating I'm Interested Button (if signed in and not owner, and not in admin view) */}
       {!isAdminView && session?.user?.id && event?.createdById !== session.user.id && (
@@ -207,7 +194,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
           const alreadyInterested = optimisticInterested || (event?.interests && Array.isArray(event.interests) && event.interests.some((i: { user?: { id: string } }) => i.user && i.user.id === session.user.id));
           if (!alreadyInterested) {
             return (
-              <div className="fixed bottom-8 right-8 z-30 group">
+              <div className="fixed bottom-20 sm:bottom-8 right-4 sm:right-8 z-30 group">
                 <button
                   className="flex items-center gap-2 px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white rounded-full font-semibold shadow-lg text-lg transition-all duration-200"
                   style={{ boxShadow: "0 4px 24px 0 rgba(236, 72, 153, 0.15)" }}
@@ -249,7 +236,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
             );
           } else {
             return (
-              <div className="fixed bottom-8 right-8 z-30 group">
+              <div className="fixed bottom-20 sm:bottom-8 right-4 sm:right-8 z-30 group">
                 <button
                   className="flex items-center gap-2 px-6 py-3 border border-pink-400 text-pink-600 bg-white hover:bg-pink-50 rounded-full font-semibold shadow-lg text-lg transition-all duration-200"
                   style={{ boxShadow: "0 4px 24px 0 rgba(236, 72, 153, 0.10)" }}
