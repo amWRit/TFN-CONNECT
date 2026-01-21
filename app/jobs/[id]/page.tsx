@@ -148,9 +148,6 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                           />
                           <div className="flex flex-col">
                             <span className="font-semibold text-blue-700 text-base">{interest.user.firstName} {interest.user.lastName}</span>
-                            {interest.user.type && (
-                              <span className="inline-block mt-1 text-xs font-bold px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 border border-yellow-300">{interest.user.type}</span>
-                            )}
                           </div>
                         </div>
                       </a>
