@@ -14,6 +14,7 @@ import { JobPostingCard } from "@/components/JobPostingCard";
 import OpportunityCard from "@/components/OpportunityCard";
 import { PostCard } from "@/components/PostCard";
 import { EditPostModal } from "@/components/EditPostModal";
+import EventCard from "@/components/EventCard";
 import Link from "next/link";
 import { PostType } from "@prisma/client";
 
@@ -39,6 +40,7 @@ export default function ProfileActivityPage() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [opportunities, setOpportunities] = useState<any[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
   const postTypeOptions = Object.entries(PostType).map(([key, value]) => ({ key, value }));
   const [selectedPostType, setSelectedPostType] = useState<string>("");
   // Opportunities filters
@@ -127,6 +129,9 @@ export default function ProfileActivityPage() {
       // Fetch posts
       const postsRes = await fetch(`/api/feed?personId=${id}`);
       if (postsRes.ok) setPosts(await postsRes.json());
+      // Fetch events
+      const eventsRes = await fetch(`/api/events?personId=${id}`);
+      if (eventsRes.ok) setEvents(await eventsRes.json());
       setLoading(false);
     }
     fetchProfileAndActivity();
@@ -391,6 +396,7 @@ export default function ProfileActivityPage() {
   const tabs = [
     { key: "jobs", label: "Jobs", icon: Briefcase },
     { key: "opportunities", label: "Opportunities", icon: Rocket },
+    { key: "events", label: "Events", icon: Calendar },
     { key: "posts", label: "Posts", icon: MessageSquare },
     ...((isProfileOwner || isAdmin)
       ? [
@@ -502,6 +508,23 @@ export default function ProfileActivityPage() {
             </div>
           )
         : <div className="text-gray-500">No opportunities found.</div>;
+    }
+    if (tab === "events") {
+      const myEvents = events.filter((evt: any) => evt.createdById === profile?.id);
+      return myEvents.length > 0
+        ? (
+            <div className="flex flex-col gap-3">
+              {myEvents.map((evt: any) => (
+                <EventCard
+                  key={evt.id}
+                  {...evt}
+                  adminView={isAdmin}
+                  showOverviewOnly
+                />
+              ))}
+            </div>
+          )
+        : <div className="text-gray-500">No events found.</div>;
     }
     if (tab === "posts") {
       const myPosts = posts.filter((post: any) => post.person?.id === profile?.id);

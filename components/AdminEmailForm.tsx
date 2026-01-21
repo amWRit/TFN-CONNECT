@@ -260,8 +260,8 @@ export default function AdminEmailForm() {
   // }, []);
 
   return (
-    <div className="max-w-5xl mx-auto p-8 bg-white rounded-2xl shadow-xl border-2 border-blue-200 animate-fade-in">
-      <form className="space-y-8">
+    <div className="max-w-full w-full mx-auto p-2 sm:p-8 bg-white rounded-2xl shadow-xl border-2 border-blue-200 animate-fade-in overflow-x-hidden">
+      <form className="space-y-6 w-full max-w-full">
         {/* No Gmail admin authentication required for compose/send */}
         {/* Subject */}
         <div>
@@ -272,7 +272,7 @@ export default function AdminEmailForm() {
               value={subject}
               onChange={e => setSubject(e.target.value)}
               maxLength={120}
-              className="w-full border-2 border-blue-200 focus:border-pink-400 rounded-lg px-4 py-2 mt-1 text-lg transition-all focus:shadow-lg bg-white/80"
+              className="w-full max-w-full border-2 border-blue-200 focus:border-pink-400 rounded-lg px-3 py-2 mt-1 text-base sm:text-lg transition-all focus:shadow-lg bg-white/80"
               placeholder="What's this email about?"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 bg-white/80 px-2 rounded-full">{subject.length}/120</span>
@@ -286,7 +286,7 @@ export default function AdminEmailForm() {
             value={ccList}
             onChange={e => setCcList(e.target.value)}
             placeholder="Comma-separated emails (optional)"
-            className="w-full border-2 border-blue-200 focus:border-pink-400 rounded-lg px-4 py-2 mt-1 transition-all focus:shadow-lg bg-white/80"
+            className="w-full max-w-full border-2 border-blue-200 focus:border-pink-400 rounded-lg px-3 py-2 mt-1 transition-all focus:shadow-lg bg-white/80 text-base sm:text-lg"
           />
         </div>
         {/* BCC List */}
@@ -297,7 +297,7 @@ export default function AdminEmailForm() {
             value={bccList}
             onChange={e => setBccList(e.target.value)}
             placeholder="Comma-separated emails (optional)"
-            className="w-full border-2 border-blue-200 focus:border-pink-400 rounded-lg px-4 py-2 mt-1 transition-all focus:shadow-lg bg-white/80"
+            className="w-full max-w-full border-2 border-blue-200 focus:border-pink-400 rounded-lg px-3 py-2 mt-1 transition-all focus:shadow-lg bg-white/80 text-base sm:text-lg"
           />
         </div>
         {/* Person Type (Recipient) */}
@@ -307,7 +307,7 @@ export default function AdminEmailForm() {
             <select
               value={personType}
               onChange={e => setPersonType(e.target.value as PersonType)}
-              className="w-full border-2 border-blue-200 focus:border-pink-400 rounded-lg px-4 py-2 mt-1 appearance-none text-base bg-white/80 focus:shadow-lg transition-all"
+              className="w-full max-w-full border-2 border-blue-200 focus:border-pink-400 rounded-lg px-3 py-2 mt-1 appearance-none text-base sm:text-lg bg-white/80 focus:shadow-lg transition-all"
             >
               <option value="">All</option>
               <option value="FELLOW">Fellow</option>
@@ -326,7 +326,7 @@ export default function AdminEmailForm() {
         {/* Email Preference */}
         <div>
           <label className="font-medium flex items-center gap-2 text-blue-700"><AtSign className="w-5 h-5" /> Email Preference</label>
-          <div className="flex gap-4 mt-1">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-1 w-full">
             <label className={emailPreference==='primary' ? 'bg-blue-100 px-3 py-1 rounded-full flex items-center gap-1 font-semibold text-blue-700' : 'px-3 py-1 rounded-full flex items-center gap-1 text-gray-600 cursor-pointer hover:bg-blue-50'}>
               <input type="radio" checked={emailPreference==='primary'} onChange={()=>setEmailPreference('primary')} className="accent-blue-600" /> Primary
             </label>
@@ -350,7 +350,7 @@ export default function AdminEmailForm() {
               To convert a Word document to Markdown, try <a href="https://www.word2md.net/" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">word2md.net</a> and paste the result here.
             </div>
           </div>
-          <div className="border-2 border-blue-100 rounded-xl p-2 bg-white/70 shadow-inner">
+          <div className="border-2 border-blue-100 rounded-xl p-2 bg-white/70 shadow-inner w-full max-w-full">
             <MarkdownEditor value={body} onChange={v => setBody(v ?? '')} preview="edit" />
           </div>
         </div>
@@ -358,18 +358,18 @@ export default function AdminEmailForm() {
         {/* Live Preview */}
         <div>
           <label className="font-medium flex items-center gap-2 text-blue-700"><Eye className="w-5 h-5" /> Live Email Preview</label>
-          <div className="border-2 border-blue-200 rounded-xl p-4 bg-blue-50/60 min-h-[120px] shadow-inner mt-1 relative">
+          <div className="border-2 border-blue-200 rounded-xl p-4 bg-blue-50/60 min-h-[120px] shadow-inner mt-1 relative w-full max-w-full overflow-x-auto">
             <div className="absolute right-3 top-3 text-blue-300 animate-spin" style={{display: sending ? 'block' : 'none'}}><Loader2 className="w-5 h-5" /></div>
             <div dangerouslySetInnerHTML={{__html: previewHtml}} />
           </div>
         </div>
         {/* Actions */}
-        <div className="flex gap-4 mt-8 justify-center">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-8 justify-center w-full max-w-full">
           {!sending && (
             <>
               <button
                 type="button"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full flex items-center gap-2 font-bold shadow-lg transition-all text-lg disabled:opacity-60"
+                className="w-full sm:w-auto max-w-full bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-3 rounded-full flex items-center justify-center gap-2 font-bold shadow-lg transition-all text-base sm:text-lg disabled:opacity-60"
                 onClick={handleSendTest}
                 disabled={sending}
                 title="Send a test email to yourself"
@@ -378,7 +378,7 @@ export default function AdminEmailForm() {
               </button>
               <button
                 type="button"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full flex items-center gap-2 font-bold shadow-lg transition-all text-lg disabled:opacity-60"
+                className="w-full sm:w-auto max-w-full bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-3 rounded-full flex items-center justify-center gap-2 font-bold shadow-lg transition-all text-base sm:text-lg disabled:opacity-60"
                 onClick={()=>setShowConfirm(true)}
                 disabled={sending}
                 title="Send to all selected users"

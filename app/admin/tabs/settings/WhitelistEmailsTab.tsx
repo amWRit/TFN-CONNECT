@@ -61,11 +61,11 @@ export default function WhitelistEmailsTab() {
   }
 
   return (
-    <Card className="p-6 max-w-4xl mx-auto bg-white border-2 border-blue-400 rounded-xl shadow-md">
-      <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-800">
+    <Card className="p-3 sm:p-6 w-full max-w-2xl mx-auto bg-white border-2 border-blue-400 rounded-xl shadow-md">
+      <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2 text-gray-800">
         <Mail className="w-5 h-5 text-blue-500" /> Whitelisted Emails
       </h2>
-      <form onSubmit={addEmail} className="flex gap-2 mb-4 items-center bg-gray-50 rounded-lg p-3 border-2 border-blue-300">
+      <form onSubmit={addEmail} className="flex flex-col sm:flex-row gap-2 mb-4 items-stretch sm:items-center bg-gray-50 rounded-lg p-2 sm:p-3 border-2 border-blue-300">
         <input
           type="email"
           value={newEmail}
@@ -74,7 +74,7 @@ export default function WhitelistEmailsTab() {
           className="border-2 border-blue-300 rounded-lg px-3 py-2 flex-1 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base"
           required
         />
-        <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700 rounded-lg shadow px-4 py-2 font-medium">Add</Button>
+        <Button type="submit" className="bg-blue-600 text-white hover:bg-blue-700 rounded-lg shadow px-4 py-2 font-medium w-full sm:w-auto">Add</Button>
       </form>
       {error && <div className="text-red-600 mb-2 font-medium">{error}</div>}
       {loading ? (
@@ -82,10 +82,10 @@ export default function WhitelistEmailsTab() {
       ) : emails.length === 0 ? (
         <div className="text-gray-400">No whitelisted emails found.</div>
       ) : (
-        <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 rounded-lg border border-gray-200 bg-white p-2">
+        <ul className="flex flex-col gap-2 sm:gap-3 rounded-lg border border-gray-200 bg-white p-1 sm:p-2">
           {emails.map(email => (
-            <li key={email} className="flex justify-between items-center px-4 py-2 bg-gray-50 rounded-lg shadow-sm hover:bg-blue-50 transition border-2 border-blue-300">
-              <span className="font-mono text-gray-700 text-base truncate">{email}</span>
+            <li key={email} className="flex justify-between items-center px-2 sm:px-4 py-2 bg-gray-50 rounded-lg shadow-sm hover:bg-blue-50 transition border-2 border-blue-300">
+              <span className="font-mono text-gray-700 text-sm sm:text-base">{email}</span>
               <Button variant="ghost" size="icon" onClick={() => removeEmail(email)} className="text-red-500 hover:text-red-700 rounded-full p-2">
                 <Trash2 size={20} />
               </Button>

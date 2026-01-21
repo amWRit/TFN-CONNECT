@@ -29,7 +29,7 @@ export default function ManageTab() {
   return (
     <div className="space-y-4">
       {/* Top-level Manage tabs: Fellowship, People, Talent, Listings */}
-      <div className="flex gap-2 mb-4 flex-wrap">
+      <div className="flex flex-wrap gap-1 mb-4 w-full max-w-full overflow-x-auto border-b border-blue-200">
         {[
           { key: 'fellowship-program', label: 'Fellowship', icon: GraduationCap },
           { key: 'people', label: 'People', icon: Users },
@@ -41,11 +41,8 @@ export default function ManageTab() {
             <button
               key={tab.key}
               onClick={() => setCurrentView(tab.key as ManageView)}
-              className={`flex flex-row items-center justify-center gap-2 px-2 py-2 sm:px-4 sm:py-2 rounded-lg font-medium text-sm transition-colors min-w-[44px] min-h-[44px] ${
-                currentView === tab.key
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'bg-gray-100 text-gray-700 hover:bg-blue-50'
-              }`}
+              className={`flex flex-row items-center justify-center gap-2 px-4 py-2 font-medium text-sm transition-colors whitespace-nowrap border-b-2 ${currentView === tab.key ? 'border-blue-600 text-white bg-blue-500' : 'border-transparent text-gray-600 hover:text-blue-600 hover:bg-blue-50'}`}
+              style={{ minWidth: 0, borderRadius: 0 }}
               title={tab.label}
             >
               <Icon className="w-5 h-5" />
@@ -58,7 +55,7 @@ export default function ManageTab() {
       {/* Fellowship Program Group with Sub-Tabs */}
       {currentView === 'fellowship-program' && (
         <div className="space-y-4">
-          <div className="flex gap-2 flex-wrap bg-gray-50 p-4 rounded-lg border border-gray-200">
+          <div className="flex flex-wrap gap-1 mb-4 w-full max-w-full overflow-x-auto border-b border-blue-200 bg-white p-0">
             {[
               { id: 'localgovs', label: 'Local Governments', icon: Landmark },
               { id: 'schools', label: 'Schools', icon: School },
@@ -72,11 +69,8 @@ export default function ManageTab() {
                 <button
                   key={tab.id}
                   onClick={() => setFellowshipSubTab(tab.id as FellowshipSubTab)}
-                  className={`flex flex-row items-center justify-center gap-2 px-2 py-2 sm:px-4 sm:py-2 rounded-lg font-medium text-sm transition-colors min-w-[44px] min-h-[44px] ${
-                    fellowshipSubTab === tab.id
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
-                  }`}
+                  className={`flex flex-row items-center justify-center gap-2 px-4 py-2 font-medium text-sm transition-colors whitespace-nowrap border-b-2 ${fellowshipSubTab === tab.id ? 'border-blue-600 text-white bg-blue-500' : 'border-transparent text-gray-600 hover:text-blue-600 hover:bg-blue-50'}`}
+                  style={{ minWidth: 0, borderRadius: 0 }}
                   title={tab.label}
                 >
                   <Icon className="w-5 h-5" />
@@ -102,7 +96,7 @@ export default function ManageTab() {
       {currentView === 'talent' && (
         <div className="space-y-8">
           {/* Talent sub-tabs */}
-          <div className="flex gap-2 mb-4 flex-wrap">
+          <div className="flex flex-wrap gap-1 mb-4 w-full max-w-full overflow-x-auto border-b border-blue-200">
             {[
               { key: 'skills', label: 'Skills', icon: Wrench },
               { key: 'categories', label: 'Categories', icon: Tags },
@@ -112,11 +106,8 @@ export default function ManageTab() {
                 <button
                   key={tab.key}
                   onClick={() => setTalentSubTab(tab.key as TalentSubTab)}
-                  className={`flex flex-row items-center justify-center gap-2 px-2 py-2 sm:px-4 sm:py-2 rounded-lg font-medium text-sm transition-colors min-w-[44px] min-h-[44px] ${
-                    talentSubTab === tab.key
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'bg-gray-100 text-gray-700 hover:bg-blue-50'
-                  }`}
+                  className={`flex flex-row items-center justify-center gap-2 px-4 py-2 font-medium text-sm transition-colors whitespace-nowrap border-b-2 ${talentSubTab === tab.key ? 'border-blue-600 text-white bg-blue-500' : 'border-transparent text-gray-600 hover:text-blue-600 hover:bg-blue-50'}`}
+                  style={{ minWidth: 0, borderRadius: 0 }}
                   title={tab.label}
                 >
                   <Icon className="w-5 h-5" />

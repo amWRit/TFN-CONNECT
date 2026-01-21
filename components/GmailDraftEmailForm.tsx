@@ -107,18 +107,18 @@ export default function GmailDraftEmailForm() {
 
   if (!hasGmailToken) {
     return (
-      <div className="mb-4 p-4 bg-yellow-50 border border-yellow-300 rounded-lg flex flex-col gap-4">
-        <div className="flex items-center gap-4">
-          <span className="text-yellow-700 font-semibold">Gmail admin authentication required to send using Gmail drafts.</span>
+      <div className="mb-4 p-3 sm:p-4 bg-yellow-50 border border-yellow-300 rounded-lg flex flex-col gap-3 sm:gap-4 w-full max-w-full">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 w-full">
+          <span className="text-yellow-700 font-semibold text-base sm:text-lg leading-snug sm:leading-normal">Gmail admin authentication required to send using Gmail drafts.</span>
           <button
             type="button"
-            className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-full font-bold shadow transition-all"
+            className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-full font-bold shadow transition-all w-full sm:w-auto text-sm sm:text-base whitespace-nowrap"
             onClick={() => { window.open('/api/admin/gmail/login?prompt=select_account%20consent', '_blank', 'noopener,noreferrer'); }}
           >
             Authenticate with Gmail
           </button>
         </div>
-        <div className="mt-2 text-yellow-900 text-sm">
+        <div className="mt-1 sm:mt-2 text-yellow-900 text-xs sm:text-sm leading-tight sm:leading-normal">
           <b>Tip:</b> For best results, open a Chrome profile using your admin email, or use an incognito/private window to ensure you can select the correct Google account.
         </div>
       </div>
@@ -230,19 +230,19 @@ export default function GmailDraftEmailForm() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-8 bg-white rounded-2xl shadow-xl border-2 border-blue-200 animate-fade-in">
-      <div className="mb-6 p-4 bg-yellow-50 border border-yellow-300 rounded-lg text-yellow-900 text-base font-semibold flex items-center gap-3">
-        <span className="text-yellow-700 font-bold">⚠️</span>
-        This bulk email feature is experimental and may not work as expected. Please verify results and proceed with care.
+    <div className="max-w-2xl w-full mx-auto p-2 sm:p-8 bg-white rounded-2xl shadow-xl border-2 border-blue-200 animate-fade-in">
+      <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-yellow-50 border border-yellow-300 rounded-lg text-yellow-900 text-sm sm:text-base font-semibold flex items-start sm:items-center gap-2 sm:gap-3">
+        <span className="text-yellow-700 font-bold text-lg">⚠️</span>
+        <span className="flex-1">This bulk email feature is experimental and may not work as expected. Please verify results and proceed with care.</span>
       </div>
-      <form className="space-y-8">
+      <form className="space-y-6 sm:space-y-8">
         {/* Gmail Draft Selection */}
         <div>
-          <label className="font-medium flex items-center gap-2 text-blue-700"><Mail className="w-5 h-5" /> Select Gmail Draft</label>
+          <label className="font-medium flex items-center gap-2 text-blue-700 text-sm sm:text-base"><Mail className="w-5 h-5" /> Select Gmail Draft</label>
           <select
             value={selectedDraftId}
             onChange={e => setSelectedDraftId(e.target.value)}
-            className="w-full border-2 border-blue-200 focus:border-pink-400 rounded-lg px-4 py-2 mt-1 appearance-none text-base bg-white/80 focus:shadow-lg transition-all"
+            className="w-full border-2 border-blue-200 focus:border-pink-400 rounded-lg px-3 py-2 sm:px-4 sm:py-2 mt-1 appearance-none text-sm sm:text-base bg-white/80 focus:shadow-lg transition-all"
           >
             <option value="">-- Choose a draft --</option>
             {drafts.map(d => (
@@ -253,14 +253,14 @@ export default function GmailDraftEmailForm() {
         </div>
         {/* Subject */}
         <div>
-          <label className="font-medium flex items-center gap-2 text-blue-700"><Mail className="w-5 h-5" /> Subject</label>
+          <label className="font-medium flex items-center gap-2 text-blue-700 text-sm sm:text-base"><Mail className="w-5 h-5" /> Subject</label>
           <div className="relative">
             <input
               type="text"
               value={subject}
               onChange={e => setSubject(e.target.value)}
               maxLength={120}
-              className="w-full border-2 border-blue-200 focus:border-pink-400 rounded-lg px-4 py-2 mt-1 text-lg transition-all focus:shadow-lg bg-white/80"
+              className="w-full border-2 border-blue-200 focus:border-pink-400 rounded-lg px-3 py-2 sm:px-4 sm:py-2 mt-1 text-base sm:text-lg transition-all focus:shadow-lg bg-white/80"
               placeholder="What's this email about?"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 bg-white/80 px-2 rounded-full">{subject.length}/120</span>
@@ -268,34 +268,34 @@ export default function GmailDraftEmailForm() {
         </div>
         {/* CC List */}
         <div>
-          <label className="font-medium flex items-center gap-2 text-blue-700"><AtSign className="w-5 h-5" /> CC List</label>
+          <label className="font-medium flex items-center gap-2 text-blue-700 text-sm sm:text-base"><AtSign className="w-5 h-5" /> CC List</label>
           <input
             type="text"
             value={ccList}
             onChange={e => setCcList(e.target.value)}
             placeholder="Comma-separated emails (optional)"
-            className="w-full border-2 border-blue-200 focus:border-pink-400 rounded-lg px-4 py-2 mt-1 transition-all focus:shadow-lg bg-white/80"
+            className="w-full border-2 border-blue-200 focus:border-pink-400 rounded-lg px-3 py-2 sm:px-4 sm:py-2 mt-1 text-sm sm:text-base transition-all focus:shadow-lg bg-white/80"
           />
         </div>
         {/* BCC List */}
         <div>
-          <label className="font-medium flex items-center gap-2 text-blue-700"><AtSign className="w-5 h-5" /> BCC List</label>
+          <label className="font-medium flex items-center gap-2 text-blue-700 text-sm sm:text-base"><AtSign className="w-5 h-5" /> BCC List</label>
           <input
             type="text"
             value={bccList}
             onChange={e => setBccList(e.target.value)}
             placeholder="Comma-separated emails (optional)"
-            className="w-full border-2 border-blue-200 focus:border-pink-400 rounded-lg px-4 py-2 mt-1 transition-all focus:shadow-lg bg-white/80"
+            className="w-full border-2 border-blue-200 focus:border-pink-400 rounded-lg px-3 py-2 sm:px-4 sm:py-2 mt-1 text-sm sm:text-base transition-all focus:shadow-lg bg-white/80"
           />
         </div>
         {/* Person Type (Recipient) */}
         <div>
-          <label className="font-medium flex items-center gap-2 text-blue-700"><Users className="w-5 h-5" /> Recipient Type</label>
+          <label className="font-medium flex items-center gap-2 text-blue-700 text-sm sm:text-base"><Users className="w-5 h-5" /> Recipient Type</label>
           <div className="relative">
             <select
               value={personType}
               onChange={e => setPersonType(e.target.value as PersonType)}
-              className="w-full border-2 border-blue-200 focus:border-pink-400 rounded-lg px-4 py-2 mt-1 appearance-none text-base bg-white/80 focus:shadow-lg transition-all"
+              className="w-full border-2 border-blue-200 focus:border-pink-400 rounded-lg px-3 py-2 sm:px-4 sm:py-2 mt-1 appearance-none text-sm sm:text-base bg-white/80 focus:shadow-lg transition-all"
             >
               <option value="">All</option>
               <option value="FELLOW">Fellow</option>
@@ -313,27 +313,27 @@ export default function GmailDraftEmailForm() {
         </div>
         {/* Email Preference */}
         <div>
-          <label className="font-medium flex items-center gap-2 text-blue-700"><AtSign className="w-5 h-5" /> Email Preference</label>
-          <div className="flex gap-4 mt-1">
-            <label className={emailPreference==='primary' ? 'bg-blue-100 px-3 py-1 rounded-full flex items-center gap-1 font-semibold text-blue-700' : 'px-3 py-1 rounded-full flex items-center gap-1 text-gray-600 cursor-pointer hover:bg-blue-50'}>
+          <label className="font-medium flex items-center gap-2 text-blue-700 text-sm sm:text-base"><AtSign className="w-5 h-5" /> Email Preference</label>
+          <div className="flex flex-wrap gap-2 sm:gap-4 mt-1">
+            <label className={emailPreference==='primary' ? 'bg-blue-100 px-3 py-1 rounded-full flex items-center gap-1 font-semibold text-blue-700 text-xs sm:text-base' : 'px-3 py-1 rounded-full flex items-center gap-1 text-gray-600 cursor-pointer hover:bg-blue-50 text-xs sm:text-base'}>
               <input type="radio" checked={emailPreference==='primary'} onChange={()=>setEmailPreference('primary')} className="accent-blue-600" /> Primary
             </label>
-            <label className={emailPreference==='secondary' ? 'bg-pink-100 px-3 py-1 rounded-full flex items-center gap-1 font-semibold text-pink-700' : 'px-3 py-1 rounded-full flex items-center gap-1 text-gray-600 cursor-pointer hover:bg-pink-50'}>
+            <label className={emailPreference==='secondary' ? 'bg-pink-100 px-3 py-1 rounded-full flex items-center gap-1 font-semibold text-pink-700 text-xs sm:text-base' : 'px-3 py-1 rounded-full flex items-center gap-1 text-gray-600 cursor-pointer hover:bg-pink-50 text-xs sm:text-base'}>
               <input type="radio" checked={emailPreference==='secondary'} onChange={()=>setEmailPreference('secondary')} className="accent-pink-600" /> Secondary
             </label>
-            <label className={emailPreference==='both' ? 'bg-yellow-100 px-3 py-1 rounded-full flex items-center gap-1 font-semibold text-yellow-700' : 'px-3 py-1 rounded-full flex items-center gap-1 text-gray-600 cursor-pointer hover:bg-yellow-50'}>
+            <label className={emailPreference==='both' ? 'bg-yellow-100 px-3 py-1 rounded-full flex items-center gap-1 font-semibold text-yellow-700 text-xs sm:text-base' : 'px-3 py-1 rounded-full flex items-center gap-1 text-gray-600 cursor-pointer hover:bg-yellow-50 text-xs sm:text-base'}>
               <input type="radio" checked={emailPreference==='both'} onChange={()=>setEmailPreference('both')} className="accent-yellow-500" /> Both
             </label>
           </div>
         </div>
         {/* Removed body editor and live preview UI */}
         {/* Actions */}
-        <div className="flex gap-4 mt-8 justify-center">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-6 sm:mt-8 justify-center items-center w-full">
           {!sending && (
             <>
               <button
                 type="button"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full flex items-center gap-2 font-bold shadow-lg transition-all text-lg disabled:opacity-60"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-8 py-2 sm:py-3 rounded-full flex items-center gap-2 font-bold shadow-lg transition-all text-base sm:text-lg disabled:opacity-60 sm:w-auto"
                 onClick={handleSendTest}
                 disabled={sending || !selectedDraftId}
                 title="Send this draft to yourself"
@@ -342,7 +342,7 @@ export default function GmailDraftEmailForm() {
               </button>
               <button
                 type="button"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-full flex items-center gap-2 font-bold shadow-lg transition-all text-lg disabled:opacity-60"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-8 py-2 sm:py-3 rounded-full flex items-center gap-2 font-bold shadow-lg transition-all text-base sm:text-lg disabled:opacity-60 sm:w-auto"
                 onClick={()=>setShowConfirm(true)}
                 disabled={sending || !selectedDraftId}
                 title="Send this draft to all selected users"
