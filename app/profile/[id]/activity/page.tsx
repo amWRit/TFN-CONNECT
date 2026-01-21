@@ -485,7 +485,7 @@ export default function ProfileActivityPage() {
                 const skillNames = Array.isArray(job.requiredSkills)
                   ? job.requiredSkills.map((id: string) => skillIdToName[id] || id)
                   : [];
-                return <JobPostingCard key={job.id} {...job} requiredSkills={skillNames} adminView={isAdmin} />;
+                return <JobPostingCard key={job.id} {...job} requiredSkills={skillNames} adminView={isAdmin} showOverviewOnly href={`/jobs/${job.id}`} />;
               })}
             </div>
           )
@@ -497,7 +497,7 @@ export default function ProfileActivityPage() {
         ? (
             <div className="flex flex-col gap-3">
               {list.map((opp: any) => (
-                <OpportunityCard key={opp.id} {...opp} adminView={isAdmin} />
+                <OpportunityCard key={opp.id} {...opp} adminView={isAdmin} showOverviewOnly />
               ))}
             </div>
           )
@@ -1075,10 +1075,8 @@ export default function ProfileActivityPage() {
                   {/* Name and person type as a link */}
                   {/* View Profile Button */}
                   <div className="mt-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 w-full">
-                    <Link href={`/profile/${profile.id}`} passHref legacyBehavior>
-                      <a className="text-xl font-bold text-blue-700 hover:underline truncate">
-                        {profile.firstName} {profile.lastName}
-                      </a>
+                    <Link href={`/profile/${profile.id}`} className="text-xl font-bold text-blue-700 hover:underline truncate">
+                      {profile.firstName} {profile.lastName}
                     </Link>
                     {profile.type && (
                       <div className="flex flex-wrap gap-1 ml-0 sm:ml-1">

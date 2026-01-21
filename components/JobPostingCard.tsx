@@ -39,6 +39,7 @@ interface JobPostingProps {
   // (e.g. localStorage bypass admin on activity page) and should
   // show the edit icon instead of bookmark, and skip bookmark logic.
   adminView?: boolean;
+  showOverviewOnly?: boolean;
 }
 
 export function JobPostingCard({
@@ -58,6 +59,7 @@ export function JobPostingCard({
   deadline,
   overview,
   adminView = false,
+  showOverviewOnly = false,
 }: JobPostingProps) {
   const { data: session } = useSession();
   const isSessionAdmin = (session?.user as any)?.type === "ADMIN";
@@ -126,6 +128,12 @@ export function JobPostingCard({
   const isJobOwner = !!userId && !!ownerId && userId === ownerId;
   const showEdit = (session?.user && isJobOwner) || isEffectiveAdmin;
   const showBookmark = session?.user && !isJobOwner && !isEffectiveAdmin;
+
+  // For description expand/collapse (must be outside of conditionals)
+  const [descExpanded, setDescExpanded] = useState(false);
+  function countLines(str: string) {
+    return (str.match(/\n/g) || []).length + 1;
+  }
 
   return (
     <Card className={`relative border-2 border-green-400 bg-white hover:shadow-xl hover:border-green-500 transition-all duration-300 rounded-2xl overflow-hidden group flex flex-col${isDetailPage ? ' min-h-[340px]' : ''}`}> 
@@ -250,11 +258,22 @@ export function JobPostingCard({
           <span className="font-medium">{location ? location : '---'}</span>
         </div>
 
+        {/* Show overview only if showOverviewOnly is true and not detail page */}
+        {!isDetailPage && showOverviewOnly && overview && (
+          <div className="mb-2 text-sm text-gray-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+            <div className="flex items-center gap-2 mb-1">
+              <Eye className="h-5 w-5 text-blue-400 flex-shrink-0" />
+              <span className="font-semibold text-blue-700">Overview</span>
+            </div>
+            <div className="text-sm text-gray-800">{overview}</div>
+          </div>
+        )}
+
         {/* Only show description and required skills if detail page */}
         {isDetailPage && (
           <>
             {/* Overview panel */}
-            {isDetailPage && overview && (
+            {overview && (
               <div className="mb-2 text-sm text-gray-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
                 <div className="flex items-center gap-2 mb-1">
                   <Eye className="h-5 w-5 text-blue-400 flex-shrink-0" />
@@ -263,75 +282,55 @@ export function JobPostingCard({
                 <div className="text-sm text-gray-800">{overview}</div>
               </div>
             )}
-
-            {/* Collapsible markdown description section */}
-            {description && description.trim() !== '' ? (() => {
-              // Helper to count lines in markdown string
-              function countLines(str: string) {
-                return (str.match(/\n/g) || []).length + 1;
-              }
-              const MAX_DESC_LINES = 8;
-              const [descExpanded, setDescExpanded] = useState(false);
-              // Use a local state for expansion
-              // Use a wrapper function to allow hooks in function body
-              return (
-                <div className="mb-4 text-sm text-gray-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Info className="h-5 w-5 text-blue-400 flex-shrink-0" />
-                    <span className="font-semibold text-blue-700">Description</span>
-                  </div>
-                  <div className="markdown-content w-full relative">
-                    <div style={{
-                      maxHeight: !descExpanded && countLines(description || "") > MAX_DESC_LINES ? `${1.6 * MAX_DESC_LINES}em` : undefined,
-                      overflow: !descExpanded && countLines(description || "") > MAX_DESC_LINES ? 'hidden' : undefined,
-                      position: 'relative',
-                      transition: 'max-height 0.3s',
-                    }}>
-                      <ReactMarkdown
-                        components={{
-                          h1: ({node, ...props}) => <h1 {...props} className="text-2xl font-bold mt-4 mb-2 text-blue-900" />,
-                          h2: ({node, ...props}) => <h2 {...props} className="text-xl font-bold mt-3 mb-2 text-blue-800" />,
-                          h3: ({node, ...props}) => <h3 {...props} className="text-lg font-semibold mt-3 mb-1 text-blue-700" />,
-                          h4: ({node, ...props}) => <h4 {...props} className="text-base font-semibold mt-2 mb-1 text-blue-600" />,
-                          h5: ({node, ...props}) => <h5 {...props} className="text-sm font-semibold mt-2 mb-1 text-blue-500" />,
-                          h6: ({node, ...props}) => <h6 {...props} className="text-xs font-semibold mt-2 mb-1 text-blue-400" />,
-                          a: ({node, ...props}) => <a {...props} className="text-blue-600 underline break-all" target="_blank" rel="noopener noreferrer" />,
-                          strong: ({node, ...props}) => <strong {...props} className="font-bold" />,
-                          em: ({node, ...props}) => <em {...props} className="italic" />,
-                          ul: ({node, ...props}) => <ul {...props} className="list-disc ml-6" />,
-                          ol: ({node, ...props}) => <ol {...props} className="list-decimal ml-6" />,
-                          li: ({node, ...props}) => <li {...props} className="mb-1" />,
-                        }}
-                      >
-                        {linkify(description || "")}
-                      </ReactMarkdown>
-                    </div>
-                    {countLines(description || "") > MAX_DESC_LINES && (
-                      <div className="absolute bottom-0 left-0 w-full h-8 bg-gradient-to-t from-blue-50 to-transparent flex items-end justify-center pointer-events-none" style={{display: descExpanded ? 'none' : 'flex'}} />
-                    )}
-                  </div>
-                  {countLines(description || "") > MAX_DESC_LINES && (
-                    <button
-                      className="mt-2 text-xs text-blue-600 underline font-semibold focus:outline-none"
-                      onClick={() => setDescExpanded(v => !v)}
-                      type="button"
-                    >
-                      {descExpanded ? 'Show less' : 'Show more'}
-                    </button>
-                  )}
-                </div>
-              );
-            })() : (
+            {/* Description and required skills only if not showOverviewOnly */}
+            {!showOverviewOnly && description && description.trim() !== '' && (
               <div className="mb-4 text-sm text-gray-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
                 <div className="flex items-center gap-2 mb-1">
                   <Info className="h-5 w-5 text-blue-400 flex-shrink-0" />
                   <span className="font-semibold text-blue-700">Description</span>
                 </div>
-                <div className="text-gray-400 italic">---</div>
+                <div className="markdown-content w-full relative">
+                  <div style={{
+                    maxHeight: !descExpanded && countLines(description || "") > 8 ? `${1.6 * 8}em` : undefined,
+                    overflow: !descExpanded && countLines(description || "") > 8 ? 'hidden' : undefined,
+                    position: 'relative',
+                    transition: 'max-height 0.3s',
+                  }}>
+                    <ReactMarkdown
+                      components={{
+                        h1: ({node, ...props}) => <h1 {...props} className="text-2xl font-bold mt-4 mb-2 text-blue-900" />,
+                        h2: ({node, ...props}) => <h2 {...props} className="text-xl font-bold mt-3 mb-2 text-blue-800" />,
+                        h3: ({node, ...props}) => <h3 {...props} className="text-lg font-semibold mt-3 mb-1 text-blue-700" />,
+                        h4: ({node, ...props}) => <h4 {...props} className="text-base font-semibold mt-2 mb-1 text-blue-600" />,
+                        h5: ({node, ...props}) => <h5 {...props} className="text-sm font-semibold mt-2 mb-1 text-blue-500" />,
+                        h6: ({node, ...props}) => <h6 {...props} className="text-xs font-semibold mt-2 mb-1 text-blue-400" />,
+                        a: ({node, ...props}) => <a {...props} className="text-blue-600 underline break-all" target="_blank" rel="noopener noreferrer" />,
+                        strong: ({node, ...props}) => <strong {...props} className="font-bold" />,
+                        em: ({node, ...props}) => <em {...props} className="italic" />,
+                        ul: ({node, ...props}) => <ul {...props} className="list-disc ml-6" />,
+                        ol: ({node, ...props}) => <ol {...props} className="list-decimal ml-6" />,
+                        li: ({node, ...props}) => <li {...props} className="mb-1" />,
+                      }}
+                    >
+                      {linkify(description || "")}
+                    </ReactMarkdown>
+                  </div>
+                  {countLines(description || "") > 8 && (
+                    <div className="absolute bottom-0 left-0 w-full h-8 bg-gradient-to-t from-blue-50 to-transparent flex items-end justify-center pointer-events-none" style={{display: descExpanded ? 'none' : 'flex'}} />
+                  )}
+                </div>
+                {countLines(description || "") > 8 && (
+                  <button
+                    className="mt-2 text-xs text-blue-600 underline font-semibold focus:outline-none"
+                    onClick={() => setDescExpanded(v => !v)}
+                    type="button"
+                  >
+                    {descExpanded ? 'Show less' : 'Show more'}
+                  </button>
+                )}
               </div>
             )}
-
-            {requiredSkills.length > 0 && (
+            {!showOverviewOnly && requiredSkills.length > 0 && (
               <div className="mb-5">
                 <p className="text-xs font-bold mb-2 text-gray-900 uppercase tracking-wide">Required Skills:</p>
                 <div className="flex flex-wrap gap-2">
@@ -377,14 +376,13 @@ export function JobPostingCard({
           <div />
           <div>
             {!hideViewButton && (
-              href ? (
-                <Link href={href} passHref>
+              (typeof href === 'string' && href.trim().length > 0) ? (
+                <Link href={href} className="w-full sm:w-auto">
                   <Button
                     size="sm"
                     className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 font-semibold"
-                    asChild
                   >
-                    <span>View</span>
+                    View
                   </Button>
                 </Link>
               ) : (
