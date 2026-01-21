@@ -223,13 +223,13 @@ export function JobPostingCard({
                 );
               })()}
             </div>
-            <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-blue-600 transition line-clamp-2">
+            <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-blue-600 transition line-clamp-2 truncate max-w-[70vw] sm:max-w-full">
               {href ? (
-                <Link href={href} className="hover:underline focus:underline">
-                  {title}
+                <Link href={href} className="hover:underline focus:underline truncate max-w-[50vw] sm:max-w-full block">
+                  <span className="truncate max-w-[50vw] sm:max-w-full block">{title}</span>
                 </Link>
               ) : (
-                title
+                <span className="truncate max-w-[70vw] sm:max-w-full block">{title}</span>
               )}
             </CardTitle>
             {company && (

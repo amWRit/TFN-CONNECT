@@ -577,11 +577,11 @@ export default function ProfileActivityPage() {
                                 ) : (
                                   <div className="h-12 w-12 rounded-full bg-gray-200" />
                                 )}
-                                <CardTitle className="text-lg font-semibold text-blue-700 flex-1 flex items-center gap-2">
+                                <CardTitle className="text-lg font-semibold text-blue-700 flex-1 flex items-center gap-2 truncate max-w-[70vw] sm:max-w-full">
                                   {person ? (
                                     <>
-                                      <Link href={`/profile?id=${person.id}`} className="hover:underline">
-                                        {person.firstName} {person.lastName}
+                                      <Link href={`/profile?id=${person.id}`} className="hover:underline truncate max-w-[50vw] sm:max-w-full block">
+                                        <span className="truncate">{person.firstName} {person.lastName}</span>
                                       </Link>
                                       {person.type && (
                                         <span className="ml-2 px-2 py-0.5 rounded-full text-xs font-bold bg-blue-200 text-blue-800 border border-blue-300 uppercase tracking-wide">
@@ -756,7 +756,9 @@ export default function ProfileActivityPage() {
                                             )}
                                           </>
                                         ) : (
-                                          <span>Event ID: {bm.targetId}</span>
+                                          <div className="flex overflow-hidden w-full">
+                                            <span className="truncate block max-w-[50vw] sm:max-w-full" title={"Event ID: " + bm.targetId}>Event ID: {bm.targetId}</span>
+                                          </div>
                                         )}
                                       </CardTitle>
                                       {(isProfileOwner || isAdmin) && (
@@ -834,22 +836,22 @@ export default function ProfileActivityPage() {
                                 className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-green-300"
                               >
                                 <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
-                                  <CardTitle className="text-lg font-semibold text-green-700 flex-1 flex flex-col items-start gap-1">
-                                    {job ? (
-                                      <>
-                                        <Link href={`/jobs/${job.id}`} className="hover:underline">
-                                          {job.title}
-                                        </Link>
-                                        <div className="mt-1">
-                                          <span className="px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold uppercase">
-                                            {job.jobType.replace(/_/g, " ")}
-                                          </span>
-                                        </div>
-                                      </>
-                                    ) : (
-                                      <span>Job ID: {interest.targetId}</span>
-                                    )}
-                                  </CardTitle>
+                                    <CardTitle className="text-lg font-semibold text-green-700 flex-1 flex flex-col items-start gap-1 truncate max-w-[70vw] sm:max-w-full">
+                                      {job ? (
+                                        <>
+                                          <Link href={`/jobs/${job.id}`} className="hover:underline truncate max-w-[50vw] sm:max-w-full block">
+                                            <span className="truncate max-w-[50vw] sm:max-w-full block">{job.title}</span>
+                                          </Link>
+                                          <div className="mt-1">
+                                            <span className="px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold uppercase">
+                                              {job.jobType.replace(/_/g, " ")}
+                                            </span>
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <span className="truncate max-w-[50vw] sm:max-w-full block" title={"Job ID: " + interest.targetId}>Job ID: {interest.targetId}</span>
+                                      )}
+                                    </CardTitle>
                                   {isProfileOwner && (
                                     <Button
                                       variant="ghost"
@@ -874,14 +876,14 @@ export default function ProfileActivityPage() {
                                   className="flex items-center gap-3 p-3 hover:shadow bg-white border-l-4 border-orange-300"
                                 >
                                   <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
-                                    <CardTitle className="text-lg font-semibold text-orange-700 flex-1 flex flex-col items-start gap-1">
+                                    <CardTitle className="text-lg font-semibold text-orange-700 flex-1 flex flex-col items-start gap-1 truncate max-w-[70vw] sm:max-w-full">
                                       {opp ? (
                                         <>
                                           <Link
                                             href={`/opportunities/${opp.id}`}
-                                            className="hover:underline"
+                                            className="hover:underline truncate max-w-[50vw] sm:max-w-full block"
                                           >
-                                            {opp.title || "Untitled Opportunity"}
+                                            <span className="truncate max-w-[50vw] sm:max-w-full block">{opp.title || "Untitled Opportunity"}</span>
                                           </Link>
                                           {opp.status && (
                                             <div className="mt-1">
@@ -892,7 +894,7 @@ export default function ProfileActivityPage() {
                                           )}
                                         </>
                                       ) : (
-                                        <span>Opportunity ID: {interest.targetId}</span>
+                                        <span className="truncate max-w-[50vw] sm:max-w-full block" title={"Opportunity ID: " + interest.targetId}>Opportunity ID: {interest.targetId}</span>
                                       )}
                                     </CardTitle>
                                     {isProfileOwner && (
@@ -918,11 +920,11 @@ export default function ProfileActivityPage() {
                                   className="flex flex-col gap-1 p-3 hover:shadow bg-white border-l-4 border-emerald-300"
                                 >
                                   <CardHeader className="flex flex-row items-center gap-3 p-0 pr-3 bg-transparent w-full">
-                                    <CardTitle className="text-lg font-semibold text-emerald-700 flex-1 flex flex-col items-start gap-1">
+                                    <CardTitle className="text-lg font-semibold text-emerald-700 flex-1 flex flex-col items-start gap-1 truncate max-w-[70vw] sm:max-w-full">
                                       {evt ? (
                                         <>
-                                          <Link href={`/events/${evt.id}`} className="hover:underline">
-                                            {evt.title || "Untitled Event"}
+                                          <Link href={`/events/${evt.id}`} className="hover:underline truncate max-w-[50vw] sm:max-w-full block">
+                                            <span className="truncate max-w-[50vw] sm:max-w-full block">{evt.title || "Untitled Event"}</span>
                                           </Link>
                                           {evt.type && (
                                             <div className="mt-1">
@@ -940,7 +942,7 @@ export default function ProfileActivityPage() {
                                           )}
                                         </>
                                       ) : (
-                                        <span>Event ID: {interest.targetId}</span>
+                                        <span className="truncate max-w-[50vw] sm:max-w-full block" title={"Event ID: " + interest.targetId}>Event ID: {interest.targetId}</span>
                                       )}
                                     </CardTitle>
                                     {isProfileOwner && (

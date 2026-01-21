@@ -128,8 +128,10 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ id, title, descriptio
           )}
           {status}
         </span>
-        <h2 className="text-xl font-semibold text-purple-700 flex items-center gap-2">
-          <Link href={`/opportunities/${id}`} className="hover:underline">{title}</Link>
+        <h2 className="text-xl font-semibold text-purple-700 flex items-center gap-2 truncate max-w-[70vw] sm:max-w-full">
+          <Link href={`/opportunities/${id}`} className="hover:underline truncate max-w-[50vw] sm:max-w-full block">
+            <span className="truncate max-w-[50vw] sm:max-w-full block">{title}</span>
+          </Link>
         </h2>
         {createdByName && (
           <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
