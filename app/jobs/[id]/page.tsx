@@ -105,7 +105,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
   }
 
   return (
-    <div className="w-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 min-h-screen">
+    <div className="w-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 min-h-screen pb-24">
       <div className="max-w-5xl mx-auto px-4 md:p-8">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Main Card (left column) */}

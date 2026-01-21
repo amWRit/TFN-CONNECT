@@ -63,9 +63,9 @@ export default function SubscriptionSettings() {
 
   return (
     <div className="p-4">
-      <h2 className="text-2xl font-bold mb-2 flex items-center gap-2 text-blue-600">
-        <Mail className="text-blue-600" size={24} />
-        Email Subscriptions
+      <h2 className="font-bold mb-2 flex items-center gap-1 sm:gap-2 text-blue-600 text-lg md:text-2xl whitespace-nowrap">
+        <Mail className="text-blue-600" size={20} />
+        <span className="truncate">Email Subscriptions</span>
       </h2>
       <p className="mb-4 text-gray-600">
         Control what you get notified about.

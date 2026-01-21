@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import SubscriptionSettings from "@/components/SubscriptionSettings";
-import { Mail, Shield } from "lucide-react";
+import { Mail, Shield, Eye, Share2, UserX } from "lucide-react";
 
 export default function ProfileSettingsPage() {
   const [tab, setTab] = useState<'subscription' | 'privacy'>('subscription');
@@ -31,10 +31,10 @@ export default function ProfileSettingsPage() {
             <Shield className="w-6 h-6" /> Privacy Settings
           </div>
           <div>Control your privacy preferences. (Coming soon)</div>
-          <ul className="list-disc list-inside text-left max-w-md mx-auto text-base text-gray-600 space-y-2">
-            <li><b>Visibility</b>: Choose who can see your profile and activity.</li>
-            <li><b>Data Sharing</b>: Manage what information is shared with others or third parties.</li>
-            <li><b>Blocked Users</b>: View and manage users you have blocked.</li>
+          <ul className="text-left max-w-md mx-auto text-base text-gray-600 space-y-4">
+            <li className="flex items-start gap-3"><Eye className="w-5 h-5 text-blue-400 mt-1" /><div><b>Visibility</b>: Choose who can see your profile and activity.</div></li>
+            <li className="flex items-start gap-3"><Share2 className="w-5 h-5 text-green-400 mt-1" /><div><b>Data Sharing</b>: Manage what information is shared with others or third parties.</div></li>
+            <li className="flex items-start gap-3"><UserX className="w-5 h-5 text-pink-400 mt-1" /><div><b>Blocked Users</b>: View and manage users you have blocked.</div></li>
           </ul>
         </div>
       )}

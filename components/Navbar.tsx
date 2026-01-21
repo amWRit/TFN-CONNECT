@@ -19,6 +19,10 @@ export default function Navbar() {
 
   const isActive = (path: string) => {
     if (path === "/people") {
+      // Exclude /profile/bookmarks from Community active state
+      if (pathname === "/profile/bookmarks" || pathname?.startsWith("/profile/bookmarks")) {
+        return false;
+      }
       return (
         pathname === "/people" ||
         pathname?.startsWith("/people/") ||
