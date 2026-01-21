@@ -334,27 +334,24 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
           <span className="opacity-0 group-hover:opacity-100 transition bg-gray-800 text-white text-xs rounded px-2 py-1 absolute right-0 mt-2 whitespace-nowrap pointer-events-none shadow-lg" style={{top: '100%'}}>Save</span>
         </div>
       )}
-      <div className="relative h-40 bg-gradient-to-r from-indigo-500 to-purple-500">
-        <div className="absolute inset-0 flex items-end px-6 sm:px-8 pb-6 gap-6">
-          <div className="flex-shrink-0">
-            <ProfileImage
-              src={person.profileImage}
-              name={[person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ")}
-              className="h-24 w-24 rounded-2xl border-4 border-indigo-200 shadow-md object-cover"
-              alt={[person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ")}
-            />
-          </div>
-          <div className="flex flex-col justify-end pb-2 flex-1">
-            <h1 className="text-3xl sm:text-4xl font-bold text-white mb-0">
-              {[person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ")}
-            </h1>
-            {person.pronouns && (
-              <div className="text-sm font-semibold text-indigo-100 mb-2 flex items-center gap-1">
-                <User size={16} className="text-indigo-100/80" />
-                <span>{person.pronouns}</span>
-              </div>
-            )}
-            <div className="flex items-center gap-2 flex-wrap">
+      <div className="relative bg-gradient-to-r from-indigo-500 to-purple-500 py-4 px-2">
+        <div className="flex flex-col items-center justify-center w-full">
+          <ProfileImage
+            src={person.profileImage}
+            name={[person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ")}
+            className="h-16 w-16 rounded-2xl border-4 border-indigo-200 shadow-md object-cover mb-2"
+            alt={[person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ")}
+          />
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-0.5 text-center">
+            {[person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ")}
+          </h1>
+          {person.pronouns && (
+            <div className="text-xs font-semibold text-indigo-100 mb-1 flex items-center gap-1 justify-center">
+              <User size={14} className="text-indigo-100/80" />
+              <span>{person.pronouns}</span>
+            </div>
+          )}
+          <div className="flex flex-wrap gap-1 justify-center mt-0.5">
             {person.type && person.type.split("_").map((part, index) => {
               const meta = TYPE_META[part] || {
                 bg: "bg-gray-100",
@@ -372,11 +369,6 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                 </Badge>
               );
             })}
-              <Badge className="text-xs font-semibold bg-red-100 text-red-700 pointer-events-none">
-                {person.empStatus === "EMPLOYED" && <span className="inline-flex items-center gap-1">💼 Employed</span>}
-                {person.empStatus === "SEEKING" && <span className="inline-flex items-center gap-1">🔍 Seeking</span>}
-              </Badge>
-            </div>
           </div>
         </div>
       </div>
