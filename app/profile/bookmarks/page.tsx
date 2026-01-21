@@ -178,7 +178,7 @@ export default function BookmarksPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
+    <div className="max-w-2xl mx-auto p-6 pb-24 sm:pb-6">
       <h1 className="text-3xl font-bold mb-4 text-center text-blue-700">My Bookmarks</h1>
       {loading && <p className="text-center text-gray-500">Loading bookmarks...</p>}
       {error && <p className="text-center text-red-500">{error}</p>}
@@ -219,11 +219,11 @@ export default function BookmarksPage() {
                                   ) : (
                                     <div className="h-12 w-12 rounded-full bg-gray-200" />
                                   )}
-                                  <CardTitle className="text-lg font-semibold text-blue-700 flex-1 flex items-center gap-2">
+                                  <CardTitle className="text-lg font-semibold text-blue-700 flex-1 flex items-center gap-2 truncate max-w-[70vw] sm:max-w-full">
                                     {person ? (
                                       <>
-                                        <Link href={`/profile?id=${person.id}`} className="hover:underline">
-                                          {person.firstName} {person.lastName}
+                                        <Link href={`/profile?id=${person.id}`} className="hover:underline truncate max-w-[50vw] sm:max-w-full block">
+                                          <span className="truncate max-w-[50vw] sm:max-w-full block">{person.firstName} {person.lastName}</span>
                                         </Link>
                                         {person.type && (
                                           <span className="ml-2 px-2 py-0.5 rounded-full text-xs font-bold bg-blue-200 text-blue-800 border border-blue-300 uppercase tracking-wide">
@@ -322,11 +322,11 @@ export default function BookmarksPage() {
                                 return (
                                   <Card key={bm.id} className="p-4 bg-white border-l-4 border-green-300 flex items-center">
                                     <CardHeader className="p-0 flex-1">
-                                      <CardTitle className="text-lg font-semibold text-green-700 flex items-center gap-2">
+                                      <CardTitle className="text-lg font-semibold text-green-700 flex items-center gap-2 truncate max-w-[70vw] sm:max-w-full">
                                         {job ? (
                                           <>
-                                            <Link href={`/jobs/${job.id}`} className="hover:underline">
-                                              {job.title}
+                                            <Link href={`/jobs/${job.id}`} className="hover:underline truncate max-w-[50vw] sm:max-w-full block">
+                                              <span className="truncate max-w-[50vw] sm:max-w-full block">{job.title}</span>
                                             </Link>
                                             <span className="ml-2 px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold uppercase">
                                               {job.jobType.replace(/_/g, ' ')}
@@ -353,9 +353,9 @@ export default function BookmarksPage() {
                               ? items.map((bm) => (
                                   <Card key={bm.id} className="p-4 bg-white border-l-4 border-orange-300 flex items-center">
                                     <CardHeader className="p-0 flex-1">
-                                      <CardTitle className="text-lg font-semibold text-orange-700 flex items-center gap-2">
-                                        <Link href={`/opportunities/${bm.targetId}`} className="hover:underline">
-                                          {bm.title || `Opportunity ID: ${bm.targetId}`}
+                                      <CardTitle className="text-lg font-semibold text-orange-700 flex items-center gap-2 truncate max-w-[70vw] sm:max-w-full">
+                                        <Link href={`/opportunities/${bm.targetId}`} className="hover:underline truncate max-w-[50vw] sm:max-w-full block">
+                                          <span className="truncate max-w-[50vw] sm:max-w-full block">{bm.title || `Opportunity ID: ${bm.targetId}`}</span>
                                         </Link>
                                         {bm.status && (
                                           <span className="ml-2 px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-xs font-semibold uppercase">
@@ -379,9 +379,9 @@ export default function BookmarksPage() {
                                 ? items.map((bm) => (
                                     <Card key={bm.id} className="p-4 bg-white border-l-4 border-emerald-300 flex items-center">
                                       <CardHeader className="p-0 flex-1">
-                                        <CardTitle className="text-lg font-semibold text-emerald-700 flex items-center gap-2">
-                                          <Link href={`/events/${bm.targetId}`} className="hover:underline">
-                                            {bm.title || `Event ID: ${bm.targetId}`}
+                                        <CardTitle className="text-lg font-semibold text-emerald-700 flex items-center gap-2 truncate max-w-[70vw] sm:max-w-full">
+                                          <Link href={`/events/${bm.targetId}`} className="hover:underline truncate max-w-[50vw] sm:max-w-full block">
+                                            <span className="truncate max-w-[50vw] sm:max-w-full block">{bm.title || `Event ID: ${bm.targetId}`}</span>
                                           </Link>
                                           {bm.status && (
                                             <span className="ml-2 px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase">

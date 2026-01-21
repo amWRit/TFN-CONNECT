@@ -207,7 +207,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
           const alreadyInterested = optimisticInterested || (event?.interests && Array.isArray(event.interests) && event.interests.some((i: { user?: { id: string } }) => i.user && i.user.id === session.user.id));
           if (!alreadyInterested) {
             return (
-              <div className="fixed bottom-8 right-8 z-30 group">
+              <div className="fixed bottom-20 sm:bottom-8 right-4 sm:right-8 z-30 group">
                 <button
                   className="flex items-center gap-2 px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white rounded-full font-semibold shadow-lg text-lg transition-all duration-200"
                   style={{ boxShadow: "0 4px 24px 0 rgba(236, 72, 153, 0.15)" }}
@@ -249,7 +249,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
             );
           } else {
             return (
-              <div className="fixed bottom-8 right-8 z-30 group">
+              <div className="fixed bottom-20 sm:bottom-8 right-4 sm:right-8 z-30 group">
                 <button
                   className="flex items-center gap-2 px-6 py-3 border border-pink-400 text-pink-600 bg-white hover:bg-pink-50 rounded-full font-semibold shadow-lg text-lg transition-all duration-200"
                   style={{ boxShadow: "0 4px 24px 0 rgba(236, 72, 153, 0.10)" }}
