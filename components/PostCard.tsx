@@ -217,10 +217,10 @@ export function PostCard({
             )}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <CardTitle className="text-base font-semibold text-blue-700 group-hover:text-blue-800 transition m-0 p-0">
+                <CardTitle className="text-base font-semibold text-blue-700 group-hover:text-blue-800 transition m-0 p-0 max-w-[50vw] sm:max-w-full truncate">
                   {author && author.id ? (
-                    <Link href={`/profile?id=${encodeURIComponent(author.id)}`} className="hover:underline focus:underline">
-                      {author.firstName} {author.lastName}
+                    <Link href={`/profile?id=${encodeURIComponent(author.id)}`} className="hover:underline focus:underline truncate block max-w-[50vw] sm:max-w-full">
+                      <span className="truncate">{author.firstName} {author.lastName}</span>
                     </Link>
                   ) : (
                     <span>Unknown Author</span>

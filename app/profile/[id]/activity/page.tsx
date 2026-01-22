@@ -600,14 +600,14 @@ export default function ProfileActivityPage() {
                                 ) : (
                                   <div className="h-12 w-12 rounded-full bg-gray-200" />
                                 )}
-                                <CardTitle className="text-lg font-semibold text-blue-700 flex-1 flex items-center gap-2 truncate max-w-[70vw] sm:max-w-full">
+                                <CardTitle className="text-lg font-semibold text-blue-700 flex-1 flex flex-col items-start gap-1 truncate max-w-[70vw] sm:max-w-full">
                                   {person ? (
                                     <>
                                       <Link href={`/profile?id=${person.id}`} className="hover:underline truncate max-w-[50vw] sm:max-w-full block">
                                         <span className="truncate">{person.firstName} {person.lastName}</span>
                                       </Link>
                                       {person.type && (
-                                        <span className="ml-2 px-2 py-0.5 rounded-full text-xs font-bold bg-blue-200 text-blue-800 border border-blue-300 uppercase tracking-wide">
+                                        <span className="mt-1 px-2 py-0.5 rounded-full text-xs font-bold bg-blue-200 text-blue-800 border border-blue-300 uppercase tracking-wide">
                                           {person.type}
                                         </span>
                                       )}
@@ -729,8 +729,8 @@ export default function ProfileActivityPage() {
                                       <CardTitle className="text-lg font-semibold text-orange-700 flex-1 flex flex-col items-start gap-1">
                                         {opp ? (
                                           <>
-                                            <Link href={`/opportunities/${opp.id}`} className="hover:underline">
-                                              {opp.title || "Untitled Opportunity"}
+                                            <Link href={`/opportunities/${opp.id}`} className="hover:underline truncate block max-w-[50vw] sm:max-w-full">
+                                              <span className="truncate block max-w-[50vw] sm:max-w-full">{opp.title || "Untitled Opportunity"}</span>
                                             </Link>
                                             {opp.status && (
                                               <div className="mt-1">
@@ -741,7 +741,7 @@ export default function ProfileActivityPage() {
                                             )}
                                           </>
                                         ) : (
-                                          <span>Opportunity ID: {bm.targetId}</span>
+                                          <span className="truncate block max-w-[50vw] sm:max-w-full" title={"Opportunity ID: " + bm.targetId}>Opportunity ID: {bm.targetId}</span>
                                         )}
                                       </CardTitle>
                                       {(isProfileOwner || isAdmin) && (
@@ -1133,7 +1133,9 @@ export default function ProfileActivityPage() {
       </div>
       {/* Activity Tabs */}
       <div>
-        <div className="flex gap-4 border-b mb-3">
+        <div
+          className="flex gap-1 sm:gap-3 border-b mb-3 w-full justify-between"
+        >
           {tabs.map(t => {
             const Icon = t.icon;
             let activeText = "";
@@ -1147,6 +1149,10 @@ export default function ProfileActivityPage() {
               activeText = "text-purple-700";
               activeBorder = "border-purple-600";
               hoverText = "hover:text-purple-700";
+            } else if (t.key === "events") {
+              activeText = "text-emerald-700";
+              activeBorder = "border-emerald-600";
+              hoverText = "hover:text-emerald-700";
             } else if (t.key === "posts") {
               activeText = "text-pink-700";
               activeBorder = "border-pink-600";
@@ -1163,14 +1169,15 @@ export default function ProfileActivityPage() {
             return (
               <button
                 key={t.key}
-                className={`px-4 py-2 font-semibold inline-flex items-center gap-2 border-b-2 ${
+                className={`flex-1 px-1 sm:px-2 py-2 font-semibold flex items-center justify-center gap-1 border-b-2 whitespace-nowrap min-w-0 text-xs sm:text-base ${
                   tab === t.key
                     ? `${activeText} ${activeBorder}`
                     : `text-gray-600 border-transparent ${hoverText}`
                 }`}
                 onClick={() => setTab(t.key)}
+                style={{maxWidth: '100%', minWidth: 0, alignItems: 'center'}}
               >
-                {Icon && <Icon className="w-5 h-5" aria-hidden />}
+                {Icon && <Icon className="w-4 h-4 sm:w-5 sm:h-5" aria-hidden style={{marginBottom: '2px'}} />}
                 <span className="hidden sm:inline">{t.label}</span>
               </button>
             );

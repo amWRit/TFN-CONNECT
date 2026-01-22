@@ -61,6 +61,8 @@ export default function BookmarksPage() {
   const [personDetails, setPersonDetails] = useState<Record<string, Person>>({});
   const [jobDetails, setJobDetails] = useState<Record<string, JobDetail>>({});
   const [postDetails, setPostDetails] = useState<Record<string, PostDetail>>({});
+  const [opportunityDetails, setOpportunityDetails] = useState<Record<string, { id: string; title: string; status?: string }>>({});
+  const [eventDetails, setEventDetails] = useState<Record<string, { id: string; title: string; status?: string }>>({});
 
   useEffect(() => {
     async function fetchBookmarks() {
@@ -110,6 +112,10 @@ export default function BookmarksPage() {
           const oppRes = await fetch(`/api/opportunities?ids=${oppIds.join(",")}`);
           if (oppRes.ok) {
             const opportunities: { id: string; title: string; status?: string }[] = await oppRes.json();
+            // Set opportunityDetails map
+            const map: Record<string, { id: string; title: string; status?: string }> = {};
+            opportunities.forEach((o) => { map[o.id] = o; });
+            setOpportunityDetails(map);
             setBookmarks((prev) => {
               if (!prev) return prev;
               const updated = (prev.opportunities ?? []).map((bm) => {
@@ -126,6 +132,10 @@ export default function BookmarksPage() {
           const eventRes = await fetch(`/api/events?ids=${eventIds.join(",")}`);
           if (eventRes.ok) {
             const events: { id: string; title: string; status?: string }[] = await eventRes.json();
+            // Set eventDetails map
+            const map: Record<string, { id: string; title: string; status?: string }> = {};
+            events.forEach((e) => { map[e.id] = e; });
+            setEventDetails(map);
             setBookmarks((prev) => {
               if (!prev) return prev;
               const updated = (prev.events ?? []).map((bm) => {
@@ -234,7 +244,7 @@ export default function BookmarksPage() {
                                             )}
                                           </>
                                         ) : (
-                                          <span>Person ID: {bm.targetId}</span>
+                                          <div className="h-5 w-32 rounded bg-gray-200 animate-pulse" />
                                         )}
                                       </CardTitle>
                                       <Button
@@ -305,7 +315,7 @@ export default function BookmarksPage() {
                                 <Card key={bm.id} className="p-4 bg-white border-l-4 border-purple-300 flex items-center">
                                   <CardHeader className="p-0 flex-1">
                                     <CardTitle className="text-lg font-semibold text-purple-700">
-                                      <span>Post ID: {bm.targetId}</span>
+                                      <div className="h-5 w-32 rounded bg-gray-200 animate-pulse" />
                                     </CardTitle>
                                   </CardHeader>
                                   <Button
@@ -325,7 +335,7 @@ export default function BookmarksPage() {
                                 <div className="grid gap-2">
                                   {items.map((bm) => {
                                     const job = jobDetails[bm.targetId];
-                                    return (
+                                    return job ? (
                                       <Card key={bm.id} className="p-4 bg-white border-l-4 border-green-300 flex items-center w-full min-w-0 max-w-full">
                                         <CardHeader className="p-0 flex-1 w-full min-w-0 max-w-full">
                                           <CardTitle className="text-lg font-semibold text-green-700 flex items-center gap-2 w-full min-w-0 max-w-full truncate">
@@ -353,25 +363,11 @@ export default function BookmarksPage() {
                                           <Trash2 />
                                         </Button>
                                       </Card>
-                                    );
-                                  })}
-                                </div>
-                              )
-                            : type === "opportunities"
-                              ? (
-                                  <div className="grid gap-2">
-                                    {items.map((bm) => (
-                                      <Card key={bm.id} className="p-4 bg-white border-l-4 border-orange-300 flex items-center w-full min-w-0 max-w-full">
+                                    ) : (
+                                      <Card key={bm.id} className="p-4 bg-white border-l-4 border-green-300 flex items-center w-full min-w-0 max-w-full">
                                         <CardHeader className="p-0 flex-1 w-full min-w-0 max-w-full">
-                                          <CardTitle className="text-lg font-semibold text-orange-700 flex items-center gap-2 w-full min-w-0 max-w-full truncate">
-                                            <Link href={`/opportunities/${bm.targetId}`} className="hover:underline truncate w-full min-w-0 max-w-full block">
-                                              <span className="truncate w-full min-w-0 max-w-full block">{bm.title || `Opportunity ID: ${bm.targetId}`}</span>
-                                            </Link>
-                                            {bm.status && (
-                                              <span className="ml-2 px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-xs font-semibold uppercase">
-                                                {bm.status}
-                                              </span>
-                                            )}
+                                          <CardTitle className="text-lg font-semibold text-green-700 flex items-center gap-2 w-full min-w-0 max-w-full truncate">
+                                            <div className="h-5 w-32 rounded bg-gray-200 animate-pulse" />
                                           </CardTitle>
                                         </CardHeader>
                                         <Button
@@ -384,21 +380,24 @@ export default function BookmarksPage() {
                                           <Trash2 />
                                         </Button>
                                       </Card>
-                                    ))}
-                                  </div>
-                                )
-                              : type === "events"
-                                ? (
-                                    <div className="grid gap-2">
-                                      {items.map((bm) => (
-                                        <Card key={bm.id} className="p-4 bg-white border-l-4 border-emerald-300 flex items-center w-full min-w-0 max-w-full">
+                                    );
+                                  })}
+                                </div>
+                              )
+                            : type === "opportunities"
+                              ? (
+                                  <div className="grid gap-2">
+                                    {items.map((bm) => {
+                                      const opportunity = opportunityDetails[bm.targetId];
+                                      return opportunity ? (
+                                        <Card key={bm.id} className="p-4 bg-white border-l-4 border-orange-300 flex items-center w-full min-w-0 max-w-full">
                                           <CardHeader className="p-0 flex-1 w-full min-w-0 max-w-full">
-                                            <CardTitle className="text-lg font-semibold text-emerald-700 flex items-center gap-2 w-full min-w-0 max-w-full truncate">
-                                              <Link href={`/events/${bm.targetId}`} className="hover:underline truncate w-full min-w-0 max-w-full block">
-                                                <span className="truncate w-full min-w-0 max-w-full block">{bm.title || `Event ID: ${bm.targetId}`}</span>
+                                            <CardTitle className="text-lg font-semibold text-orange-700 flex items-center gap-2 w-full min-w-0 max-w-full truncate">
+                                              <Link href={`/opportunities/${bm.targetId}`} className="hover:underline truncate w-full min-w-0 max-w-full block">
+                                                <span className="truncate w-full min-w-0 max-w-full block">{bm.title || `Opportunity ID: ${bm.targetId}`}</span>
                                               </Link>
                                               {bm.status && (
-                                                <span className="ml-2 px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase">
+                                                <span className="ml-2 px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-xs font-semibold uppercase">
                                                   {bm.status}
                                                 </span>
                                               )}
@@ -414,7 +413,75 @@ export default function BookmarksPage() {
                                             <Trash2 />
                                           </Button>
                                         </Card>
-                                      ))}
+                                      ) : (
+                                        <Card key={bm.id} className="p-4 bg-white border-l-4 border-orange-300 flex items-center w-full min-w-0 max-w-full">
+                                          <CardHeader className="p-0 flex-1 w-full min-w-0 max-w-full">
+                                            <CardTitle className="text-lg font-semibold text-orange-700 flex items-center gap-2 w-full min-w-0 max-w-full truncate">
+                                              <div className="h-5 w-32 rounded bg-gray-200 animate-pulse" />
+                                            </CardTitle>
+                                          </CardHeader>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="text-red-500 hover:bg-red-100 ml-2"
+                                            title="Remove bookmark"
+                                            onClick={() => handleDelete(bm, type)}
+                                          >
+                                            <Trash2 />
+                                          </Button>
+                                        </Card>
+                                      );
+                                    })}
+                                  </div>
+                                )
+                              : type === "events"
+                                ? (
+                                    <div className="grid gap-2">
+                                      {items.map((bm) => {
+                                        const event = eventDetails[bm.targetId];
+                                        return event ? (
+                                          <Card key={bm.id} className="p-4 bg-white border-l-4 border-emerald-300 flex items-center w-full min-w-0 max-w-full">
+                                            <CardHeader className="p-0 flex-1 w-full min-w-0 max-w-full">
+                                              <CardTitle className="text-lg font-semibold text-emerald-700 flex items-center gap-2 w-full min-w-0 max-w-full truncate">
+                                                <Link href={`/events/${bm.targetId}`} className="hover:underline truncate w-full min-w-0 max-w-full block">
+                                                  <span className="truncate w-full min-w-0 max-w-full block">{bm.title || `Event ID: ${bm.targetId}`}</span>
+                                                </Link>
+                                                {bm.status && (
+                                                  <span className="ml-2 px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 text-xs font-semibold uppercase">
+                                                    {bm.status}
+                                                  </span>
+                                                )}
+                                              </CardTitle>
+                                            </CardHeader>
+                                            <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              className="text-red-500 hover:bg-red-100 ml-2"
+                                              title="Remove bookmark"
+                                              onClick={() => handleDelete(bm, type)}
+                                            >
+                                              <Trash2 />
+                                            </Button>
+                                          </Card>
+                                        ) : (
+                                          <Card key={bm.id} className="p-4 bg-white border-l-4 border-emerald-300 flex items-center w-full min-w-0 max-w-full">
+                                            <CardHeader className="p-0 flex-1 w-full min-w-0 max-w-full">
+                                              <CardTitle className="text-lg font-semibold text-emerald-700 flex items-center gap-2 w-full min-w-0 max-w-full truncate">
+                                                <div className="h-5 w-32 rounded bg-gray-200 animate-pulse" />
+                                              </CardTitle>
+                                            </CardHeader>
+                                            <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              className="text-red-500 hover:bg-red-100 ml-2"
+                                              title="Remove bookmark"
+                                              onClick={() => handleDelete(bm, type)}
+                                            >
+                                              <Trash2 />
+                                            </Button>
+                                          </Card>
+                                        );
+                                      })}
                                     </div>
                                   )
                                 : null}

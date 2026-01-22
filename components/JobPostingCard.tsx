@@ -242,9 +242,11 @@ export function JobPostingCard({
                 <Users className="h-4 w-4 mr-1 text-blue-400" />
                 <span>Posted by </span>
                 {createdBy.id ? (
-                  <Link href={`/profile/${createdBy.id}`} className="text-blue-700 hover:underline font-semibold">{createdBy.firstName} {createdBy.lastName}</Link>
+                  <Link href={`/profile/${createdBy.id}`} className="text-blue-700 hover:underline font-semibold truncate block max-w-[50vw] sm:max-w-full">
+                    <span className="truncate">{createdBy.firstName} {createdBy.lastName}</span>
+                  </Link>
                 ) : (
-                  <span>{createdBy.firstName} {createdBy.lastName}</span>
+                  <span className="truncate block max-w-[50vw] sm:max-w-full">{createdBy.firstName} {createdBy.lastName}</span>
                 )}
               </div>
             )}
