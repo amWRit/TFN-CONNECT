@@ -89,50 +89,51 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
   const canSeeContacts = !!canViewPhones;
 
   if (editing && isProfileOwner && formData && onFormChange && onSave && onCancel) {
-    // Improved Edit mode UI
+    // Improved Edit mode UI - fix input stacking and spacing
     return (
       <Card className="bg-white border-2 border-indigo-500 shadow-lg rounded-xl overflow-hidden mb-4 relative">
         {/* Save/Cancel Buttons */}
         <div className="absolute top-4 right-4 z-10 flex gap-2">
-            <button
-              aria-label="Save"
-              onClick={onSave}
-              className="p-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
-              title="Save"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </button>
-            <button
-              aria-label="Cancel"
-              onClick={onCancel}
-              className="p-3 rounded-full bg-red-600 hover:bg-red-700 text-white shadow focus:outline-none focus:ring-2 focus:ring-red-300 transition"
-              title="Cancel"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+          <button
+            aria-label="Save"
+            onClick={onSave}
+            className="p-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
+            title="Save"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </button>
+          <button
+            aria-label="Cancel"
+            onClick={onCancel}
+            className="p-3 rounded-full bg-red-600 hover:bg-red-700 text-white shadow focus:outline-none focus:ring-2 focus:ring-red-300 transition"
+            title="Cancel"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
-        <div className="relative h-40 bg-gradient-to-r from-indigo-500 to-purple-500">
-          <div className="absolute inset-0 flex items-end px-6 sm:px-8 pb-6 gap-6">
-            <div className="flex-shrink-0">
+        {/* Header and Inputs - stack vertically for mobile, avoid overlap */}
+        <div className="relative bg-gradient-to-r from-indigo-500 to-purple-500 pt-8 pb-6 px-0">
+          <div className="flex flex-col sm:flex-row items-center sm:items-end px-6 sm:px-8 gap-6">
+            <div className="flex-shrink-0 mb-4 sm:mb-0">
               <ProfileImage
                 src={person.profileImage}
                 name={[formData.firstName, formData.middleName, formData.lastName].filter(Boolean).join(" ")}
-                className="h-28 w-28 rounded-2xl border-4 border-indigo-200 shadow-md object-cover"
+                className="h-16 w-16 rounded-2xl border-4 border-indigo-200 shadow-md object-cover mb-2"
                 alt={[formData.firstName, formData.middleName, formData.lastName].filter(Boolean).join(" ")}
               />
             </div>
-            <div className="flex flex-col justify-end pb-2 flex-1">
-              <div className="flex gap-2 flex-wrap items-end">
+            <div className="flex flex-col justify-end flex-1 w-full">
+              <div className="flex flex-col sm:flex-row gap-2 mb-2 w-full">
                 <input
                   type="text"
                   name="firstName"
                   value={formData.firstName}
                   onChange={onFormChange}
-                  className="text-sm text-gray-700 mb-1 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-32 sm:w-36 placeholder:text-gray-400"
+                  className="text-sm text-gray-700 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-full sm:w-36 placeholder:text-gray-400"
                   placeholder="First Name"
                 />
                 <input
@@ -140,7 +141,7 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                   name="middleName"
                   value={formData.middleName}
                   onChange={onFormChange}
-                  className="text-sm text-gray-700 mb-1 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-28 sm:w-32 placeholder:text-gray-400"
+                  className="text-sm text-gray-700 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-full sm:w-32 placeholder:text-gray-400"
                   placeholder="Middle Name"
                 />
                 <input
@@ -148,7 +149,7 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                   name="lastName"
                   value={formData.lastName}
                   onChange={onFormChange}
-                  className="text-sm text-gray-700 mb-1 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-32 sm:w-36 placeholder:text-gray-400"
+                  className="text-sm text-gray-700 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-full sm:w-36 placeholder:text-gray-400"
                   placeholder="Last Name"
                 />
                 <input
@@ -156,7 +157,7 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                   name="pronouns"
                   value={formData.pronouns}
                   onChange={onFormChange}
-                  className="text-sm text-gray-700 mb-1 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-40 sm:w-48 placeholder:text-gray-400"
+                  className="text-sm text-gray-700 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-full sm:w-48 placeholder:text-gray-400"
                   placeholder="Pronouns (e.g., she/her)"
                 />
               </div>
