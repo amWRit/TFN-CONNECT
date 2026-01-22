@@ -246,22 +246,24 @@ export default function ProfilePage() {
       if (res.ok) {
         const data = await res.json();
         setPerson(data);
-        setFormData({
-          firstName: data.firstName || "",
-          middleName: data.middleName || "",
-          lastName: data.lastName || "",
-          pronouns: data.pronouns || "",
-          type: data.type || "",
-          email2: data.email2 || "",
-          phone1: data.phone1 || "",
-          phone2: data.phone2 || "",
-          linkedin: data.linkedin || "",
-          website: data.website || "",
-          bio: data.bio || "",
-          dob: data.dob ? new Date(data.dob).toISOString().split("T")[0] : "",
-          eduStatus: data.eduStatus || "COMPLETED",
-          empStatus: data.empStatus || "SEEKING",
-        });
+        if (!editing) {
+          setFormData({
+            firstName: data.firstName || "",
+            middleName: data.middleName || "",
+            lastName: data.lastName || "",
+            pronouns: data.pronouns || "",
+            type: data.type || "",
+            email2: data.email2 || "",
+            phone1: data.phone1 || "",
+            phone2: data.phone2 || "",
+            linkedin: data.linkedin || "",
+            website: data.website || "",
+            bio: data.bio || "",
+            dob: data.dob ? new Date(data.dob).toISOString().split("T")[0] : "",
+            eduStatus: data.eduStatus || "COMPLETED",
+            empStatus: data.empStatus || "SEEKING",
+          });
+        }
       }
     } catch (error) {
       console.error("Error fetching profile by id:", error);
@@ -276,22 +278,24 @@ export default function ProfilePage() {
       if (res.ok) {
         const data = await res.json();
         setPerson(data);
-        setFormData({
-          firstName: data.firstName || "",
-          middleName: data.middleName || "",
-          lastName: data.lastName || "",
-          pronouns: data.pronouns || "",
-          type: data.type || "",
-          email2: data.email2 || "",
-          phone1: data.phone1 || "",
-          phone2: data.phone2 || "",
-          linkedin: data.linkedin || "",
-          website: data.website || "",
-          bio: data.bio || "",
-          dob: data.dob ? new Date(data.dob).toISOString().split("T")[0] : "",
-          eduStatus: data.eduStatus || "COMPLETED",
-          empStatus: data.empStatus || "SEEKING",
-        });
+        if (!editing) {
+          setFormData({
+            firstName: data.firstName || "",
+            middleName: data.middleName || "",
+            lastName: data.lastName || "",
+            pronouns: data.pronouns || "",
+            type: data.type || "",
+            email2: data.email2 || "",
+            phone1: data.phone1 || "",
+            phone2: data.phone2 || "",
+            linkedin: data.linkedin || "",
+            website: data.website || "",
+            bio: data.bio || "",
+            dob: data.dob ? new Date(data.dob).toISOString().split("T")[0] : "",
+            eduStatus: data.eduStatus || "COMPLETED",
+            empStatus: data.empStatus || "SEEKING",
+          });
+        }
         // Force session refetch to ensure session.user.id is up-to-date
         if (typeof window !== 'undefined' && window.location) {
           // This will trigger next-auth to refetch session

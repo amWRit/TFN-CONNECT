@@ -81,10 +81,14 @@ export default function NewOpportunityPage() {
             onChange={e => setDescription(e.target.value)}
             required
           />
-          <div className="text-xs text-gray-500 mt-1 italic">
-            Tip: You can use Markdown to format your description.<br />
-            Supports **bold**, _italics_, headings, ordered and unordered lists.<br />
-            Try <a href="https://markdownlivepreview.com/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Live Preview</a> or the <a href="https://www.markdownguide.org/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Guide</a> for syntax and examples.
+          <div className="mb-2 mt-2 text-xs font-normal text-gray-800 bg-gray-50 border border-blue-200 rounded-lg p-3 italic">
+            <div>
+              This editor supports <a href="https://www.markdownguide.org/basic-syntax/" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">Markdown syntax</a>.
+            </div>
+            <div className="mt-1">
+              You can use online tools like <a href="https://markdownlivepreview.com/" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">Markdown Live Preview</a> or <a href="https://stackedit.io/app#" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">StackEdit</a> to compose and copy your content here.
+              To convert a Word document to Markdown, try <a href="https://www.word2md.net/" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">word2md.net</a> and paste the result here.
+            </div>
           </div>
         </div>
         <div>

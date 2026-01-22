@@ -3,7 +3,9 @@ import { Badge } from "@/components/ui/badge";
 import { ProfileImage } from "@/components/ProfileImage";
 import { Bookmark, BookmarkCheck, Edit2, Info, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import React from "react";
+import React, { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 const TYPE_META: Record<string, { bg: string; text: string; icon: string; label: string }> = {
   FELLOW:  { bg: "bg-purple-100",   text: "text-purple-700",   icon: "🎓", label: "Fellow" },
@@ -85,6 +87,62 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
   onCancel,
   canViewPhones = false,
 }) => {
+
+// Collapsible bio component with markdown support
+const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
+  const [expanded, setExpanded] = useState(false);
+  const COLLAPSE_LENGTH = 180;
+  const isLong = bio.length > COLLAPSE_LENGTH;
+  const displayText = !expanded && isLong ? bio.slice(0, COLLAPSE_LENGTH) + "..." : bio;
+  return (
+    <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mb-5">
+      <Info className="w-5 h-5 mt-1 text-blue-400 flex-shrink-0" />
+      <span className="italic text-blue-900 w-full">
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            h1: ({node, ...props}) => <h1 {...props} className="text-2xl font-bold mt-4 mb-2 text-blue-900" />,
+            h2: ({node, ...props}) => <h2 {...props} className="text-xl font-bold mt-3 mb-2 text-blue-800" />,
+            h3: ({node, ...props}) => <h3 {...props} className="text-lg font-semibold mt-3 mb-1 text-blue-700" />,
+            h4: ({node, ...props}) => <h4 {...props} className="text-base font-semibold mt-2 mb-1 text-blue-600" />,
+            h5: ({node, ...props}) => <h5 {...props} className="text-sm font-semibold mt-2 mb-1 text-blue-500" />,
+            h6: ({node, ...props}) => <h6 {...props} className="text-xs font-semibold mt-2 mb-1 text-blue-400" />,
+            a: ({node, ...props}) => <a {...props} className="text-blue-600 underline break-all" target="_blank" rel="noopener noreferrer" />,
+            strong: ({node, ...props}) => <strong {...props} className="font-bold" />,
+            em: ({node, ...props}) => <em {...props} className="italic" />,
+            ul: ({node, ...props}) => <ul {...props} className="list-disc ml-6" />,
+            ol: ({node, ...props}) => <ol {...props} className="list-decimal ml-6" />,
+            li: ({node, ...props}) => <li {...props} className="mb-1" />,
+            p: ({node, ...props}) => <p {...props} className="prose prose-blue max-w-none text-blue-900 text-sm" />,
+          }}
+        >
+          {displayText}
+        </ReactMarkdown>
+        {isLong && (
+          <>
+            {!expanded ? (
+              <button
+                className="ml-2 text-blue-600 underline text-xs font-semibold"
+                onClick={() => setExpanded(true)}
+                type="button"
+              >
+                View more
+              </button>
+            ) : (
+              <button
+                className="ml-2 text-blue-600 underline text-xs font-semibold"
+                onClick={() => setExpanded(false)}
+                type="button"
+              >
+                Show less
+              </button>
+            )}
+          </>
+        )}
+      </span>
+    </div>
+  );
+};
 
   // Hide contacts if type is LEADERSHIP
   const isLeadership = person.type && person.type.toUpperCase() === "LEADERSHIP";
@@ -195,16 +253,23 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                   ))}
                 </select>
               </div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">Bio</label>
-              <textarea
-                name="bio"
-                value={formData.bio}
-                onChange={onFormChange}
-                rows={3}
-                className="w-full border border-blue-200 px-3 py-2 rounded-md text-sm text-gray-700 leading-relaxed bg-white focus:border-blue-400 focus:outline-none resize-none mb-5"
-                placeholder="Share a short bio about yourself..."
-                maxLength={300}
-              />
+                <div className="mb-5">
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Bio</label>
+                  <textarea
+                    name="bio"
+                    value={formData.bio}
+                    onChange={onFormChange}
+                    rows={3}
+                    className="w-full border border-blue-200 px-3 py-2 rounded-md text-sm text-gray-700 leading-relaxed bg-white focus:border-blue-400 focus:outline-none mb-1 resize-y"
+                    placeholder="Share a short bio about yourself..."
+                    maxLength={1000}
+                  />
+                  <div className="text-xs text-gray-500 mt-1 italic">
+                    Tip: You can use Markdown to format your description.
+                    Supports bold, italics, headings, ordered and unordered lists. 
+                    You can use <a href="https://markdownlivepreview.com/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Live Preview</a>.
+                  </div>
+                </div>
               {/* Two-column Info Layout */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 mb-4 text-sm">
                 {/* Email1 (read-only) */}
@@ -385,11 +450,9 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
         <div className="flex flex-col gap-6">
           <div className="flex-1">
             {person.bio && (
-              <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mb-5">
-                <Info className="w-5 h-5 mt-1 text-blue-400 flex-shrink-0" />
-                <span className="italic text-blue-900">{person.bio}</span>
-              </div>
+              <BioCollapse bio={person.bio} />
             )}
+
             {/* Info Grid */}
             <div className="mb-4 text-sm">
               {!canSeeContacts && (
