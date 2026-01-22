@@ -193,7 +193,7 @@ export default function FeedPage() {
         <div className="mb-2 sm:mb-3 relative flex items-center justify-between gap-2 sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <div className="inline-block mb-0">
-              <span className="inline-block bg-gradient-to-r from-pink-200 via-blue-200 to-green-200 text-blue-900 text-base sm:text-2xl font-extrabold px-4 sm:px-8 py-2 sm:py-3 rounded-full tracking-wide shadow-lg border-2 border-blue-200 animate-fadeIn">✨ FEED ✨</span>
+              <span className="inline-block bg-pink-400 text-white text-base sm:text-2xl font-extrabold px-4 sm:px-8 py-2 sm:py-3 rounded-full tracking-wide shadow-lg border-2 border-pink-500 animate-fadeIn">✨ FEED ✨</span>
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">

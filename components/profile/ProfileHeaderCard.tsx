@@ -94,20 +94,26 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
       <Card className="bg-white border-2 border-indigo-500 shadow-lg rounded-xl overflow-hidden mb-4 relative">
         {/* Save/Cancel Buttons */}
         <div className="absolute top-4 right-4 z-10 flex gap-2">
-          <button
-            aria-label="Save"
-            onClick={onSave}
-            className="px-4 py-2 rounded-md font-semibold shadow transition-colors duration-200 border-2 border-blue-700 bg-white text-blue-700 hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300"
-          >
-            Save
-          </button>
-          <button
-            aria-label="Cancel"
-            onClick={onCancel}
-            className="px-4 py-2 rounded-md font-semibold shadow transition-colors duration-200 border-2 border-red-600 text-red-600 bg-white hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-200"
-          >
-            Cancel
-          </button>
+            <button
+              aria-label="Save"
+              onClick={onSave}
+              className="p-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
+              title="Save"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </button>
+            <button
+              aria-label="Cancel"
+              onClick={onCancel}
+              className="p-3 rounded-full bg-red-600 hover:bg-red-700 text-white shadow focus:outline-none focus:ring-2 focus:ring-red-300 transition"
+              title="Cancel"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
         </div>
         <div className="relative h-40 bg-gradient-to-r from-indigo-500 to-purple-500">
           <div className="absolute inset-0 flex items-end px-6 sm:px-8 pb-6 gap-6">
