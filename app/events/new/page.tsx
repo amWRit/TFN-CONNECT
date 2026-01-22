@@ -118,7 +118,7 @@ export default function NewEventPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-8 bg-white rounded-2xl shadow-xl mt-12 mb-12 border-4 border-emerald-400/70 bg-gradient-to-br from-emerald-50 via-white to-emerald-100">
+    <div className="max-w-2xl mx-auto p-8 bg-white rounded-2xl shadow-xl mt-4 mb-16 sm:mb-0 border-4 border-emerald-400/70 bg-gradient-to-br from-emerald-50 via-white to-emerald-100">{/* Add bottom margin for mobile to avoid navbar overlap */}
       <h1 className="text-3xl font-extrabold mb-8 text-emerald-700 text-center tracking-tight">
         Add New Event
       </h1>
@@ -380,7 +380,7 @@ export default function NewEventPage() {
             className="flex-1 bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
             disabled={loading}
           >
-            {loading ? "Creating..." : "Create Event"}
+            {loading ? "Adding..." : "Add"}
           </button>
           <button
             type="button"

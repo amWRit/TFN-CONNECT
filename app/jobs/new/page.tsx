@@ -74,7 +74,7 @@ export default function NewJobPage() {
 	};
 
 	return (
-		<div className="max-w-xl mx-auto p-8 bg-white rounded-2xl shadow-xl mt-12 border-4 border-blue-400/70 bg-gradient-to-br from-blue-50 via-white to-blue-100">
+		<div className="max-w-xl mx-auto p-8 bg-white rounded-2xl shadow-xl mt-4 mb-16 sm:mb-0 border-4 border-blue-400/70 bg-gradient-to-br from-blue-50 via-white to-blue-100">
 			<h1 className="text-3xl font-extrabold mb-8 text-blue-700 text-center tracking-tight">
 				Add New Job Posting
 			</h1>
@@ -200,7 +200,7 @@ export default function NewJobPage() {
 						className="flex-1 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
 						disabled={loading}
 					>
-						{loading ? "Posting..." : "Add Job"}
+						{loading ? "Adding..." : "Add"}
 					</button>
 					<button
 						type="button"

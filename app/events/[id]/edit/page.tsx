@@ -206,7 +206,7 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-8 bg-white rounded-2xl shadow-xl mt-12 mb-12 border-4 border-emerald-400/70 bg-gradient-to-br from-emerald-50 via-white to-emerald-100">
+    <div className="max-w-2xl mx-auto p-8 bg-white rounded-2xl shadow-xl mt-4 mb-16 sm:mb-0 border-4 border-emerald-400/70 bg-gradient-to-br from-emerald-50 via-white to-emerald-1000">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-extrabold text-emerald-700 tracking-tight">Edit Event</h1>
         <button
@@ -474,7 +474,7 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
             className="flex-1 bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-700 hover:from-emerald-600 hover:to-emerald-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
             disabled={saving}
           >
-            {saving ? "Saving..." : "Save Changes"}
+            {saving ? "Saving..." : "Save"}
           </button>
           <button
             type="button"

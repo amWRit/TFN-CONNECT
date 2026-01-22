@@ -122,7 +122,7 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
+    <div className="max-w-2xl mx-auto p-6 mt-4 mb-16 sm:mb-0">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-blue-700">Edit Job</h1>
         <button

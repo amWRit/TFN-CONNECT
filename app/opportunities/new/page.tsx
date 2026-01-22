@@ -49,7 +49,7 @@ export default function NewOpportunityPage() {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-8 bg-white rounded-2xl shadow-xl mt-12 border-4 border-purple-400/70 bg-gradient-to-br from-purple-50 via-white to-purple-100">
+    <div className="max-w-xl mx-auto p-8 bg-white rounded-2xl shadow-xl mt-4 mb-16 sm:mb-0 border-4 border-purple-400/70 bg-gradient-to-br from-purple-50 via-white to-purple-100">
       <h1 className="text-3xl font-extrabold mb-8 text-purple-700 text-center tracking-tight">Add New Opportunity</h1>
       <div className="mb-4 text-sm text-gray-700 text-center bg-yellow-100 border border-yellow-300 rounded-lg px-4 py-2">
         By posting an opportunity, you agree to our <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline text-purple-700 font-semibold">Terms and Conditions</a>.
@@ -130,7 +130,7 @@ export default function NewOpportunityPage() {
             className="flex-1 bg-gradient-to-r from-purple-500 via-purple-600 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
             disabled={loading}
           >
-            {loading ? "Creating..." : "Create Opportunity"}
+            {loading ? "Adding..." : "Add"}
           </button>
           <button
             type="button"
