@@ -86,7 +86,9 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
   canViewPhones = false,
 }) => {
 
-  const canSeeContacts = !!canViewPhones;
+  // Hide contacts if type is LEADERSHIP
+  const isLeadership = person.type && person.type.toUpperCase() === "LEADERSHIP";
+  const canSeeContacts = !!canViewPhones && !isLeadership;
 
   if (editing && isProfileOwner && formData && onFormChange && onSave && onCancel) {
     // Improved Edit mode UI - fix input stacking and spacing
@@ -395,11 +397,11 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                   To connect with this person, sign in or contact the Admin.
                 </div>
               )}
-              {/* Each info pair in its own row, two columns per row */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2">
-                {/* Row 1: Email (only if allowed) */}
+                {/* Only render email and phone rows if allowed */}
                 {canSeeContacts && (
                   <>
+                    {/* Row 1: Email */}
                     <div className="flex items-center gap-2">
                       <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-500" viewBox="0 0 24 24"><path d="M4 4h16v16H4z" stroke="none"/><path d="M22 6l-10 7L2 6" /><rect x="2" y="6" width="20" height="12" rx="2" /></svg>
                       <span>{person.email1 || <span className="text-gray-400">--</span>}</span>
@@ -408,11 +410,7 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                       <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-500" viewBox="0 0 24 24"><path d="M4 4h16v16H4z" stroke="none"/><path d="M22 6l-10 7L2 6" /><rect x="2" y="6" width="20" height="12" rx="2" /></svg>
                       <span>{person.email2 || <span className="text-gray-400">--</span>}</span>
                     </div>
-                  </>
-                )}
-                {/* Row 2: Phone (only if allowed) */}
-                {canSeeContacts && (
-                  <>
+                    {/* Row 2: Phone */}
                     <div className="flex items-center gap-2">
                       <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-500" viewBox="0 0 24 24"><path d="M22 16.92V19a2 2 0 0 1-2 2A18 18 0 0 1 3 5a2 2 0 0 1 2-2h2.09a2 2 0 0 1 2 1.72c.13.81.28 1.6.47 2.36a2 2 0 0 1-.45 2.11l-.27.27a16 16 0 0 0 6.29 6.29l.27-.27a2 2 0 0 1 2.11-.45c.76.19 1.55.34 2.36.47A2 2 0 0 1 22 16.92z" /></svg>
                       <span>{person.phone1 || <span className="text-gray-400">--</span>}</span>
@@ -423,7 +421,6 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                     </div>
                   </>
                 )}
-                {/* Row 3: LinkedIn & Web */}
                 <div className="flex items-center gap-2">
                   <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-700" viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z" /><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" /></svg>
                   {person.linkedin ? (

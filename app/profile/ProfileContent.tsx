@@ -568,7 +568,7 @@ export default function ProfilePage() {
 
 
   return (
-    <div className="max-w-4xl mx-auto px-4 pt-4 pb-16 sm:pb-0">{/* Add bottom padding for mobile to avoid navbar overlap */}
+    <div className="max-w-4xl mx-auto px-4 pt-4 pb-16 sm:pb-4">{/* Add bottom padding for mobile to avoid navbar overlap */}
       {/* New ProfileHeaderCard for reference */}
       <div className="mb-4">
         <ProfileHeaderCard
