@@ -177,20 +177,31 @@ export async function POST(req: NextRequest) {
     const firstName = filteredSubscribers[0]?.firstName;
     const htmlBody = TYPE_CONFIG[type as TypeConfigKey].html(item, appUrl, { firstName });
 
-    // Send to Apps Script
+    // Send to Apps Script in batches of 50
     const appsScriptUrl = process.env.APPS_SCRIPT_URL;
-    const response = await fetch(appsScriptUrl!, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        subject,
-        htmlBody,
-        subscribers: filteredSubscribers.map(s => ({ email: s[emailField], name: `${s.firstName} ${s.lastName}` })),
-      }),
-    });
-    const result = await response.json();
+    const BATCH_SIZE = 50;
+    const batches = [];
+    for (let i = 0; i < filteredSubscribers.length; i += BATCH_SIZE) {
+      batches.push(filteredSubscribers.slice(i, i + BATCH_SIZE));
+    }
+    let totalSent = 0;
+    let batchResults = [];
+    for (const batch of batches) {
+      const response = await fetch(appsScriptUrl!, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject,
+          htmlBody,
+          subscribers: batch.map(s => ({ email: s[emailField], name: `${s.firstName} ${s.lastName}` })),
+        }),
+      });
+      const result = await response.json();
+      batchResults.push(result);
+      totalSent += batch.length;
+    }
 
-    return NextResponse.json({ success: true, count: filteredSubscribers.length, appsScript: result });
+    return NextResponse.json({ success: true, count: totalSent, batches: batchResults });
   } catch (error: any) {
     // Log error details to server console for debugging
     console.error('Notify API error:', error);
