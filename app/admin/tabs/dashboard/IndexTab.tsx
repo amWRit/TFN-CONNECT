@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
-import { User, Users, School, Briefcase, Award, Layers, FileText, BookOpen, Users2, Group, Contact, Rocket, Calendar, Activity } from 'lucide-react';
+import { User, Users, School, Briefcase, Award, Layers, FileText, BookOpen, Users2, Group, Contact, Rocket, Calendar, Activity, MessageSquareHeart } from 'lucide-react';
 import { AcademicCapIcon, UserGroupIcon, BriefcaseIcon, BuildingLibraryIcon, DocumentTextIcon } from '@heroicons/react/24/outline';
 import { FiUsers, FiBookOpen, FiAward } from 'react-icons/fi';
 
@@ -16,8 +16,11 @@ interface Stats {
   totalFellowships: number;
   totalCohorts: number;
   totalJobPostings: number;
+  openJobPostings: number;
   totalOpportunities: number;
+  openOpportunities: number;
   totalEvents: number;
+  upcomingEvents: number;
   totalPosts: number;
 }
 
@@ -31,10 +34,13 @@ export default function IndexTab() {
     totalFellowships: 0,
     totalCohorts: 0,
     totalJobPostings: 0,
+    openJobPostings: 0,
     totalPosts: 0,
     totalLocalGovs: 0,
     totalOpportunities: 0,
+    openOpportunities: 0,
     totalEvents: 0,
+    upcomingEvents: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -95,8 +101,11 @@ export default function IndexTab() {
           totalFellowships: fellowships.length,
           totalCohorts: cohorts.length,
           totalJobPostings: jobs.length,
+          openJobPostings: jobs.filter((j: any) => j.status === 'OPEN').length,
           totalOpportunities: opportunities.length,
+          openOpportunities: opportunities.filter((o: any) => o.status === 'OPEN').length,
           totalEvents: events.length,
+          upcomingEvents: events.filter((e: any) => new Date(e.startDateTime) >= new Date()).length,
           totalPosts: posts.length,
           totalLocalGovs: localgovs.length,
         });
@@ -111,10 +120,10 @@ export default function IndexTab() {
   }, []);
 
   const StatCard = ({ label, value, Icon }: { label: string; value: number; Icon: React.ElementType }) => (
-    <Card className="py-5 px-4 md:py-7 md:px-6 flex flex-col items-center justify-center min-h-[120px] md:min-h-[150px] shadow-lg border-2 border-blue-500 rounded-lg">
-      <Icon className="w-8 h-8 md:w-10 md:h-10 text-blue-400 mb-2" />
-      <p className="text-2xl md:text-4xl font-bold text-blue-600 mb-1">{value}</p>
-      <p className="text-gray-600 text-sm md:text-base font-medium">{label}</p>
+    <Card className="py-5 px-4 md:py-7 md:px-6 flex flex-col items-center justify-center min-h-[120px] md:min-h-[150px] shadow-lg border-2 border-blue-500 rounded-lg text-center">
+      <Icon className="w-8 h-8 md:w-10 md:h-10 text-blue-400 mb-2 mx-auto" />
+      <p className="text-2xl md:text-4xl font-bold text-blue-600 mb-1 text-center">{value}</p>
+      <p className="text-gray-600 text-sm md:text-base font-medium text-center">{label}</p>
     </Card>
   );
 
@@ -123,25 +132,25 @@ export default function IndexTab() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Total People" value={stats.totalPeople} Icon={Users2} />
-        <StatCard label="Alumni" value={stats.totalAlumni} Icon={AcademicCapIcon} />
-        <StatCard label="Current Fellows" value={stats.totalFellows} Icon={UserGroupIcon} />
-        <StatCard label="Staff" value={stats.totalStaff} Icon={Contact} />
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Cohorts" value={stats.totalCohorts} Icon={Group} />
-        <StatCard label="Schools" value={stats.totalSchools} Icon={School} />
-        <StatCard label="Fellowships" value={stats.totalFellowships} Icon={Award} />
-        <StatCard label="LocalGov" value={stats.totalLocalGovs} Icon={BuildingLibraryIcon} />
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Jobs" value={stats.totalJobPostings} Icon={Briefcase} />
-        <StatCard label="Opportunities" value={stats.totalOpportunities} Icon={Rocket} />
-        <StatCard label="Events" value={stats.totalEvents} Icon={Calendar} />
-        <StatCard label="Posts" value={stats.totalPosts} Icon={Activity} />
-      </div>
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <StatCard label="Total People" value={stats.totalPeople} Icon={Users2} />
+      <StatCard label="Alumni" value={stats.totalAlumni} Icon={AcademicCapIcon} />
+      <StatCard label="Current Fellows" value={stats.totalFellows} Icon={UserGroupIcon} />
+      <StatCard label="Staff" value={stats.totalStaff} Icon={Contact} />
+      <StatCard label="Cohorts" value={stats.totalCohorts} Icon={Group} />
+      <StatCard label="Schools" value={stats.totalSchools} Icon={School} />
+      <StatCard label="Fellowships" value={stats.totalFellowships} Icon={Award} />
+      <StatCard label="LocalGov" value={stats.totalLocalGovs} Icon={BuildingLibraryIcon} />
+      <StatCard label="Total Jobs" value={stats.totalJobPostings} Icon={Briefcase} />
+      <StatCard label="Open Jobs" value={stats.openJobPostings} Icon={BriefcaseIcon} />
+      <StatCard label="Total Opportunities" value={stats.totalOpportunities} Icon={Rocket} />
+      <StatCard label="Open Opportunities" value={stats.openOpportunities} Icon={Rocket} />
+      <StatCard label="Total Events" value={stats.totalEvents} Icon={Calendar} />
+      <StatCard label="Upcoming Events" value={stats.upcomingEvents} Icon={Calendar} />
+      <StatCard label="Posts" value={stats.totalPosts} Icon={MessageSquareHeart} />
+      <div className="hidden lg:block"></div>
+      <div className="hidden lg:block"></div>
+      <div className="hidden lg:block"></div>
     </div>
   );
 }

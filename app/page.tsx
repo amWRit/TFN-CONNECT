@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import { MessageSquareHeart } from "lucide-react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getServerSession } from "next-auth/next"
@@ -15,27 +16,36 @@ export default async function Home() {
 
   // Live stats from the database
   const now = new Date()
-  const [alumniCount, openJobCount, opportunityCount, postCount, activeCohortCount, upcomingEventsCount] = await Promise.all([
-    // Treat ALUMNI as part of the alumni & fellows network
+  const [alumniCount, activeCohortCount, totalJobCount, openJobCount, totalOpportunityCount, openOpportunityCount, totalEventCount, upcomingEventsCount, postCount] = await Promise.all([
+    // Alumni & Fellows
     prisma.person.count({
       where: {
         type: {
-          in: [PersonType.ALUMNI, PersonType.STAFF_ALUMNI, PersonType.FELLOW], // Only use valid enum values
+          in: [PersonType.ALUMNI, PersonType.STAFF_ALUMNI, PersonType.FELLOW],
         },
       },
     }),
-    prisma.jobPosting.count({
-      where: { status: "OPEN" },
-    }),
-    prisma.opportunity.count({
-      where: { status: "OPEN" },
-    }),
-    prisma.post.count(),
+    // Active Cohorts
     prisma.cohort.count({
       where: {
         OR: [{ end: null }, { end: { gte: now } }],
       },
     }),
+    // Total Jobs
+    prisma.jobPosting.count(),
+    // Open Jobs
+    prisma.jobPosting.count({
+      where: { status: "OPEN" },
+    }),
+    // Total Opportunities
+    prisma.opportunity.count(),
+    // Open Opportunities
+    prisma.opportunity.count({
+      where: { status: "OPEN" },
+    }),
+    // Total Events
+    prisma.event.count(),
+    // Upcoming Events
     prisma.event.count({
       where: {
         startDateTime: {
@@ -43,6 +53,8 @@ export default async function Home() {
         },
       },
     }),
+    // Community Posts
+    prisma.post.count(),
   ])
 
   return (
@@ -109,30 +121,43 @@ export default async function Home() {
       <section className="bg-white py-3 sm:py-4 md:py-6 px-4 border-t border-gray-200">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-lg sm:text-2xl font-bold mb-4 sm:mb-6 text-center text-gray-900">Quick Stats</h2>
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
             <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 sm:p-6 rounded-xl border-2 border-blue-500 text-center hover:shadow-md transition">
               <div className="text-2xl sm:text-3xl font-bold text-blue-600">{alumniCount}</div>
               <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Alumni & Fellows in the network</p>
-            </div>
-            <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 sm:p-6 rounded-xl border-2 border-green-500 text-center hover:shadow-md transition">
-              <div className="text-2xl sm:text-3xl font-bold text-green-600">{openJobCount}</div>
-              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Open job postings</p>
-            </div>
-            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-4 sm:p-6 rounded-xl border-2 border-emerald-500 text-center hover:shadow-md transition">
-              <div className="text-2xl sm:text-3xl font-bold text-emerald-600">{opportunityCount}</div>
-              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Open opportunities</p>
-            </div>
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 sm:p-6 rounded-xl border-2 border-purple-500 text-center hover:shadow-md transition">
-              <div className="text-2xl sm:text-3xl font-bold text-purple-600">{postCount}</div>
-              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Community posts</p>
             </div>
             <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 sm:p-6 rounded-xl border-2 border-orange-500 text-center hover:shadow-md transition">
               <div className="text-2xl sm:text-3xl font-bold text-orange-600">{activeCohortCount}</div>
               <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Active cohorts</p>
             </div>
+            <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 sm:p-6 rounded-xl border-2 border-green-500 text-center hover:shadow-md transition">
+              <div className="text-2xl sm:text-3xl font-bold text-green-600">{totalJobCount}</div>
+              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Total jobs</p>
+            </div>
+            <div className="bg-gradient-to-br from-green-100 to-green-200 p-4 sm:p-6 rounded-xl border-2 border-green-600 text-center hover:shadow-md transition">
+              <div className="text-2xl sm:text-3xl font-bold text-green-700">{openJobCount}</div>
+              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Open jobs</p>
+            </div>
+            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-4 sm:p-6 rounded-xl border-2 border-emerald-500 text-center hover:shadow-md transition">
+              <div className="text-2xl sm:text-3xl font-bold text-emerald-600">{totalOpportunityCount}</div>
+              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Total opportunities</p>
+            </div>
+            <div className="bg-gradient-to-br from-emerald-100 to-emerald-200 p-4 sm:p-6 rounded-xl border-2 border-emerald-600 text-center hover:shadow-md transition">
+              <div className="text-2xl sm:text-3xl font-bold text-emerald-700">{openOpportunityCount}</div>
+              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Open opportunities</p>
+            </div>
             <div className="bg-gradient-to-br from-pink-50 to-pink-100 p-4 sm:p-6 rounded-xl border-2 border-pink-500 text-center hover:shadow-md transition">
-              <div className="text-2xl sm:text-3xl font-bold text-pink-600">{upcomingEventsCount}</div>
+              <div className="text-2xl sm:text-3xl font-bold text-pink-600">{totalEventCount}</div>
+              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Total events</p>
+            </div>
+            <div className="bg-gradient-to-br from-pink-100 to-pink-200 p-4 sm:p-6 rounded-xl border-2 border-pink-600 text-center hover:shadow-md transition">
+              <div className="text-2xl sm:text-3xl font-bold text-pink-700">{upcomingEventsCount}</div>
               <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Upcoming events</p>
+            </div>
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 sm:p-6 rounded-xl border-2 border-purple-500 text-center hover:shadow-md transition flex flex-col items-center justify-center">
+              <MessageSquareHeart className="w-8 h-8 sm:w-10 sm:h-10 text-purple-400 mb-1" />
+              <div className="text-2xl sm:text-3xl font-bold text-purple-600">{postCount}</div>
+              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Community posts</p>
             </div>
           </div>
         </div>
