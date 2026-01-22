@@ -191,7 +191,7 @@ export default function PostsTab() {
         open={modalOpen}
         title="Send Post Notification"
         message={''}
-        confirmText={loading ? 'Sending...' : 'Send Email'}
+        confirmText={loading ? 'Sending...' : 'Send'}
         cancelText="Cancel"
         onConfirm={sendEmail}
         onCancel={() => { setModalOpen(false); setModalPostId(null); }}

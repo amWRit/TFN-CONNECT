@@ -318,7 +318,7 @@ export default function UserMenu() {
           {/* Admin password modal */}
           {showAdminModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-              <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
+              <div className="bg-white rounded-lg shadow-lg p-4 w-[90vw] max-w-xs sm:max-w-md relative">
                 <button
                   type="button"
                   className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 p-1 rounded-full focus:outline-none"

@@ -223,7 +223,7 @@ export default function OpportunitiesTab() {
             open={modalOpen}
             title="Send Opportunity Notification"
             message={''}
-            confirmText={loading ? 'Sending...' : 'Send Email'}
+            confirmText={loading ? 'Sending...' : 'Send'}
             cancelText="Cancel"
             onConfirm={sendEmail}
             onCancel={() => { setModalOpen(false); setModalOppId(null); }}

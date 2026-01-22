@@ -228,7 +228,7 @@ export default function SchoolsTab() {
                       className="flex-1 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
                       disabled={loading}
                     >
-                      {loading ? 'Creating...' : 'Create School'}
+                      {loading ? 'Adding...' : 'Add'}
                     </button>
                     <button
                       type="button"

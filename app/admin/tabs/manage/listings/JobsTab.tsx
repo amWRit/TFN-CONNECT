@@ -229,7 +229,7 @@ export default function JobsTab() {
         open={modalOpen}
         title="Send Job Notification"
         message={''}
-        confirmText={loading ? 'Sending...' : 'Send Email'}
+        confirmText={loading ? 'Sending...' : 'Send'}
         cancelText="Cancel"
         onConfirm={sendEmail}
         onCancel={() => { setModalOpen(false); setModalJobId(null); }}
