@@ -143,6 +143,13 @@ export default function UserMenu() {
             >
               <Shield size={16} /> Admin Panel
             </Link>
+            <Link
+              href="/admin/manual"
+              className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-blue-50 text-gray-700 text-sm"
+              onClick={() => setOpen(false)}
+            >
+              <span role="img" aria-label="Manual">📖</span> Admin Manual
+            </Link>
             <button
               onClick={() => {
                 setOpen(false);
@@ -278,6 +285,19 @@ export default function UserMenu() {
           >
             <Settings size={16} /> Settings
           </Link>
+          <Link
+            href="/manual"
+            className="flex items-center gap-2 px-4 py-2 hover:bg-blue-50 text-gray-700 text-sm"
+            onClick={() => setOpen(false)}
+          >
+            <span role="img" aria-label="Manual">📖</span> User Manual
+          </Link>
+          <button
+            onClick={() => { setOpen(false); signOut({ callbackUrl: "/" }); }}
+            className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-blue-50 text-gray-700 text-sm"
+          >
+            <LogOut size={16} /> Logout
+          </button>
           {/* Admin Panel toggle button and Dashboard link */}
           {showAdminPanel && (
             <>
@@ -372,12 +392,6 @@ export default function UserMenu() {
               </div>
             </div>
           )}
-          <button
-            onClick={() => { setOpen(false); signOut({ callbackUrl: "/" }); }}
-            className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-blue-50 text-gray-700 text-sm"
-          >
-            <LogOut size={16} /> Logout
-          </button>
         </div>
       )}
     </div>

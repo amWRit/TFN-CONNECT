@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
-import { MessageSquareHeart } from "lucide-react"
+import { MessageSquareHeart, Users2, School, Briefcase, Award, Group, Rocket, Calendar, CalendarCheck } from "lucide-react"
+import { AcademicCapIcon, UserGroupIcon, BriefcaseIcon, BuildingLibraryIcon } from '@heroicons/react/24/outline';
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getServerSession } from "next-auth/next"
@@ -122,42 +123,59 @@ export default async function Home() {
         <div className="max-w-6xl mx-auto">
           <h2 className="text-lg sm:text-2xl font-bold mb-4 sm:mb-6 text-center text-gray-900">Quick Stats</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 sm:p-6 rounded-xl border-2 border-blue-500 text-center hover:shadow-md transition">
+            {/* Alumni & Fellows */}
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 sm:p-6 rounded-xl border-2 border-blue-500 text-center hover:shadow-md transition flex flex-col items-center justify-center">
+              <AcademicCapIcon className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400 mb-1" />
               <div className="text-2xl sm:text-3xl font-bold text-blue-600">{alumniCount}</div>
-              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Alumni & Fellows in the network</p>
+              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Alumni & Fellows</p>
             </div>
-            <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 sm:p-6 rounded-xl border-2 border-orange-500 text-center hover:shadow-md transition">
+            {/* Active Cohorts */}
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 sm:p-6 rounded-xl border-2 border-orange-500 text-center hover:shadow-md transition flex flex-col items-center justify-center">
+              <Group className="w-8 h-8 sm:w-10 sm:h-10 text-orange-400 mb-1" />
               <div className="text-2xl sm:text-3xl font-bold text-orange-600">{activeCohortCount}</div>
-              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Active cohorts</p>
+              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Active Cohorts</p>
             </div>
-            <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 sm:p-6 rounded-xl border-2 border-green-500 text-center hover:shadow-md transition">
+            {/* Total Jobs */}
+            <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 sm:p-6 rounded-xl border-2 border-green-500 text-center hover:shadow-md transition flex flex-col items-center justify-center">
+              <Briefcase className="w-8 h-8 sm:w-10 sm:h-10 text-green-400 mb-1" />
               <div className="text-2xl sm:text-3xl font-bold text-green-600">{totalJobCount}</div>
-              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Total jobs</p>
+              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Total Jobs</p>
             </div>
-            <div className="bg-gradient-to-br from-green-100 to-green-200 p-4 sm:p-6 rounded-xl border-2 border-green-600 text-center hover:shadow-md transition">
+            {/* Open Jobs */}
+            <div className="bg-gradient-to-br from-green-100 to-green-200 p-4 sm:p-6 rounded-xl border-2 border-green-600 text-center hover:shadow-md transition flex flex-col items-center justify-center">
+              <BriefcaseIcon className="w-8 h-8 sm:w-10 sm:h-10 text-green-600 mb-1" />
               <div className="text-2xl sm:text-3xl font-bold text-green-700">{openJobCount}</div>
-              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Open jobs</p>
+              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Open Jobs</p>
             </div>
-            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-4 sm:p-6 rounded-xl border-2 border-emerald-500 text-center hover:shadow-md transition">
+            {/* Total Opportunities */}
+            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-4 sm:p-6 rounded-xl border-2 border-emerald-500 text-center hover:shadow-md transition flex flex-col items-center justify-center">
+              <Rocket className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-400 mb-1" />
               <div className="text-2xl sm:text-3xl font-bold text-emerald-600">{totalOpportunityCount}</div>
-              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Total opportunities</p>
+              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Total Opportunities</p>
             </div>
-            <div className="bg-gradient-to-br from-emerald-100 to-emerald-200 p-4 sm:p-6 rounded-xl border-2 border-emerald-600 text-center hover:shadow-md transition">
+            {/* Open Opportunities */}
+            <div className="bg-gradient-to-br from-emerald-100 to-emerald-200 p-4 sm:p-6 rounded-xl border-2 border-emerald-600 text-center hover:shadow-md transition flex flex-col items-center justify-center">
+              <Rocket className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-600 mb-1" />
               <div className="text-2xl sm:text-3xl font-bold text-emerald-700">{openOpportunityCount}</div>
-              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Open opportunities</p>
+              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Open Opportunities</p>
             </div>
-            <div className="bg-gradient-to-br from-pink-50 to-pink-100 p-4 sm:p-6 rounded-xl border-2 border-pink-500 text-center hover:shadow-md transition">
+            {/* Total Events */}
+            <div className="bg-gradient-to-br from-pink-50 to-pink-100 p-4 sm:p-6 rounded-xl border-2 border-pink-500 text-center hover:shadow-md transition flex flex-col items-center justify-center">
+              <Calendar className="w-8 h-8 sm:w-10 sm:h-10 text-pink-400 mb-1" />
               <div className="text-2xl sm:text-3xl font-bold text-pink-600">{totalEventCount}</div>
-              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Total events</p>
+              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Total Events</p>
             </div>
-            <div className="bg-gradient-to-br from-pink-100 to-pink-200 p-4 sm:p-6 rounded-xl border-2 border-pink-600 text-center hover:shadow-md transition">
+            {/* Upcoming Events */}
+            <div className="bg-gradient-to-br from-pink-100 to-pink-200 p-4 sm:p-6 rounded-xl border-2 border-pink-600 text-center hover:shadow-md transition flex flex-col items-center justify-center">
+              <CalendarCheck className="w-8 h-8 sm:w-10 sm:h-10 text-pink-600 mb-1" />
               <div className="text-2xl sm:text-3xl font-bold text-pink-700">{upcomingEventsCount}</div>
-              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Upcoming events</p>
+              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Upcoming Events</p>
             </div>
+            {/* Community Posts */}
             <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 sm:p-6 rounded-xl border-2 border-purple-500 text-center hover:shadow-md transition flex flex-col items-center justify-center">
               <MessageSquareHeart className="w-8 h-8 sm:w-10 sm:h-10 text-purple-400 mb-1" />
               <div className="text-2xl sm:text-3xl font-bold text-purple-600">{postCount}</div>
-              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Community posts</p>
+              <p className="text-gray-700 mt-1 text-xs sm:text-sm font-medium">Community Posts</p>
             </div>
           </div>
         </div>
