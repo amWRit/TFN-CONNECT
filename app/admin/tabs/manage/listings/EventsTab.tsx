@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useUserEmail } from '@/lib/useUserEmail';
+import { FlaskConical } from 'lucide-react';
+import { OkModal } from '@/components/OkModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -44,6 +47,14 @@ export default function EventsTab() {
   const [selectedEmailField, setSelectedEmailField] = useState<'email1' | 'email2'>('email1');
   // Modal for showing result messages
   const [resultModal, setResultModal] = useState<{ open: boolean; message: string; success: boolean }>({ open: false, message: '', success: false });
+  // Test email modal state
+  const [showTestConfirm, setShowTestConfirm] = useState(false);
+  const [showTestOk, setShowTestOk] = useState(false);
+  const [testEmail, setTestEmail] = useState<string | null>(null);
+  const [testEventId, setTestEventId] = useState<string | null>(null);
+  const [testLoading, setTestLoading] = useState(false);
+  // Get current user's email from session
+  const sessionEmail = useUserEmail();
 
   useEffect(() => {
     fetchEvents();
@@ -100,6 +111,39 @@ export default function EventsTab() {
   function openEmailModal(eventId: string) {
     setModalEventId(eventId);
     setModalOpen(true);
+  }
+
+  // Open test email confirmation modal
+  function openTestConfirm(eventId: string) {
+    setTestEventId(eventId);
+    setShowTestConfirm(true);
+    setTestLoading(false);
+  }
+
+  // Always update testEmail to latest session email when modal opens
+  useEffect(() => {
+    if (showTestConfirm) {
+      setTestEmail(sessionEmail);
+    }
+  }, [showTestConfirm, sessionEmail]);
+
+  // Send test email using notify route with test flag
+  async function sendTestEmail() {
+    if (!testEventId) return;
+    setTestLoading(true);
+    setShowTestConfirm(false);
+    try {
+      const res = await fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'EVENT', id: testEventId, test: true }),
+      });
+      setShowTestOk(true);
+    } catch {
+      setShowTestOk(true);
+    }
+    setTestLoading(false);
+    setTestEventId(null);
   }
 
   // Send email after modal confirm
@@ -211,14 +255,50 @@ export default function EventsTab() {
                 <Button size="icon" className="bg-emerald-600 hover:bg-emerald-700 text-white" aria-label="Email" onClick={() => openEmailModal(e.id)} disabled={loading} title="Email">
                   <Mail className="w-4 h-4 text-white" />
                 </Button>
+                <Button size="icon" className="bg-yellow-500 hover:bg-yellow-600 text-white" aria-label="Test Email" onClick={() => openTestConfirm(e.id)} disabled={loading} title="Send test email to yourself">
+                  <FlaskConical className="w-4 h-4 text-white" />
+                </Button>
                 <Button size="icon" variant="destructive" aria-label="Delete" onClick={() => handleDelete(e.id)} disabled={loading}>
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
+              {/* Test Email Confirmation Modal */}
+              {showTestConfirm && (
+                <ConfirmModal
+                  open={showTestConfirm}
+                  title="Send Test Email"
+                  message={
+                    testLoading
+                      ? 'Sending test email...'
+                      : !testEmail
+                        ? 'Loading your email...'
+                        : `You are about to send a test email to yourself: ${testEmail}. Continue?`
+                  }
+                  confirmText={testLoading ? 'Sending...' : 'Send Test'}
+                  cancelText="Cancel"
+                  onConfirm={sendTestEmail}
+                  onCancel={() => { setShowTestConfirm(false); setTestEventId(null); setTestEmail(null); }}
+                  loading={testLoading}
+                />
+              )}
+              {/* Test Email Ok Modal */}
+              <OkModal
+                open={showTestOk}
+                title="Test Email Sent"
+                message={testEmail ? `A test email was sent to ${testEmail}.` : 'A test email was sent.'}
+                onOk={() => { setShowTestOk(false); setTestEmail(null); }}
+              />
             </div>
           ))}
         </div>
       </div>
+      {/* Test Email Progress Bar (global, not per-event) */}
+      {testLoading && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-yellow-500 text-white px-8 py-3 rounded-full shadow-lg text-lg font-bold flex items-center gap-2 animate-pulse z-50">
+          <FlaskConical className="w-5 h-5 animate-spin" />
+          Sending test email...
+        </div>
+      )}
       <ConfirmModal
         open={modalOpen}
         title="Send Event Notification"
