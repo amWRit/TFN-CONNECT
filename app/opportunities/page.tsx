@@ -1,4 +1,4 @@
-"use client";
+ "use client";
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import OpportunityCard from "../../components/OpportunityCard";
@@ -37,6 +37,42 @@ export default function OpportunitiesPage() {
   // Collapsible filter state for small screens
   const [showFilters, setShowFilters] = useState(false);
 
+   // Utility to extract opportunity IDs from batch bookmarks response
+  function extractBookmarkedOpportunityIds(bookmarks: any): Set<string> {
+    if (!bookmarks || !Array.isArray(bookmarks.opportunities)) return new Set();
+    return new Set(bookmarks.opportunities.map((b: any) => b.targetId));
+  }
+  const [bookmarkedOpportunityIds, setBookmarkedOpportunityIds] = useState<Set<string>>(new Set());
+  const [bookmarksLoading, setBookmarksLoading] = useState(true);
+  useEffect(() => {
+    if (!session || !session.user || isAdminView) {
+      setBookmarksLoading(false);
+      return;
+    }
+    let ignore = false;
+    async function fetchBookmarks() {
+      try {
+        const res = await fetch('/api/bookmarks/all');
+        if (!res.ok) {
+          if (!ignore) setBookmarksLoading(false);
+          return;
+        }
+        const data = await res.json();
+        if (!ignore) {
+          setBookmarkedOpportunityIds(extractBookmarkedOpportunityIds(data));
+          setBookmarksLoading(false);
+        }
+      } catch {
+        if (!ignore) {
+          setBookmarkedOpportunityIds(new Set());
+          setBookmarksLoading(false);
+        }
+      }
+    }
+    fetchBookmarks();
+    return () => { ignore = true; };
+  }, [session, isAdminView]);
+
   useEffect(() => {
     setLoading(true);
     setPage(1);
@@ -63,7 +99,7 @@ export default function OpportunitiesPage() {
     if (typeof window === "undefined") return;
     const localAdminAuth = localStorage.getItem("adminAuth") === "true";
     setAdminAuth(localAdminAuth);
-    const userType = session?.user?.type;
+    const userType = (session as any) ?.user?.type;
     const isPrivileged = localAdminAuth && (userType === "ADMIN" || userType === "STAFF_ADMIN");
     setIsAdminView(isPrivileged);
   }, [session]);
@@ -178,7 +214,7 @@ export default function OpportunitiesPage() {
             </div>
           </div>
           {/* Two Column Opportunity Grid */}
-          {loading ? (
+          {loading || bookmarksLoading ? (
             <div className="text-center text-gray-500">Loading opportunities...</div>
           ) : error ? (
             <div className="text-center text-red-500">{error}</div>
@@ -202,6 +238,8 @@ export default function OpportunitiesPage() {
                       showOverviewOnly={true}
                       adminView={isAdminView}
                       adminAuth={adminAuth}
+                      // Pass bookmark state from batch API
+                      bookmarked={bookmarkedOpportunityIds.has(opp.id)}
                     />
                   ))
                 )}

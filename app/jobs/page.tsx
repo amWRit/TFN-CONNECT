@@ -45,6 +45,31 @@ export default function JobsPage() {
   // Collapsible filter state for small screens
   const [showFilters, setShowFilters] = useState(false);
 
+  // Utility to extract job IDs from batch bookmarks response
+  function extractBookmarkedJobIds(bookmarks: any): Set<string> {
+    if (!bookmarks || !Array.isArray(bookmarks.jobs)) return new Set();
+    return new Set(bookmarks.jobs.map((b: any) => b.targetId));
+  }
+  const [bookmarkedJobIds, setBookmarkedJobIds] = useState<Set<string>>(new Set());
+  // Fetch all job bookmarks for the current user (batch API)
+
+  useEffect(() => {
+    if (!session || !session.user || isAdminView) return;
+    let ignore = false;
+    async function fetchBookmarks() {
+      try {
+        const res = await fetch('/api/bookmarks/all');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!ignore) setBookmarkedJobIds(extractBookmarkedJobIds(data));
+      } catch {
+        if (!ignore) setBookmarkedJobIds(new Set());
+      }
+    }
+    fetchBookmarks();
+    return () => { ignore = true; };
+  }, [session, isAdminView]);
+
   useEffect(() => {
     async function fetchData() {
       const [jobsRes, skillsRes] = await Promise.all([
@@ -256,6 +281,8 @@ export default function JobsPage() {
                     deadline={job.deadline}
                     href={`/jobs/${job.id}`}
                     adminView={isAdminView}
+                    // Pass bookmark state from batch API
+                    bookmarked={bookmarkedJobIds.has(job.id)}
                   />
                 </div>
               );

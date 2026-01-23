@@ -48,6 +48,30 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
   const { id } = use(params);
   const { data: session, status: authStatus } = useSession();
 
+  // Utility to extract opportunity IDs from batch bookmarks response
+  function extractBookmarkedOpportunityIds(bookmarks: any): Set<string> {
+    if (!bookmarks || !Array.isArray(bookmarks.opportunities)) return new Set();
+    return new Set(bookmarks.opportunities.map((b: any) => b.targetId));
+  }
+  const [bookmarkedOpportunityIds, setBookmarkedOpportunityIds] = useState<Set<string>>(new Set());
+  // Fetch all opportunity bookmarks for the current user (batch API)
+  useEffect(() => {
+    if (!session || !session.user || isAdminView) return;
+    let ignore = false;
+    async function fetchBookmarks() {
+      try {
+        const res = await fetch('/api/bookmarks/all');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!ignore) setBookmarkedOpportunityIds(extractBookmarkedOpportunityIds(data));
+      } catch {
+        if (!ignore) setBookmarkedOpportunityIds(new Set());
+      }
+    }
+    fetchBookmarks();
+    return () => { ignore = true; };
+  }, [session, isAdminView]);
+
   useEffect(() => {
     if (!id) return;
     fetch(`/api/opportunities/${id}`)
@@ -110,6 +134,8 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
             showOverviewOnly={false}
             adminView={isAdminView}
             adminAuth={adminAuth}
+            // Pass bookmark state from batch API
+            bookmarked={bookmarkedOpportunityIds.has(opportunity.id)}
           />
         </div>
         {/* People Interested (right column, only for owner) */}

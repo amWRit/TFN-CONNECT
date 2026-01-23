@@ -43,6 +43,42 @@ export default function EventsPage() {
   // Collapsible filter state for small screens
   const [showFilters, setShowFilters] = useState(false);
 
+    // Utility to extract event IDs from batch bookmarks response
+  function extractBookmarkedEventIds(bookmarks: any): Set<string> {
+    if (!bookmarks || !Array.isArray(bookmarks.events)) return new Set();
+    return new Set(bookmarks.events.map((b: any) => b.targetId));
+  }
+  const [bookmarkedEventIds, setBookmarkedEventIds] = useState<Set<string>>(new Set());
+  const [bookmarksLoading, setBookmarksLoading] = useState(true);
+  useEffect(() => {
+    if (!session || !session.user || isAdminView) {
+      setBookmarksLoading(false);
+      return;
+    }
+    let ignore = false;
+    async function fetchBookmarks() {
+      try {
+        const res = await fetch('/api/bookmarks/all');
+        if (!res.ok) {
+          if (!ignore) setBookmarksLoading(false);
+          return;
+        }
+        const data = await res.json();
+        if (!ignore) {
+          setBookmarkedEventIds(extractBookmarkedEventIds(data));
+          setBookmarksLoading(false);
+        }
+      } catch {
+        if (!ignore) {
+          setBookmarkedEventIds(new Set());
+          setBookmarksLoading(false);
+        }
+      }
+    }
+    fetchBookmarks();
+    return () => { ignore = true; };
+  }, [session, isAdminView]);
+  
   useEffect(() => {
     setLoading(true);
     setPage(1);
@@ -69,7 +105,7 @@ export default function EventsPage() {
     if (typeof window === "undefined") return;
     const localAdminAuth = localStorage.getItem("adminAuth") === "true";
     setAdminAuth(localAdminAuth);
-    const userType = session?.user?.type;
+    const userType = (session as any)?.user?.type;
     const isPrivileged = localAdminAuth && (userType === "ADMIN" || userType === "STAFF_ADMIN");
     setIsAdminView(isPrivileged);
   }, [session]);
@@ -195,7 +231,7 @@ export default function EventsPage() {
         </div>
 
         {/* Event Grid */}
-        {loading ? (
+        {loading || bookmarksLoading ? (
           <div className="text-center text-gray-500 py-12">Loading events...</div>
         ) : error ? (
           <div className="text-center text-red-500 py-12">{error}</div>
@@ -226,6 +262,8 @@ export default function EventsPage() {
                     adminView={isAdminView}
                     adminAuth={adminAuth}
                     onDelete={handleDelete}
+                    // Pass bookmark state from batch API
+                    bookmarked={bookmarkedEventIds.has(event.id)}
                   />
                 ))
               )}

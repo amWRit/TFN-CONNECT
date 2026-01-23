@@ -73,6 +73,42 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
   const { id } = use(params);
   const { data: session, status: authStatus } = useSession();
 
+    // Utility to extract event IDs from batch bookmarks response
+  function extractBookmarkedEventIds(bookmarks: any): Set<string> {
+    if (!bookmarks || !Array.isArray(bookmarks.events)) return new Set();
+    return new Set(bookmarks.events.map((b: any) => b.targetId));
+  }
+  const [bookmarkedEventIds, setBookmarkedEventIds] = useState<Set<string>>(new Set());
+  const [bookmarksLoading, setBookmarksLoading] = useState(true);
+  useEffect(() => {
+    if (!session || !session.user || isAdminView) {
+      setBookmarksLoading(false);
+      return;
+    }
+    let ignore = false;
+    async function fetchBookmarks() {
+      try {
+        const res = await fetch('/api/bookmarks/all');
+        if (!res.ok) {
+          if (!ignore) setBookmarksLoading(false);
+          return;
+        }
+        const data = await res.json();
+        if (!ignore) {
+          setBookmarkedEventIds(extractBookmarkedEventIds(data));
+          setBookmarksLoading(false);
+        }
+      } catch {
+        if (!ignore) {
+          setBookmarkedEventIds(new Set());
+          setBookmarksLoading(false);
+        }
+      }
+    }
+    fetchBookmarks();
+    return () => { ignore = true; };
+  }, [session, isAdminView]);
+  
   useEffect(() => {
     if (!id) return;
     fetch(`/api/events/${id}`)
@@ -99,7 +135,7 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
     setIsAdminView(isPrivileged);
   }, [session]);
 
-  if (loading) {
+  if (loading || bookmarksLoading) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-12">
         <div className="text-center">Loading event...</div>
@@ -159,6 +195,8 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
               showOverviewOnly={false}
               adminView={isAdminView}
               adminAuth={adminAuth}
+              // Pass bookmark state from batch API
+              bookmarked={bookmarkedEventIds.has(event.id)}
             />
           </div>
           {/* People Interested (right column, only for owner or admin) */}
