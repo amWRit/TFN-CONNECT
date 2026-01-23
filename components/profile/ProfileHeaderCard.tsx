@@ -1,9 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProfileImage } from "@/components/ProfileImage";
-import { Bookmark, BookmarkCheck, Edit2, Info, User } from "lucide-react";
+import { Bookmark, BookmarkCheck, Edit2, Info, User, Briefcase, GraduationCap, Mail, Phone, Globe, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -91,12 +91,27 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
 // Collapsible bio component with markdown support
 const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
   const [expanded, setExpanded] = useState(false);
-  const COLLAPSE_LENGTH = 180;
-  const isLong = bio.length > COLLAPSE_LENGTH;
-  const displayText = !expanded && isLong ? bio.slice(0, COLLAPSE_LENGTH) + "..." : bio;
+  const [collapseLength, setCollapseLength] = useState(200);
+
+  React.useEffect(() => {
+    function handleResize() {
+      if (window.innerWidth < 640) {
+        setCollapseLength(120); // mobile
+      } else if (window.innerWidth < 1024) {
+        setCollapseLength(180); // tablet
+      } else {
+        setCollapseLength(250); // desktop
+      }
+    }
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isLong = bio.length > collapseLength;
+  const displayText = !expanded && isLong ? bio.slice(0, collapseLength) + "..." : bio;
   return (
-    <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mb-5">
-      <Info className="w-5 h-5 mt-1 text-blue-400 flex-shrink-0" />
+    <div className="flex flex-col bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mb-5">
       <span className="italic text-blue-900 w-full">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
@@ -118,28 +133,28 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
         >
           {displayText}
         </ReactMarkdown>
-        {isLong && (
-          <>
-            {!expanded ? (
-              <button
-                className="ml-2 text-blue-600 underline text-xs font-semibold"
-                onClick={() => setExpanded(true)}
-                type="button"
-              >
-                View more
-              </button>
-            ) : (
-              <button
-                className="ml-2 text-blue-600 underline text-xs font-semibold"
-                onClick={() => setExpanded(false)}
-                type="button"
-              >
-                Show less
-              </button>
-            )}
-          </>
-        )}
       </span>
+      {isLong && (
+        <div className="flex justify-end mt-1">
+          {!expanded ? (
+            <button
+              className="text-blue-600 underline text-xs font-semibold"
+              onClick={() => setExpanded(true)}
+              type="button"
+            >
+              View more
+            </button>
+          ) : (
+            <button
+              className="text-blue-600 underline text-xs font-semibold"
+              onClick={() => setExpanded(false)}
+              type="button"
+            >
+              Show less
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };
@@ -147,6 +162,14 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
   // Hide contacts if type is LEADERSHIP
   const isLeadership = person.type && person.type.toUpperCase() === "LEADERSHIP";
   const canSeeContacts = !!canViewPhones && !isLeadership;
+
+  const [statusOptions, setStatusOptions] = useState<{ eduStatus: any[]; empStatus: any[] }>({ eduStatus: [], empStatus: [] });
+
+  useEffect(() => {
+    fetch('/api/meta/status-options')
+      .then(res => res.json())
+      .then(data => setStatusOptions(data));
+  }, []);
 
   if (editing && isProfileOwner && formData && onFormChange && onSave && onCancel) {
     // Improved Edit mode UI - fix input stacking and spacing
@@ -352,9 +375,9 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
                     onChange={onFormChange}
                     className="border border-blue-200 px-2 py-1 rounded focus:border-blue-400 focus:outline-none"
                   >
-                    <option value="COMPLETED">Completed</option>
-                    <option value="ENROLLED">Enrolled</option>
-                    <option value="NOT_ENROLLED">Not Enrolled</option>
+                    {statusOptions.eduStatus.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
                   </select>
                 </div>
                 {/* Employment Status */}
@@ -366,9 +389,9 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
                     onChange={onFormChange}
                     className="border border-green-200 px-2 py-1 rounded focus:border-green-400 focus:outline-none"
                   >
-                    <option value="SEEKING">Seeking</option>
-                    <option value="EMPLOYED">Employed</option>
-                    <option value="UNEMPLOYED">Unemployed</option>
+                    {statusOptions.empStatus.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -446,11 +469,17 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
           </div>
         </div>
       </div>
-      <div className="relative px-6 sm:px-8 pt-6 pb-6">
+      <div className="relative px-4 sm:px-6 pt-2 pb-2">
         <div className="flex flex-col gap-6">
           <div className="flex-1">
             {person.bio && (
-              <BioCollapse bio={person.bio} />
+              <div className="mb-4">
+                <div className="flex items-center gap-2 text-blue-900 font-medium">
+                </div>
+                <div className="mt-1">
+                  <BioCollapse bio={person.bio} />
+                </div>
+              </div>
             )}
 
             {/* Info Grid */}
@@ -466,26 +495,26 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
                   <>
                     {/* Row 1: Email */}
                     <div className="flex items-center gap-2">
-                      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-500" viewBox="0 0 24 24"><path d="M4 4h16v16H4z" stroke="none"/><path d="M22 6l-10 7L2 6" /><rect x="2" y="6" width="20" height="12" rx="2" /></svg>
+                      <Mail size={18} className="text-blue-500" />
                       <span>{person.email1 || <span className="text-gray-400">--</span>}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-500" viewBox="0 0 24 24"><path d="M4 4h16v16H4z" stroke="none"/><path d="M22 6l-10 7L2 6" /><rect x="2" y="6" width="20" height="12" rx="2" /></svg>
+                      <Mail size={18} className="text-blue-500" />
                       <span>{person.email2 || <span className="text-gray-400">--</span>}</span>
                     </div>
                     {/* Row 2: Phone */}
                     <div className="flex items-center gap-2">
-                      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-500" viewBox="0 0 24 24"><path d="M22 16.92V19a2 2 0 0 1-2 2A18 18 0 0 1 3 5a2 2 0 0 1 2-2h2.09a2 2 0 0 1 2 1.72c.13.81.28 1.6.47 2.36a2 2 0 0 1-.45 2.11l-.27.27a16 16 0 0 0 6.29 6.29l.27-.27a2 2 0 0 1 2.11-.45c.76.19 1.55.34 2.36.47A2 2 0 0 1 22 16.92z" /></svg>
+                      <Phone size={18} className="text-green-500" />
                       <span>{person.phone1 || <span className="text-gray-400">--</span>}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-500" viewBox="0 0 24 24"><path d="M22 16.92V19a2 2 0 0 1-2 2A18 18 0 0 1 3 5a2 2 0 0 1 2-2h2.09a2 2 0 0 1 2 1.72c.13.81.28 1.6.47 2.36a2 2 0 0 1-.45 2.11l-.27.27a16 16 0 0 0 6.29 6.29l.27-.27a2 2 0 0 1 2.11-.45c.76.19 1.55.34 2.36.47A2 2 0 0 1 22 16.92z" /></svg>
+                      <Phone size={18} className="text-green-500" />
                       <span>{person.phone2 || <span className="text-gray-400">--</span>}</span>
                     </div>
                   </>
                 )}
                 <div className="flex items-center gap-2">
-                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-700" viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z" /><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" /></svg>
+                  <Linkedin size={18} className="text-blue-700" />
                   {person.linkedin ? (
                     <a href={person.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">{person.linkedin}</a>
                   ) : (
@@ -493,7 +522,7 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-700" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z" /></svg>
+                  <Globe size={18} className="text-blue-700" />
                   {person.website ? (() => {
                     const url = person.website.startsWith("http://") || person.website.startsWith("https://")
                       ? person.website
@@ -517,9 +546,9 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
                   {/* Employment Status (left col) */}
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">
-                      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-600" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 3v4" /><path d="M8 3v4" /></svg>
+                      <Briefcase size={18} className="text-blue-500" />
                       <span className="font-medium text-gray-700">Employment Status:</span>
-                      <span className="font-normal">{person.empStatus ? person.empStatus.charAt(0).toUpperCase() + person.empStatus.slice(1).toLowerCase() : 'N/A'}</span>
+                      <span className="font-normal">{person.empStatus === 'NA' || !person.empStatus ? 'N/A' : person.empStatus.charAt(0).toUpperCase() + person.empStatus.slice(1).toLowerCase()}</span>
                     </div>
                     {person.experiences && person.experiences.length > 0 && (() => {
                       const recentExp = [...person.experiences].sort((a, b) => {
@@ -535,10 +564,9 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
                   {/* Education Status (right col) */}
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">
-                      {/* Graduation Cap Icon */}
-                      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-500" viewBox="0 0 24 24"><path d="M22 12l-10-5-10 5 10 5 10-5z"/><path d="M6 12v5c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2v-5"/></svg>
+                      <GraduationCap size={18} className="text-blue-500" />
                       <span className="font-medium text-gray-700">Education Status:</span>
-                      <span className="font-normal">{person.eduStatus ? person.eduStatus.charAt(0).toUpperCase() + person.eduStatus.slice(1).toLowerCase() : 'N/A'}</span>
+                      <span className="font-normal">{person.eduStatus === 'NA' || !person.eduStatus ? 'N/A' : person.eduStatus.charAt(0).toUpperCase() + person.eduStatus.slice(1).toLowerCase()}</span>
                     </div>
                     {person.educations && person.educations.length > 0 && (() => {
                       const recentEdu = [...person.educations].sort((a, b) => {
