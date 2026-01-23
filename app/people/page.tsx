@@ -51,7 +51,8 @@ export default function PeoplePage() {
 	const [page, setPage] = useState(1);
 	const pageSize = 24;
 	const { data: session } = useSession();
-	const [bookmarkStates, setBookmarkStates] = useState<Record<string, { bookmarked: boolean; loading: boolean }>>({});
+	// Set of all bookmarked person IDs for the current user
+	const [bookmarkedPersonIds, setBookmarkedPersonIds] = useState<Set<string>>(new Set());
 	const [isAdmin, setIsAdmin] = useState(false);
 	// Collapsible filter state for small screens
 	const [showFilters, setShowFilters] = useState(false);
@@ -60,7 +61,7 @@ export default function PeoplePage() {
 		fetch("/api/people")
 			.then((res) => res.json())
 			.then((data) => {
-				setPeople(data);
+				setPeople(Array.isArray(data) ? data : []);
 				setLoading(false);
 			});
 	}, []);
@@ -108,32 +109,30 @@ export default function PeoplePage() {
 		setIsAdmin(localAdmin || sessionIsAdmin);
 	}, [session]);
 
-	// Fetch bookmark state for each person when session is ready
+
+	// Utility to extract person IDs from batch bookmarks response
+	function extractBookmarkedPersonIds(bookmarks: any): Set<string> {
+		if (!bookmarks || !Array.isArray(bookmarks.people)) return new Set();
+		return new Set(bookmarks.people.map((b: any) => b.targetId));
+	}
+
+	// Fetch all person bookmarks for the current user (batch API)
 	useEffect(() => {
-		if (!session || !session.user) return;
-		if (isAdmin) return; // hide bookmarks and avoid extra calls for admins
-		const filtered = people.filter((p) => p.type === tab);
-		const fetchBookmarks = async () => {
-			const states: Record<string, { bookmarked: boolean; loading: boolean }> = {};
-			await Promise.all(
-				filtered.map(async (person) => {
-					if (session.user.id === person.id) {
-						states[person.id] = { bookmarked: false, loading: false };
-						return;
-					}
-					try {
-						const res = await fetch(`/api/bookmarks/person?targetPersonId=${person.id}`);
-						const data = await res.json();
-						states[person.id] = { bookmarked: !!data.bookmarked, loading: false };
-					} catch {
-						states[person.id] = { bookmarked: false, loading: false };
-					}
-				})
-			);
-			setBookmarkStates(states);
-		};
-		if (filtered.length > 0) fetchBookmarks();
-	}, [session, people, tab, isAdmin]);
+		if (!session || !session.user || isAdmin) return;
+		let ignore = false;
+		async function fetchBookmarks() {
+			try {
+				const res = await fetch('/api/bookmarks/all');
+				if (!res.ok) return;
+				const data = await res.json();
+				if (!ignore) setBookmarkedPersonIds(extractBookmarkedPersonIds(data));
+			} catch {
+				if (!ignore) setBookmarkedPersonIds(new Set());
+			}
+		}
+		fetchBookmarks();
+		return () => { ignore = true; };
+	}, [session, isAdmin]);
 
 	// Filter logic
 	const filteredPeople = useMemo(() => {
@@ -328,7 +327,7 @@ export default function PeoplePage() {
 					{paginatedPeople.map((person) => {
 						const isProfileOwner = session && session.user && session.user.id === person.id;
 						const showBookmark = session && session.user && !isProfileOwner && !isAdmin;
-						const bookmarkState = bookmarkStates[person.id] || { bookmarked: false, loading: false };
+						const isBookmarked = bookmarkedPersonIds.has(person.id);
 						return (
 							<div key={person.id} className="relative group">
 								<Link href={`/profile/${person.id}`} className="block">
@@ -375,42 +374,32 @@ export default function PeoplePage() {
 												</div>
 												{showBookmark && (
 													<button
-														aria-label={bookmarkState.bookmarked ? "Remove Bookmark" : "Add Bookmark"}
-														disabled={bookmarkState.loading}
+														aria-label={isBookmarked ? "Remove Bookmark" : "Add Bookmark"}
 														onClick={async (e) => {
 															e.preventDefault();
-															setBookmarkStates((prev) => ({
-																...prev,
-																[person.id]: { ...prev[person.id], loading: true },
-															}));
 															try {
 																const res = await fetch("/api/bookmarks/person", {
-																	method: bookmarkState.bookmarked ? "DELETE" : "POST",
+																	method: isBookmarked ? "DELETE" : "POST",
 																	headers: { "Content-Type": "application/json" },
 																	body: JSON.stringify({ targetPersonId: person.id }),
 																});
 																if (res.ok) {
-																	setBookmarkStates((prev) => ({
-																		...prev,
-																		[person.id]: { bookmarked: !bookmarkState.bookmarked, loading: false },
-																	}));
-																} else {
-																	setBookmarkStates((prev) => ({
-																		...prev,
-																		[person.id]: { ...prev[person.id], loading: false },
-																	}));
+																	setBookmarkedPersonIds(prev => {
+																		const newSet = new Set(prev);
+																		if (isBookmarked) {
+																			newSet.delete(person.id);
+																		} else {
+																			newSet.add(person.id);
+																		}
+																		return newSet;
+																	});
 																}
-															} catch {
-																setBookmarkStates((prev) => ({
-																	...prev,
-																	[person.id]: { ...prev[person.id], loading: false },
-																}));
-															}
+															} catch {}
 														}}
-														className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${bookmarkState.bookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110 disabled:opacity-60 ml-2`}
+														className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${isBookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110 disabled:opacity-60 ml-2`}
 														style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}
 													>
-														{bookmarkState.bookmarked ? <BookmarkCheck size={24} /> : <Bookmark size={24} />}
+														{isBookmarked ? <BookmarkCheck size={24} /> : <Bookmark size={24} />}
 													</button>
 												)}
 											</div>

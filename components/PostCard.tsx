@@ -107,9 +107,12 @@ export function PostCard({
   leftBorder = false,
   onEdit,
   adminView = false,
-}: PostProps & { onEdit?: () => void }) {
+  bookmarked
+}: PostProps & { onEdit?: () => void; bookmarked?: boolean }) {
   const { status, data: session } = useSession();
-  const [bookmarked, setBookmarked] = useState(false);
+  const [bookmarkedState, setBookmarkedState] = useState(false);
+  // Use prop if provided, else fallback to local state
+  const isBookmarked = typeof bookmarked === 'boolean' ? bookmarked : bookmarkedState;
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
   const isOwner = author && author.id && session?.user?.id === author.id;
   const [localAdmin, setLocalAdmin] = useState(false);
@@ -132,12 +135,13 @@ export function PostCard({
 
   // Fetch initial bookmark state
   useEffect(() => {
+    if (typeof bookmarked === 'boolean') return; // Controlled externally
     if (status !== "authenticated") return;
     fetch(`/api/bookmarks/post?targetPostId=${postId}`)
       .then((res) => res.json())
-      .then((data) => setBookmarked(!!data.bookmarked))
-      .catch(() => setBookmarked(false));
-  }, [postId, status]);
+      .then((data) => setBookmarkedState(!!data.bookmarked))
+      .catch(() => setBookmarkedState(false));
+  }, [postId, status, bookmarked]);
   function formatDate(date: Date) {
     const d = new Date(date);
     const now = new Date();
@@ -177,28 +181,28 @@ export function PostCard({
             </button>
           ) : (
             <button
-              aria-label={bookmarked ? "Remove Bookmark" : "Add Bookmark"}
+              aria-label={isBookmarked ? "Remove Bookmark" : "Add Bookmark"}
               disabled={bookmarkLoading || status !== "authenticated"}
               onClick={async (e) => {
                 e.preventDefault();
                 setBookmarkLoading(true);
                 try {
                   const res = await fetch("/api/bookmarks/post", {
-                    method: bookmarked ? "DELETE" : "POST",
+                    method: isBookmarked ? "DELETE" : "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ targetPostId: postId }),
                   });
-                  if (res.ok) {
-                    setBookmarked((prev) => !prev);
+                  if (res.ok && typeof bookmarked !== 'boolean') {
+                    setBookmarkedState((prev) => !prev);
                   }
                 } finally {
                   setBookmarkLoading(false);
                 }
               }}
-              className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${bookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110 disabled:opacity-60`}
+              className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${isBookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110 disabled:opacity-60`}
               style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}
             >
-              {bookmarked ? <BookmarkCheck size={22} /> : <Bookmark size={22} />}
+              {isBookmarked ? <BookmarkCheck size={22} /> : <Bookmark size={22} />}
             </button>
           )
         )}

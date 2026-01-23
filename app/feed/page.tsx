@@ -8,6 +8,12 @@ import NotFound from "@/components/NotFound"
 import { PostType } from "@prisma/client"
 import { EditPostModal } from "@/components/EditPostModal"
 
+// Utility to extract post IDs from batch bookmarks response
+function extractBookmarkedPostIds(bookmarks: any): Set<string> {
+  if (!bookmarks || !Array.isArray(bookmarks.posts)) return new Set();
+  return new Set(bookmarks.posts.map((b: any) => b.targetId));
+}
+
 interface Post {
   id: string
   content: string
@@ -29,6 +35,8 @@ export default function FeedPage() {
   const { data: session, status } = useSession();
   // Track both session admin and local admin
   const [localAdmin, setLocalAdmin] = useState(() => typeof window !== 'undefined' && localStorage.getItem('adminAuth') === 'true');
+  // State for bookmarked post IDs
+  const [bookmarkedPostIds, setBookmarkedPostIds] = useState<Set<string>>(new Set());
   useEffect(() => {
     function syncAdmin() {
       setLocalAdmin(typeof window !== 'undefined' && localStorage.getItem('adminAuth') === 'true');
@@ -40,6 +48,24 @@ export default function FeedPage() {
       window.removeEventListener('focus', syncAdmin);
     };
   }, []);
+
+  // Fetch all post bookmarks for the current user (batch API)
+  useEffect(() => {
+    if (status !== "authenticated" && !localAdmin) return;
+    let ignore = false;
+    async function fetchBookmarks() {
+      try {
+        const res = await fetch('/api/bookmarks/all');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!ignore) setBookmarkedPostIds(extractBookmarkedPostIds(data));
+      } catch {
+        if (!ignore) setBookmarkedPostIds(new Set());
+      }
+    }
+    fetchBookmarks();
+    return () => { ignore = true; };
+  }, [status, localAdmin]);
   // Only allow admin if type is ADMIN or STAFF_ADMIN AND adminAuth is set
   const personType = (session?.user as any)?.type;
   const isSessionAdmin = personType === 'ADMIN' || personType === 'STAFF_ADMIN';
@@ -319,6 +345,7 @@ export default function FeedPage() {
               hideStats
               hideBookmark={false}
               adminView={isAdmin}
+              bookmarked={bookmarkedPostIds.has(post.id)}
               onEdit={() => handleEdit(post)}
             />
           ))}
