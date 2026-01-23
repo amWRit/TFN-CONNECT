@@ -306,12 +306,15 @@ export default function JobsTab() {
 
   return (
     <>
-      {/* Test Email Progress Bar (global, not per-job) */}
+      {/* Test Email Progress Bar (global, not per-job) and blur */}
       {testLoading && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-yellow-500 text-white px-8 py-3 rounded-full shadow-lg text-lg font-bold flex items-center gap-2 animate-pulse z-50">
-          <FlaskConical className="w-5 h-5 animate-spin" />
-          Sending test email...
-        </div>
+        <>
+          <div className="fixed inset-0 z-40 bg-black/10 backdrop-blur-[2px] transition-all" />
+          <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-yellow-500 text-white px-8 py-3 rounded-full shadow-lg text-lg font-bold flex items-center gap-2 animate-pulse z-50">
+            <FlaskConical className="w-5 h-5 animate-spin" />
+            Sending test email...
+          </div>
+        </>
       )}
       <div className="space-y-6">
         {/* Filters: type and status, responsive layout */}
