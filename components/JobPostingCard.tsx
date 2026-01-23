@@ -40,6 +40,8 @@ interface JobPostingProps {
   // show the edit icon instead of bookmark, and skip bookmark logic.
   adminView?: boolean;
   showOverviewOnly?: boolean;
+  showEditButton?: boolean;
+  showBookmarkButton?: boolean;
 }
 
 export function JobPostingCard({
@@ -60,6 +62,8 @@ export function JobPostingCard({
   overview,
   adminView = false,
   showOverviewOnly = false,
+  showEditButton = false,
+  showBookmarkButton = false,
 }: JobPostingProps) {
   const { data: session } = useSession();
   const isSessionAdmin = (session?.user as any)?.type === "ADMIN";

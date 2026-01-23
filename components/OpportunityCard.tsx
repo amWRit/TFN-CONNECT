@@ -35,14 +35,22 @@ interface OpportunityCardProps {
   // (e.g. localStorage bypass admin on activity page) and should
   // show the edit icon instead of bookmark, and skip bookmark logic.
   adminView?: boolean;
+  adminAuth?: boolean;
 }
 
 const OpportunityCard: React.FC<OpportunityCardProps> = ({ id, title, description, overview, types, status, location, createdById, createdByName, showOverviewOnly, adminView = false }) => {
   const { data: session } = useSession();
+  const [localAdminAuth, setLocalAdminAuth] = useState(false);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setLocalAdminAuth(localStorage.getItem("adminAuth") === "true");
+    }
+  }, []);
   const userId = session?.user?.id;
+  const userType = (session?.user as any)?.type;
   const isOwner = userId && createdById && userId === createdById;
-  const isSessionAdmin = (session?.user as any)?.type === "ADMIN";
-  const isEffectiveAdmin = adminView || isSessionAdmin;
+  const isPrivilegedAdmin = (typeof adminAuth === 'boolean' ? adminAuth : localAdminAuth) && (userType === "ADMIN" || userType === "STAFF_ADMIN");
+  const isEffectiveAdmin = adminView || isPrivilegedAdmin;
   const [bookmarkState, setBookmarkState] = useState({ bookmarked: false, loading: false });
   // Collapsible description state (should be inside component)
   const [descExpanded, setDescExpanded] = useState(false);

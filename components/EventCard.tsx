@@ -43,6 +43,8 @@ interface EventCardProps {
   createdById?: string;
   showOverviewOnly?: boolean;
   adminView?: boolean;
+  // Optionally allow explicit adminAuth override
+  adminAuth?: boolean;
   onDelete?: (id: string) => void;
 }
 
@@ -110,13 +112,21 @@ export default function EventCard({
   createdById,
   showOverviewOnly = true,
   adminView = false,
+  adminAuth,
   onDelete,
 }: EventCardProps) {
   const { data: session } = useSession();
+  const [localAdminAuth, setLocalAdminAuth] = useState(false);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setLocalAdminAuth(localStorage.getItem("adminAuth") === "true");
+    }
+  }, []);
   const userId = session?.user?.id;
+  const userType = (session?.user as any)?.type;
   const isOwner = userId && createdById && userId === createdById;
-  const isSessionAdmin = (session?.user as any)?.type === "ADMIN";
-  const isEffectiveAdmin = adminView || isSessionAdmin;
+  const isPrivilegedAdmin = (adminAuth ?? localAdminAuth) && (userType === "ADMIN" || userType === "STAFF_ADMIN");
+  const isEffectiveAdmin = adminView || isPrivilegedAdmin;
   const showEdit = (session?.user && isOwner) || isEffectiveAdmin;
   const showBookmark = session?.user && !isOwner && !isEffectiveAdmin;
 

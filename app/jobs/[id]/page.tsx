@@ -41,9 +41,20 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
   const [optimisticInterested, setOptimisticInterested] = useState(false);
   const [interests, setInterests] = useState<any[]>([]);
   const [isAdminView, setIsAdminView] = useState(false);
+  const [adminAuth, setAdminAuth] = useState(false);
   const router = useRouter()
   const { id } = React.use(params)
-  const { data: session } = useSession();
+  interface SessionUser {
+    id?: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+    type?: string;
+  }
+  interface Session {
+    user?: SessionUser;
+  }
+  const { data: session } = useSession() as { data: Session | null };
 
   useEffect(() => {
     if (!id) return;
@@ -75,9 +86,12 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
   // Determine admin view (NextAuth ADMIN or localStorage bypass admin)
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const localAdmin = localStorage.getItem("adminAuth") === "true";
-    const sessionIsAdmin = !!(session && (session as any).user && (session as any).user.type === "ADMIN");
-    setIsAdminView(localAdmin || sessionIsAdmin);
+    const localAdminAuth = localStorage.getItem("adminAuth") === "true";
+    setAdminAuth(localAdminAuth);
+    // Only allow admin/staff_admin to have admin view if adminAuth is true
+    const userType = session?.user?.type;
+    const isPrivileged = localAdminAuth && (userType === "ADMIN" || userType === "STAFF_ADMIN");
+    setIsAdminView(isPrivileged);
   }, [session]);
 
   if (loading) {
@@ -104,6 +118,12 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
       : [];
   }
 
+  // Privilege logic
+  const userId = session?.user?.id;
+  const userType = session?.user?.type;
+  const isOwner = userId && job?.createdBy?.id === userId;
+  const isPrivilegedAdmin = adminAuth && (userType === "ADMIN" || userType === "STAFF_ADMIN");
+
   return (
     <div className="w-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 min-h-screen pb-24">
       <div className="max-w-5xl mx-auto px-4 md:p-8">
@@ -123,11 +143,13 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
               createdBy={job.createdBy && job.createdBy.id ? job.createdBy as { id: string; firstName: string; lastName: string } : undefined}
               hideViewButton={true}
               deadline={job.deadline}
-              adminView={isAdminView}
+              adminView={isPrivilegedAdmin}
+              showEditButton={Boolean(isPrivilegedAdmin || isOwner)}
+              showBookmarkButton={!isPrivilegedAdmin && !isOwner}
             />
           </div>
-          {/* People Interested (right column, only for owner) */}
-          {session?.user?.id && job?.createdBy?.id === session.user.id && (
+          {/* People Interested (right column, show for admin or owner) */}
+          {(isOwner || isPrivilegedAdmin) && (
             <div className="w-full md:w-64 flex-shrink-0">
               <h2 className="text-lg font-semibold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">People Interested</h2>
               {interests && interests.length > 0 ? (
@@ -161,13 +183,13 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
           )}
         </div>
       </div>
-      {/* Floating Interest Button (if signed in, not owner, and deadline not crossed) */}
-      {session?.user?.id && job?.createdBy?.id !== session.user.id && job?.deadline && (() => {
+      {/* Floating Interest Button (if signed in, not admin, not owner, and deadline not crossed) */}
+      {userId && !isOwner && !isPrivilegedAdmin && job?.deadline && (() => {
         const now = new Date();
         const deadlineDate = new Date(job.deadline);
         const isExpired = deadlineDate.getTime() < now.getTime();
         if (isExpired) return null;
-        const alreadyInterested = optimisticInterested || interests.some((i: { personId?: string }) => i.personId === session.user.id);
+        const alreadyInterested = optimisticInterested || interests.some((i: { personId?: string }) => i.personId === userId);
         if (!alreadyInterested) {
           return (
             <div className="fixed bottom-20 sm:bottom-8 right-4 sm:right-8 z-30 group">
@@ -191,7 +213,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                     .then((data) => {
                       setInterests(data);
                       setLoading(false);
-                      if (data && Array.isArray(data) && data.some((i: { personId?: string }) => i.personId === session.user.id)) {
+                      if (data && Array.isArray(data) && data.some((i: { personId?: string }) => i.personId === userId)) {
                         setOptimisticInterested(false);
                       }
                     });

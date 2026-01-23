@@ -37,6 +37,7 @@ export default function EventsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [showMine, setShowMine] = useState(false);
   const [isAdminView, setIsAdminView] = useState(false);
+  const [adminAuth, setAdminAuth] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 18;
   // Collapsible filter state for small screens
@@ -63,12 +64,14 @@ export default function EventsPage() {
       });
   }, [typeFilter, statusFilter, showMine]);
 
-  // Determine admin view
+  // Determine admin view and adminAuth
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const localAdmin = localStorage.getItem("adminAuth") === "true";
-    const sessionIsAdmin = !!(session && (session as any).user && (session as any).user.type === "ADMIN");
-    setIsAdminView(localAdmin || sessionIsAdmin);
+    const localAdminAuth = localStorage.getItem("adminAuth") === "true";
+    setAdminAuth(localAdminAuth);
+    const userType = session?.user?.type;
+    const isPrivileged = localAdminAuth && (userType === "ADMIN" || userType === "STAFF_ADMIN");
+    setIsAdminView(isPrivileged);
   }, [session]);
 
   const totalPages = Math.max(1, Math.ceil(events.length / pageSize));
@@ -221,6 +224,7 @@ export default function EventsPage() {
                     createdById={event.createdById}
                     showOverviewOnly={true}
                     adminView={isAdminView}
+                    adminAuth={adminAuth}
                     onDelete={handleDelete}
                   />
                 ))
