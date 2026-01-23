@@ -1,9 +1,10 @@
-"use client";
+ "use client";
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import OpportunityCard from "../../components/OpportunityCard";
 import { Badge } from "@/components/ui/badge";
 import { Filter, Plus } from "lucide-react"
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
 
 const handleAddOpportunity = () => {
 // TODO: Navigate to opportunity creation page or open modal
@@ -31,10 +32,47 @@ export default function OpportunitiesPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [showMine, setShowMine] = useState(false);
   const [isAdminView, setIsAdminView] = useState(false);
+  const [adminAuth, setAdminAuth] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 18;
   // Collapsible filter state for small screens
   const [showFilters, setShowFilters] = useState(false);
+
+   // Utility to extract opportunity IDs from batch bookmarks response
+  function extractBookmarkedOpportunityIds(bookmarks: any): Set<string> {
+    if (!bookmarks || !Array.isArray(bookmarks.opportunities)) return new Set();
+    return new Set(bookmarks.opportunities.map((b: any) => b.targetId));
+  }
+  const [bookmarkedOpportunityIds, setBookmarkedOpportunityIds] = useState<Set<string>>(new Set());
+  const [bookmarksLoading, setBookmarksLoading] = useState(true);
+  useEffect(() => {
+    if (!session || !session.user || isAdminView) {
+      setBookmarksLoading(false);
+      return;
+    }
+    let ignore = false;
+    async function fetchBookmarks() {
+      try {
+        const res = await fetch('/api/bookmarks/all');
+        if (!res.ok) {
+          if (!ignore) setBookmarksLoading(false);
+          return;
+        }
+        const data = await res.json();
+        if (!ignore) {
+          setBookmarkedOpportunityIds(extractBookmarkedOpportunityIds(data));
+          setBookmarksLoading(false);
+        }
+      } catch {
+        if (!ignore) {
+          setBookmarkedOpportunityIds(new Set());
+          setBookmarksLoading(false);
+        }
+      }
+    }
+    fetchBookmarks();
+    return () => { ignore = true; };
+  }, [session, isAdminView]);
 
   useEffect(() => {
     setLoading(true);
@@ -57,12 +95,14 @@ export default function OpportunitiesPage() {
       });
   }, [typeFilter, statusFilter, showMine]);
 
-  // Determine admin view (NextAuth ADMIN or localStorage bypass admin)
+  // Determine admin view and adminAuth
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const localAdmin = localStorage.getItem("adminAuth") === "true";
-    const sessionIsAdmin = !!(session && (session as any).user && (session as any).user.type === "ADMIN");
-    setIsAdminView(localAdmin || sessionIsAdmin);
+    const localAdminAuth = localStorage.getItem("adminAuth") === "true";
+    setAdminAuth(localAdminAuth);
+    const userType = (session as any) ?.user?.type;
+    const isPrivileged = localAdminAuth && (userType === "ADMIN" || userType === "STAFF_ADMIN");
+    setIsAdminView(isPrivileged);
   }, [session]);
 
   // Example types for filter dropdown
@@ -175,8 +215,8 @@ export default function OpportunitiesPage() {
             </div>
           </div>
           {/* Two Column Opportunity Grid */}
-          {loading ? (
-            <div className="text-center text-gray-500">Loading opportunities...</div>
+          {loading || bookmarksLoading ? (
+            <LoadingSpinner text="Loading opportunities..." />
           ) : error ? (
             <div className="text-center text-red-500">{error}</div>
           ) : (
@@ -198,6 +238,9 @@ export default function OpportunitiesPage() {
                       createdById={opp.createdById}
                       showOverviewOnly={true}
                       adminView={isAdminView}
+                      adminAuth={adminAuth}
+                      // Pass bookmark state from batch API
+                      bookmarked={bookmarkedOpportunityIds.has(opp.id)}
                     />
                   ))
                 )}

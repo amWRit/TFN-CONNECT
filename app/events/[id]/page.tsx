@@ -68,10 +68,47 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
   const [interestSuccess, setInterestSuccess] = useState(false);
   const [optimisticInterested, setOptimisticInterested] = useState(false);
   const [isAdminView, setIsAdminView] = useState(false);
+  const [adminAuth, setAdminAuth] = useState(false);
   const router = useRouter();
   const { id } = use(params);
   const { data: session, status: authStatus } = useSession();
 
+    // Utility to extract event IDs from batch bookmarks response
+  function extractBookmarkedEventIds(bookmarks: any): Set<string> {
+    if (!bookmarks || !Array.isArray(bookmarks.events)) return new Set();
+    return new Set(bookmarks.events.map((b: any) => b.targetId));
+  }
+  const [bookmarkedEventIds, setBookmarkedEventIds] = useState<Set<string>>(new Set());
+  const [bookmarksLoading, setBookmarksLoading] = useState(true);
+  useEffect(() => {
+    if (!session || !session.user || isAdminView) {
+      setBookmarksLoading(false);
+      return;
+    }
+    let ignore = false;
+    async function fetchBookmarks() {
+      try {
+        const res = await fetch('/api/bookmarks/all');
+        if (!res.ok) {
+          if (!ignore) setBookmarksLoading(false);
+          return;
+        }
+        const data = await res.json();
+        if (!ignore) {
+          setBookmarkedEventIds(extractBookmarkedEventIds(data));
+          setBookmarksLoading(false);
+        }
+      } catch {
+        if (!ignore) {
+          setBookmarkedEventIds(new Set());
+          setBookmarksLoading(false);
+        }
+      }
+    }
+    fetchBookmarks();
+    return () => { ignore = true; };
+  }, [session, isAdminView]);
+  
   useEffect(() => {
     if (!id) return;
     fetch(`/api/events/${id}`)
@@ -88,15 +125,17 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
       });
   }, [id]);
 
-  // Determine admin view
+  // Determine admin view and adminAuth
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const localAdmin = localStorage.getItem("adminAuth") === "true";
-    const sessionIsAdmin = !!(session && (session as any).user && (session as any).user.type === "ADMIN");
-    setIsAdminView(localAdmin || sessionIsAdmin);
+    const localAdminAuth = localStorage.getItem("adminAuth") === "true";
+    setAdminAuth(localAdminAuth);
+    const userType = (session?.user as { type?: string })?.type;
+    const isPrivileged = localAdminAuth && (userType === "ADMIN" || userType === "STAFF_ADMIN");
+    setIsAdminView(isPrivileged);
   }, [session]);
 
-  if (loading) {
+  if (loading || bookmarksLoading) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-12">
         <div className="text-center">Loading event...</div>
@@ -118,8 +157,11 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
     );
   }
 
-  const isOwner = session?.user?.id === event.createdById;
-  const canEdit = isOwner || isAdminView;
+  const userId = session?.user?.id;
+  const userType = (session?.user as { type?: string })?.type;
+  const isOwner = userId && event?.createdById === userId;
+  const isPrivilegedAdmin = adminAuth && (userType === "ADMIN" || userType === "STAFF_ADMIN");
+  const canEdit = isOwner || isPrivilegedAdmin;
 
 
   return (
@@ -152,6 +194,9 @@ export default function EventDetailPage({ params }: { params: Promise<{ id: stri
               createdByName={event.createdByName || (event.createdBy ? `${event.createdBy.firstName} ${event.createdBy.lastName}` : undefined)}
               showOverviewOnly={false}
               adminView={isAdminView}
+              adminAuth={adminAuth}
+              // Pass bookmark state from batch API
+              bookmarked={bookmarkedEventIds.has(event.id)}
             />
           </div>
           {/* People Interested (right column, only for owner or admin) */}

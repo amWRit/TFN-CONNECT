@@ -4,6 +4,7 @@
 import { useEffect, useState, useMemo } from "react"
 import { useSession } from "next-auth/react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import LoadingSpinner from "@/components/ui/LoadingSpinner"
 import { Badge } from "@/components/ui/badge"
 import { ProfileImage } from "@/components/ProfileImage"
 import Link from "next/link"
@@ -32,11 +33,11 @@ const TABS = [
 ];
 
 const TYPE_META: Record<string, { bg: string; text: string; icon: string; label: string }> = {
-	FELLOW:  { bg: "bg-purple-100",   text: "text-purple-700",   icon: "🎓", label: "Fellow" },
-	ALUMNI:   { bg: "bg-red-100",      text: "text-red-700",      icon: "⭐",  label: "Alumni" },
-	STAFF:    { bg: "bg-blue-100",     text: "text-blue-700",     icon: "👔", label: "Staff" },
-	LEADERSHIP: { bg: "bg-yellow-100", text: "text-yellow-800",   icon: "👑", label: "Leadership" },
-	ADMIN:    { bg: "bg-green-100",    text: "text-green-700",    icon: "🛡️", label: "Admin" },
+	 FELLOW:  { bg: "bg-emerald-100",   text: "text-emerald-700",   icon: "🎓", label: "Fellow" },
+	 ALUMNI:   { bg: "bg-emerald-200",      text: "text-emerald-800",      icon: "⭐",  label: "Alumni" },
+	 STAFF:    { bg: "bg-emerald-50",     text: "text-emerald-700",     icon: "👔", label: "Staff" },
+	 LEADERSHIP: { bg: "bg-emerald-200", text: "text-emerald-800",   icon: "👑", label: "Leadership" },
+	 ADMIN:    { bg: "bg-emerald-300",    text: "text-emerald-900",    icon: "🛡️", label: "Admin" },
 };
 
 export default function PeoplePage() {
@@ -51,7 +52,9 @@ export default function PeoplePage() {
 	const [page, setPage] = useState(1);
 	const pageSize = 24;
 	const { data: session } = useSession();
-	const [bookmarkStates, setBookmarkStates] = useState<Record<string, { bookmarked: boolean; loading: boolean }>>({});
+	// Set of all bookmarked person IDs for the current user
+	 const [bookmarkedPersonIds, setBookmarkedPersonIds] = useState<Set<string>>(new Set());
+	 const [bookmarksLoading, setBookmarksLoading] = useState(true);
 	const [isAdmin, setIsAdmin] = useState(false);
 	// Collapsible filter state for small screens
 	const [showFilters, setShowFilters] = useState(false);
@@ -60,7 +63,7 @@ export default function PeoplePage() {
 		fetch("/api/people")
 			.then((res) => res.json())
 			.then((data) => {
-				setPeople(data);
+				setPeople(Array.isArray(data) ? data : []);
 				setLoading(false);
 			});
 	}, []);
@@ -108,32 +111,43 @@ export default function PeoplePage() {
 		setIsAdmin(localAdmin || sessionIsAdmin);
 	}, [session]);
 
-	// Fetch bookmark state for each person when session is ready
-	useEffect(() => {
-		if (!session || !session.user) return;
-		if (isAdmin) return; // hide bookmarks and avoid extra calls for admins
-		const filtered = people.filter((p) => p.type === tab);
-		const fetchBookmarks = async () => {
-			const states: Record<string, { bookmarked: boolean; loading: boolean }> = {};
-			await Promise.all(
-				filtered.map(async (person) => {
-					if (session.user.id === person.id) {
-						states[person.id] = { bookmarked: false, loading: false };
-						return;
-					}
-					try {
-						const res = await fetch(`/api/bookmarks/person?targetPersonId=${person.id}`);
-						const data = await res.json();
-						states[person.id] = { bookmarked: !!data.bookmarked, loading: false };
-					} catch {
-						states[person.id] = { bookmarked: false, loading: false };
-					}
-				})
-			);
-			setBookmarkStates(states);
-		};
-		if (filtered.length > 0) fetchBookmarks();
-	}, [session, people, tab, isAdmin]);
+
+	// Utility to extract person IDs from batch bookmarks response
+	function extractBookmarkedPersonIds(bookmarks: any): Set<string> {
+		if (!bookmarks || !Array.isArray(bookmarks.people)) return new Set();
+		return new Set(bookmarks.people.map((b: any) => b.targetId));
+	}
+
+	// Fetch all person bookmarks for the current user (batch API)
+	 useEffect(() => {
+		 if (!session || !session.user || isAdmin) {
+			 setBookmarksLoading(false);
+			 return;
+		 }
+		 setBookmarksLoading(true);
+		 let ignore = false;
+		 async function fetchBookmarks() {
+			 try {
+				 const res = await fetch('/api/bookmarks/all');
+				 if (!res.ok) {
+					 if (!ignore) setBookmarksLoading(false);
+					 return;
+				 }
+				 const data = await res.json();
+				 if (!ignore) {
+					 setBookmarkedPersonIds(extractBookmarkedPersonIds(data));
+					 setBookmarksLoading(false);
+				 }
+			 } catch {
+				 if (!ignore) {
+					 setBookmarkedPersonIds(new Set());
+					 setBookmarksLoading(false);
+				 }
+			 }
+		 }
+		 fetchBookmarks();
+		 return () => { ignore = true; };
+	 }, [session, isAdmin]);
 
 	// Filter logic
 	const filteredPeople = useMemo(() => {
@@ -190,7 +204,7 @@ export default function PeoplePage() {
 	if (loading) {
 		return (
 			<div className="max-w-7xl mx-auto px-4 py-12">
-				<div className="text-center">Loading...</div>
+				<LoadingSpinner text="Loading people..." />
 			</div>
 		);
 	}
@@ -328,7 +342,7 @@ export default function PeoplePage() {
 					{paginatedPeople.map((person) => {
 						const isProfileOwner = session && session.user && session.user.id === person.id;
 						const showBookmark = session && session.user && !isProfileOwner && !isAdmin;
-						const bookmarkState = bookmarkStates[person.id] || { bookmarked: false, loading: false };
+						const isBookmarked = bookmarkedPersonIds.has(person.id);
 						return (
 							<div key={person.id} className="relative group">
 								<Link href={`/profile/${person.id}`} className="block">
@@ -373,46 +387,45 @@ export default function PeoplePage() {
 														</div>
 													</div>
 												</div>
-												{showBookmark && (
-													<button
-														aria-label={bookmarkState.bookmarked ? "Remove Bookmark" : "Add Bookmark"}
-														disabled={bookmarkState.loading}
-														onClick={async (e) => {
-															e.preventDefault();
-															setBookmarkStates((prev) => ({
-																...prev,
-																[person.id]: { ...prev[person.id], loading: true },
-															}));
-															try {
-																const res = await fetch("/api/bookmarks/person", {
-																	method: bookmarkState.bookmarked ? "DELETE" : "POST",
-																	headers: { "Content-Type": "application/json" },
-																	body: JSON.stringify({ targetPersonId: person.id }),
-																});
-																if (res.ok) {
-																	setBookmarkStates((prev) => ({
-																		...prev,
-																		[person.id]: { bookmarked: !bookmarkState.bookmarked, loading: false },
-																	}));
-																} else {
-																	setBookmarkStates((prev) => ({
-																		...prev,
-																		[person.id]: { ...prev[person.id], loading: false },
-																	}));
-																}
-															} catch {
-																setBookmarkStates((prev) => ({
-																	...prev,
-																	[person.id]: { ...prev[person.id], loading: false },
-																}));
-															}
-														}}
-														className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${bookmarkState.bookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110 disabled:opacity-60 ml-2`}
-														style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}
-													>
-														{bookmarkState.bookmarked ? <BookmarkCheck size={24} /> : <Bookmark size={24} />}
-													</button>
-												)}
+												 {showBookmark && (
+													 bookmarksLoading ? (
+														 <span
+															 className="p-2 rounded-full shadow-md border-2 bg-gray-100 border-gray-300 animate-pulse ml-2"
+															 style={{ position: 'absolute', top: 12, right: 12, zIndex: 10, width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+														 >
+															 <span className="block w-5 h-5 rounded-full bg-gray-300 opacity-60" />
+														 </span>
+													 ) : (
+														 <button
+															 aria-label={isBookmarked ? "Remove Bookmark" : "Add Bookmark"}
+															 onClick={async (e) => {
+																 e.preventDefault();
+																 try {
+																	 const res = await fetch("/api/bookmarks/person", {
+																		 method: isBookmarked ? "DELETE" : "POST",
+																		 headers: { "Content-Type": "application/json" },
+																		 body: JSON.stringify({ targetPersonId: person.id }),
+																	 });
+																	 if (res.ok) {
+																		 setBookmarkedPersonIds(prev => {
+																			 const newSet = new Set(prev);
+																			 if (isBookmarked) {
+																				 newSet.delete(person.id);
+																			 } else {
+																				 newSet.add(person.id);
+																			 }
+																			 return newSet;
+																		 });
+																	 }
+																 } catch {}
+															 }}
+															 className={`p-2 rounded-full shadow-md transition-colors duration-200 border-2 ${isBookmarked ? 'bg-yellow-400 border-yellow-500 text-white' : 'bg-white border-gray-300 text-yellow-500 hover:bg-yellow-100'} hover:scale-110 disabled:opacity-60 ml-2`}
+															 style={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}
+														 >
+															 {isBookmarked ? <BookmarkCheck size={24} /> : <Bookmark size={24} />}
+														 </button>
+													 )
+												 )}
 											</div>
 											<CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition">
 												{[person.firstName, person.middleName, person.lastName].filter(Boolean).join(" ")}
@@ -435,7 +448,7 @@ export default function PeoplePage() {
 											)}
 											<div className="flex items-center justify-between">
 												<span
-													className="text-xs font-semibold px-3 py-1.5 rounded-full bg-red-100 text-red-700 pointer-events-none"
+													className="text-xs font-semibold px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 pointer-events-none"
 												>
 													{person.empStatus === "EMPLOYED" && "✓ Employed"}
 													{person.empStatus === "SEEKING" && "🔍 Seeking"}

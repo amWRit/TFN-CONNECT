@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { EventType, EventStatus } from "@prisma/client";
 import EventCard from "@/components/EventCard";
 import { Badge } from "@/components/ui/badge";
@@ -37,11 +38,48 @@ export default function EventsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [showMine, setShowMine] = useState(false);
   const [isAdminView, setIsAdminView] = useState(false);
+  const [adminAuth, setAdminAuth] = useState(false);
   const [page, setPage] = useState(1);
   const pageSize = 18;
   // Collapsible filter state for small screens
   const [showFilters, setShowFilters] = useState(false);
 
+    // Utility to extract event IDs from batch bookmarks response
+  function extractBookmarkedEventIds(bookmarks: any): Set<string> {
+    if (!bookmarks || !Array.isArray(bookmarks.events)) return new Set();
+    return new Set(bookmarks.events.map((b: any) => b.targetId));
+  }
+  const [bookmarkedEventIds, setBookmarkedEventIds] = useState<Set<string>>(new Set());
+  const [bookmarksLoading, setBookmarksLoading] = useState(true);
+  useEffect(() => {
+    if (!session || !session.user || isAdminView) {
+      setBookmarksLoading(false);
+      return;
+    }
+    let ignore = false;
+    async function fetchBookmarks() {
+      try {
+        const res = await fetch('/api/bookmarks/all');
+        if (!res.ok) {
+          if (!ignore) setBookmarksLoading(false);
+          return;
+        }
+        const data = await res.json();
+        if (!ignore) {
+          setBookmarkedEventIds(extractBookmarkedEventIds(data));
+          setBookmarksLoading(false);
+        }
+      } catch {
+        if (!ignore) {
+          setBookmarkedEventIds(new Set());
+          setBookmarksLoading(false);
+        }
+      }
+    }
+    fetchBookmarks();
+    return () => { ignore = true; };
+  }, [session, isAdminView]);
+  
   useEffect(() => {
     setLoading(true);
     setPage(1);
@@ -63,12 +101,14 @@ export default function EventsPage() {
       });
   }, [typeFilter, statusFilter, showMine]);
 
-  // Determine admin view
+  // Determine admin view and adminAuth
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const localAdmin = localStorage.getItem("adminAuth") === "true";
-    const sessionIsAdmin = !!(session && (session as any).user && (session as any).user.type === "ADMIN");
-    setIsAdminView(localAdmin || sessionIsAdmin);
+    const localAdminAuth = localStorage.getItem("adminAuth") === "true";
+    setAdminAuth(localAdminAuth);
+    const userType = (session as any)?.user?.type;
+    const isPrivileged = localAdminAuth && (userType === "ADMIN" || userType === "STAFF_ADMIN");
+    setIsAdminView(isPrivileged);
   }, [session]);
 
   const totalPages = Math.max(1, Math.ceil(events.length / pageSize));
@@ -192,8 +232,8 @@ export default function EventsPage() {
         </div>
 
         {/* Event Grid */}
-        {loading ? (
-          <div className="text-center text-gray-500 py-12">Loading events...</div>
+        {loading || bookmarksLoading ? (
+          <LoadingSpinner text="Loading events..." />
         ) : error ? (
           <div className="text-center text-red-500 py-12">{error}</div>
         ) : (
@@ -221,7 +261,10 @@ export default function EventsPage() {
                     createdById={event.createdById}
                     showOverviewOnly={true}
                     adminView={isAdminView}
+                    adminAuth={adminAuth}
                     onDelete={handleDelete}
+                    // Pass bookmark state from batch API
+                    bookmarked={bookmarkedEventIds.has(event.id)}
                   />
                 ))
               )}

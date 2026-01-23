@@ -40,6 +40,10 @@ interface JobPostingProps {
   // show the edit icon instead of bookmark, and skip bookmark logic.
   adminView?: boolean;
   showOverviewOnly?: boolean;
+  showEditButton?: boolean;
+  showBookmarkButton?: boolean;
+  // If provided, overrides initial bookmark state (for batch API usage)
+  bookmarked?: boolean;
 }
 
 export function JobPostingCard({
@@ -60,13 +64,22 @@ export function JobPostingCard({
   overview,
   adminView = false,
   showOverviewOnly = false,
+  showEditButton = false,
+  showBookmarkButton = false,
+  bookmarked,
 }: JobPostingProps) {
   const { data: session } = useSession();
   const isSessionAdmin = (session?.user as any)?.type === "ADMIN";
   const isEffectiveAdmin = adminView || isSessionAdmin;
-  const [bookmarkState, setBookmarkState] = useState({ bookmarked: false, loading: false });
+  const [bookmarkState, setBookmarkState] = useState({ bookmarked: !!bookmarked, loading: false });
 
   useEffect(() => {
+    // If 'bookmarked' prop is provided, use it as the source of truth (batch API)
+    // Only fetch per-card if not provided
+    if (typeof bookmarked === 'boolean') {
+      setBookmarkState((prev) => ({ ...prev, bookmarked: bookmarked }));
+      return;
+    }
     // Admin views (including localStorage bypass admins) don't use bookmarks,
     // so skip bookmark fetch entirely for them.
     if (!session || !session.user || isEffectiveAdmin) return;
@@ -82,7 +95,7 @@ export function JobPostingCard({
     };
     fetchBookmark();
     return () => { ignore = true; };
-  }, [session, id, isEffectiveAdmin]);
+  }, [session, id, isEffectiveAdmin, bookmarked]);
   // Map enums to user-friendly labels
   const jobTypeLabels: Record<string, string> = {
     FULL_TIME: '💼 Full-time',

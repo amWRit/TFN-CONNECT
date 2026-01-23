@@ -43,7 +43,11 @@ interface EventCardProps {
   createdById?: string;
   showOverviewOnly?: boolean;
   adminView?: boolean;
+  // Optionally allow explicit adminAuth override
+  adminAuth?: boolean;
   onDelete?: (id: string) => void;
+  // If provided, overrides initial bookmark state (for batch API usage)
+  bookmarked?: boolean;
 }
 
 const eventTypeColors: Record<string, string> = {
@@ -110,20 +114,35 @@ export default function EventCard({
   createdById,
   showOverviewOnly = true,
   adminView = false,
+  adminAuth,
   onDelete,
+  bookmarked, 
 }: EventCardProps) {
   const { data: session } = useSession();
+  const [localAdminAuth, setLocalAdminAuth] = useState(false);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setLocalAdminAuth(localStorage.getItem("adminAuth") === "true");
+    }
+  }, []);
   const userId = session?.user?.id;
+  const userType = (session?.user as any)?.type;
   const isOwner = userId && createdById && userId === createdById;
-  const isSessionAdmin = (session?.user as any)?.type === "ADMIN";
-  const isEffectiveAdmin = adminView || isSessionAdmin;
+  const isPrivilegedAdmin = (adminAuth ?? localAdminAuth) && (userType === "ADMIN" || userType === "STAFF_ADMIN");
+  const isEffectiveAdmin = adminView || isPrivilegedAdmin;
   const showEdit = (session?.user && isOwner) || isEffectiveAdmin;
   const showBookmark = session?.user && !isOwner && !isEffectiveAdmin;
 
-  const [bookmarkState, setBookmarkState] = useState({ bookmarked: false, loading: false });
+  const [bookmarkState, setBookmarkState] = useState({ bookmarked: !!bookmarked, loading: false });
   const [descExpanded, setDescExpanded] = useState(false);
 
   useEffect(() => {
+    // If 'bookmarked' prop is provided, use it as the source of truth (batch API)
+    // Only fetch per-card if not provided
+    if (typeof bookmarked === 'boolean') {
+      setBookmarkState((prev) => ({ ...prev, bookmarked: bookmarked }));
+      return;
+    }
     // Skip bookmark fetch for owners and admins
     if (!userId || isOwner || isEffectiveAdmin) return;
     let ignore = false;
@@ -138,7 +157,7 @@ export default function EventCard({
     };
     fetchBookmark();
     return () => { ignore = true; };
-  }, [userId, isOwner, id, isEffectiveAdmin]);
+  }, [userId, isOwner, id, isEffectiveAdmin, bookmarked]);
 
   return (
     <Card className="relative border-2 border-emerald-400 hover:border-emerald-600 transition-all duration-300 rounded-xl overflow-hidden pt-5 px-6 pb-4 bg-white shadow-sm group">

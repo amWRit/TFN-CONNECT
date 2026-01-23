@@ -43,9 +43,34 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
   const [interestSuccess, setInterestSuccess] = useState(false);
   const [optimisticInterested, setOptimisticInterested] = useState(false);
   const [isAdminView, setIsAdminView] = useState(false);
+  const [adminAuth, setAdminAuth] = useState(false);
   const router = useRouter();
   const { id } = use(params);
   const { data: session, status: authStatus } = useSession();
+
+  // Utility to extract opportunity IDs from batch bookmarks response
+  function extractBookmarkedOpportunityIds(bookmarks: any): Set<string> {
+    if (!bookmarks || !Array.isArray(bookmarks.opportunities)) return new Set();
+    return new Set(bookmarks.opportunities.map((b: any) => b.targetId));
+  }
+  const [bookmarkedOpportunityIds, setBookmarkedOpportunityIds] = useState<Set<string>>(new Set());
+  // Fetch all opportunity bookmarks for the current user (batch API)
+  useEffect(() => {
+    if (!session || !session.user || isAdminView) return;
+    let ignore = false;
+    async function fetchBookmarks() {
+      try {
+        const res = await fetch('/api/bookmarks/all');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!ignore) setBookmarkedOpportunityIds(extractBookmarkedOpportunityIds(data));
+      } catch {
+        if (!ignore) setBookmarkedOpportunityIds(new Set());
+      }
+    }
+    fetchBookmarks();
+    return () => { ignore = true; };
+  }, [session, isAdminView]);
 
   useEffect(() => {
     if (!id) return;
@@ -63,12 +88,14 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
       });
   }, [id]);
 
-  // Determine admin view (NextAuth ADMIN or localStorage bypass admin)
+  // Determine admin view and adminAuth
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const localAdmin = localStorage.getItem("adminAuth") === "true";
-    const sessionIsAdmin = !!(session && (session as any).user && (session as any).user.type === "ADMIN");
-    setIsAdminView(localAdmin || sessionIsAdmin);
+    const localAdminAuth = localStorage.getItem("adminAuth") === "true";
+    setAdminAuth(localAdminAuth);
+    const userType = (session?.user as { type?: string })?.type;
+    const isPrivileged = localAdminAuth && (userType === "ADMIN" || userType === "STAFF_ADMIN");
+    setIsAdminView(isPrivileged);
   }, [session]);
 
   if (loading) {
@@ -105,7 +132,10 @@ export default function OpportunityPage({ params }: { params: Promise<{ id: stri
             createdById={opportunity.createdBy?.id}
             createdByName={opportunity.createdBy ? `${opportunity.createdBy.firstName} ${opportunity.createdBy.lastName}` : undefined}
             showOverviewOnly={false}
-              adminView={isAdminView}
+            adminView={isAdminView}
+            adminAuth={adminAuth}
+            // Pass bookmark state from batch API
+            bookmarked={bookmarkedOpportunityIds.has(opportunity.id)}
           />
         </div>
         {/* People Interested (right column, only for owner) */}
