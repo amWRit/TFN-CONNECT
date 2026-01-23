@@ -36,7 +36,7 @@ const TYPE_CONFIG = {
   },
   JOB_POSTING: {
     model: 'jobPosting',
-    subject: (item: any) => `[TFN Connect] Job Posting: ${item.title}`,
+    subject: (item: any) => `[TFN Connect] Job: ${item.title}`,
     html: (item: any, appUrl: string, subscriber?: { firstName?: string }) => {
       const jobType: string = item.jobType
         ? `<div style=\"color:#333;font-size:15px;margin-bottom:4px;\"><b>Type:</b> ${item.jobType.replace('_', ' ').toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}</div>`

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useUserEmail } from '@/lib/useUserEmail';
 import { FlaskConical } from 'lucide-react';
 import { OkModal } from '@/components/OkModal';
@@ -24,6 +24,7 @@ type Opportunity = {
 };
 
 export default function OpportunitiesTab() {
+  const csvDownloadRef = useRef<HTMLAnchorElement | null>(null);
   const [opps, setOpps] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(false);
   const [typeFilter, setTypeFilter] = useState('');
@@ -33,9 +34,19 @@ export default function OpportunitiesTab() {
   // Email modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [modalOppId, setModalOppId] = useState<string | null>(null);
-  const [selectedPersonTypes, setSelectedPersonTypes] = useState<string[]>(['ADMIN']);
+  const [selectedPersonType, setSelectedPersonType] = useState<string>('ADMIN');
   const [selectedEmailField, setSelectedEmailField] = useState<'email1' | 'email2'>('email1');
   const [resultModal, setResultModal] = useState<{ open: boolean; message: string; success: boolean }>({ open: false, message: '', success: false });
+  // Recipient count and user emails for selected person types
+  const [recipientCount, setRecipientCount] = useState<number>(0);
+  const [recipientEmails, setRecipientEmails] = useState<string[]>([]);
+  // Show confirm modal before sending
+  const [showConfirm, setShowConfirm] = useState(false);
+  // Batch progress state
+  const [batchProgress, setBatchProgress] = useState<{sent:number, failed:string[], batchResults:any[]}|null>(null);
+  // CSV download state
+  const [sentCsvUrl, setSentCsvUrl] = useState<{ url: string; filename: string } | null>(null);
+  const [csvDownloadTriggered, setCsvDownloadTriggered] = useState(false);
   // Test email modal state
   const [showTestConfirm, setShowTestConfirm] = useState(false);
   const [showTestOk, setShowTestOk] = useState(false);
@@ -58,6 +69,10 @@ export default function OpportunitiesTab() {
   function openEmailModal(oppId: string) {
     setModalOppId(oppId);
     setModalOpen(true);
+    setShowConfirm(false);
+    setBatchProgress(null);
+    setSentCsvUrl(null);
+    setCsvDownloadTriggered(false);
   }
 
   // Open test email confirmation modal, use session email
@@ -87,11 +102,16 @@ export default function OpportunitiesTab() {
     setTestOppId(null);
   }
 
-  // Send email after modal confirm
+  // Send email after confirm
   async function sendEmail() {
     if (!modalOppId) return;
+    setShowConfirm(false);
     setLoading(true);
+    setBatchProgress(null);
+    setSentCsvUrl(null);
+    setCsvDownloadTriggered(false);
     try {
+      // Send notification (batching handled in API)
       const res = await fetch('/api/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -99,27 +119,100 @@ export default function OpportunitiesTab() {
           type: 'OPPORTUNITY',
           id: modalOppId,
           which: selectedEmailField,
-          personTypes: selectedPersonTypes,
+          personTypes: selectedPersonType ? [selectedPersonType] : [],
         }),
       });
-      if (res.ok) {
-        const result = await res.json();
-        setResultModal({
-          open: true,
-          message: `Email sent to ${selectedEmailField === 'email1' ? 'primary' : 'secondary'} email for selected person types. (${result.count} notified)`,
-          success: true,
-        });
-      } else {
-        setResultModal({ open: true, message: 'Failed to send email notification', success: false });
+      const result = await res.json();
+      let sent = result.count || 0;
+      let failed = result.failed || [];
+      let batchResults = result.batchResults || [];
+      setBatchProgress({ sent, failed, batchResults });
+      // Prepare CSV of sent emails if available
+      if (result.sentEmails && Array.isArray(result.sentEmails) && result.sentEmails.length > 0) {
+        const csv = 'email\n' + result.sentEmails.map((e:any) => e).join('\n');
+        const blob = new Blob([csv], {type:'text/csv'});
+        const filename = 'opportunities-notify-email.csv';
+        const url = URL.createObjectURL(blob);
+        setSentCsvUrl({ url, filename });
       }
+      setResultModal({
+        open: true,
+        message: `Sent to ${sent} users. Failed: ${failed.length}`,
+        success: failed.length === 0,
+      });
     } catch (e) {
-      setResultModal({ open: true, message: 'Error sending email notification', success: false });
-    } finally {
-      setLoading(false);
-      setModalOpen(false);
-      setModalOppId(null);
+      setBatchProgress({sent: 0, failed: [], batchResults: []});
+      setResultModal({ open: true, message: 'Failed to send email notification', success: false });
     }
+    setLoading(false);
+    setModalOpen(false);
+    setModalOppId(null);
   }
+  // Fetch recipient count when person type or email field changes, or when modal opens
+  useEffect(() => {
+    if (!modalOpen) return;
+    async function fetchCount() {
+      try {
+        const params = new URLSearchParams();
+        if (selectedPersonType) params.append('personType', selectedPersonType);
+        params.append('emailPreference', selectedEmailField);
+        const res = await fetch(`/api/admin/email/recipients?${params}`);
+        const data = await res.json();
+        setRecipientCount(data.count || 0);
+        // Extract emails from users array
+        let emails: string[] = [];
+        if (Array.isArray(data.users)) {
+          if (selectedEmailField === 'email1') {
+            emails = data.users.map((u:any) => u.email1).filter(Boolean);
+          } else if (selectedEmailField === 'email2') {
+            emails = data.users.map((u:any) => u.email2).filter(Boolean);
+          }
+        }
+        // Deduplicate emails
+        const uniqueEmails = Array.from(new Set(emails));
+        setRecipientEmails(uniqueEmails);
+        setRecipientCount(uniqueEmails.length);
+      } catch {
+        setRecipientCount(0);
+        setRecipientEmails([]);
+      }
+    }
+    fetchCount();
+  }, [modalOpen, selectedPersonType, selectedEmailField]);
+
+  // Auto-hide batch progress bar and CSV after sending is complete
+  useEffect(() => {
+    if (batchProgress && !loading) {
+      const timeout = setTimeout(() => {
+        setBatchProgress(null);
+        setSentCsvUrl(null);
+      }, 5000);
+      return () => clearTimeout(timeout);
+    }
+  }, [batchProgress, loading]);
+
+  // Remove Blob URL after batch progress is hidden to avoid memory leaks
+  useEffect(() => {
+    return () => {
+      if (sentCsvUrl) {
+        URL.revokeObjectURL(sentCsvUrl.url);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sentCsvUrl]);
+
+  // Auto-download CSV when ready (robust: use ref)
+  useEffect(() => {
+    if (sentCsvUrl && !csvDownloadTriggered) {
+      const timeout = setTimeout(() => {
+        if (csvDownloadRef.current) {
+          csvDownloadRef.current.click();
+          setCsvDownloadTriggered(true);
+        }
+      }, 300);
+      return () => clearTimeout(timeout);
+    }
+  }, [sentCsvUrl, csvDownloadTriggered]);
 
   useEffect(() => {
     fetchOpps();
@@ -286,26 +379,25 @@ export default function OpportunitiesTab() {
             message={''}
             confirmText={loading ? 'Sending...' : 'Send'}
             cancelText="Cancel"
-            onConfirm={sendEmail}
-            onCancel={() => { setModalOpen(false); setModalOppId(null); }}
+            onConfirm={() => setShowConfirm(true)}
+            onCancel={() => { setModalOpen(false); setModalOppId(null); setShowConfirm(false); }}
             loading={loading}
           >
             <div className="mb-4 w-full">
-              <label className="block font-semibold mb-2 text-blue-700">Select Person Types:</label>
-              <div className="flex flex-wrap gap-2">
-                {PERSON_TYPES.map(pt => (
-                  <label key={pt} className="flex items-center gap-1">
-                    <input
-                      type="checkbox"
-                      checked={selectedPersonTypes.includes(pt)}
-                      onChange={e => {
-                        if (e.target.checked) setSelectedPersonTypes([...selectedPersonTypes, pt]);
-                        else setSelectedPersonTypes(selectedPersonTypes.filter(t => t !== pt));
-                      }}
-                    />
-                    <span className="text-sm">{pt.replace('_', ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</span>
-                  </label>
-                ))}
+              <label className="block font-semibold mb-2 text-blue-700">Select Person Type:</label>
+              <div className="relative w-full">
+                <select
+                  className="appearance-none pl-3 pr-10 py-2 w-full border-2 border-blue-400 rounded-full bg-blue-100/80 font-semibold text-blue-800 focus:ring-2 focus:ring-blue-400 outline-none transition shadow-sm text-base"
+                  value={selectedPersonType}
+                  onChange={e => setSelectedPersonType(e.target.value)}
+                >
+                  {PERSON_TYPES.map(pt => (
+                    <option key={pt} value={pt}>{pt.replace('_', ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</option>
+                  ))}
+                </select>
+                <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-blue-500">
+                  <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </span>
               </div>
             </div>
             <div className="mb-4 w-full">
@@ -333,7 +425,76 @@ export default function OpportunitiesTab() {
                 </label>
               </div>
             </div>
+            <div className="mb-2 w-full text-xs text-pink-600 flex items-center gap-1">
+              Will send to <span className="font-bold">{recipientCount}</span> users
+            </div>
+            {recipientEmails.length > 0 && (
+              <div className="mb-2 w-full text-xs text-gray-500 max-h-32 overflow-y-auto border border-gray-200 rounded bg-gray-50 p-2">
+                <div className="mb-1 font-semibold text-blue-700">Emails:</div>
+                <ul className="list-disc ml-5">
+                  {recipientEmails.map(email => (
+                    <li key={email}>{email}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </ConfirmModal>
+
+          {/* Confirmation Modal before sending */}
+          {showConfirm && (
+            <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 animate-fade-in">
+              <div className="bg-white rounded-2xl p-8 shadow-2xl max-w-sm w-full border-2 border-pink-200 flex flex-col items-center">
+                <Mail className="w-10 h-10 text-pink-500 mb-2 animate-bounce" />
+                <h2 className="text-xl font-bold mb-2 text-blue-700">
+                  Send to {recipientCount} users?
+                </h2>
+                <p className="mb-4 text-gray-600 text-center">
+                  This can't be undone. Are you sure you want to send this opportunity notification to <span className="font-bold text-pink-600">{recipientCount}</span> users?
+                </p>
+                <div className="flex gap-4 mt-2">
+                  <button
+                    className="bg-gray-100 px-4 py-2 rounded-full font-semibold text-gray-700 hover:bg-gray-200 transition-all disabled:opacity-60"
+                    onClick={()=>setShowConfirm(false)}
+                    disabled={loading}
+                  >Cancel</button>
+                  <button
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full font-bold shadow transition-all disabled:opacity-60"
+                    onClick={sendEmail}
+                    disabled={loading}
+                  >Send</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Batch Progress Bar & CSV Download */}
+          {(loading || batchProgress) && (
+            <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-8 py-3 rounded-full shadow-lg text-lg font-bold flex items-center gap-2 animate-pulse z-50">
+              <Mail className="w-5 h-5 animate-spin" />
+              {loading ? 'Sending...' : (
+                <>
+                  Sent: {batchProgress?.sent} &nbsp;| Failed: {batchProgress?.failed.length} &nbsp;| Remaining: {recipientCount - (batchProgress?.sent ?? 0) - (batchProgress?.failed.length ?? 0)}
+                  {sentCsvUrl && (
+                    <>
+                      &nbsp;|&nbsp;
+                      <a
+                        href={sentCsvUrl.url}
+                        download={sentCsvUrl.filename}
+                        className="underline text-white font-bold"
+                        style={{ display: 'inline' }}
+                      >Download Sent CSV</a>
+                      <a
+                        href={sentCsvUrl.url}
+                        download={sentCsvUrl.filename}
+                        style={{ display: 'none' }}
+                        ref={csvDownloadRef}
+                      >hidden</a>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          )}
 
           {/* Result Modal */}
           <ConfirmModal
