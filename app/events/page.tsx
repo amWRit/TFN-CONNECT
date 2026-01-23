@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { EventType, EventStatus } from "@prisma/client";
 import EventCard from "@/components/EventCard";
 import { Badge } from "@/components/ui/badge";
@@ -232,7 +233,7 @@ export default function EventsPage() {
 
         {/* Event Grid */}
         {loading || bookmarksLoading ? (
-          <div className="text-center text-gray-500 py-12">Loading events...</div>
+          <LoadingSpinner text="Loading events..." />
         ) : error ? (
           <div className="text-center text-red-500 py-12">{error}</div>
         ) : (

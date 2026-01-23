@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react"
 import { Badge } from "@/components/ui/badge"
 import { JobPostingCard } from "@/components/JobPostingCard"
 import { Filter, Plus } from "lucide-react"
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
 
 interface JobPosting {
   id: string
@@ -123,11 +124,7 @@ export default function JobsPage() {
 
 
   if (loading) {
-    return (
-      <div className="max-w-5xl mx-auto px-4 py-12">
-        <div className="text-center">Loading jobs...</div>
-      </div>
-    )
+    return <LoadingSpinner text="Loading jobs..." />;
   }
 
   const handleAddJob = () => {

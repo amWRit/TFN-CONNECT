@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import OpportunityCard from "../../components/OpportunityCard";
 import { Badge } from "@/components/ui/badge";
 import { Filter, Plus } from "lucide-react"
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
 
 const handleAddOpportunity = () => {
 // TODO: Navigate to opportunity creation page or open modal
@@ -215,7 +216,7 @@ export default function OpportunitiesPage() {
           </div>
           {/* Two Column Opportunity Grid */}
           {loading || bookmarksLoading ? (
-            <div className="text-center text-gray-500">Loading opportunities...</div>
+            <LoadingSpinner text="Loading opportunities..." />
           ) : error ? (
             <div className="text-center text-red-500">{error}</div>
           ) : (

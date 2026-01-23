@@ -7,6 +7,7 @@ import { PostCard } from "@/components/PostCard"
 import NotFound from "@/components/NotFound"
 import { PostType } from "@prisma/client"
 import { EditPostModal } from "@/components/EditPostModal"
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
 
 // Utility to extract post IDs from batch bookmarks response
 function extractBookmarkedPostIds(bookmarks: any): Set<string> {
@@ -205,11 +206,7 @@ export default function FeedPage() {
   }
 
   if (status === "loading" || loading) {
-    return (
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <div className="text-center">Loading feed...</div>
-      </div>
-    );
+    return <LoadingSpinner text="Loading feed..." />;
   }
 
   return (
