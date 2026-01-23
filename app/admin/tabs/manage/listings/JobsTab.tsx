@@ -471,7 +471,7 @@ export default function JobsTab() {
           Will send to <span className="font-bold">{recipientCount}</span> users
         </div>
         {recipientEmails.length > 0 && (
-          <div className="mb-2 w-full text-xs text-gray-500 max-h-32 overflow-y-auto border border-gray-200 rounded bg-gray-50 p-2">
+          <div className="w-full text-xs text-gray-500 max-h-32 overflow-y-auto border border-gray-200 rounded bg-gray-50 p-2">
             <div className="mb-1 font-semibold text-blue-700">Emails:</div>
             <ul className="list-disc ml-5">
               {recipientEmails.map(email => (
