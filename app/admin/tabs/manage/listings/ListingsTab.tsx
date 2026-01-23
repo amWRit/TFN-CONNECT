@@ -18,18 +18,19 @@ export default function ListingsTab() {
   const [tab, setTab] = useState("jobs");
   return (
     <div className="space-y-6">
-      <div className="flex gap-2 mb-4">
+      <div className="flex flex-wrap gap-1 mb-4 w-full max-w-full overflow-x-auto border-b border-blue-200">
         {TABS.map((t) => {
           const Icon = t.icon;
           return (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`flex flex-row items-center justify-center gap-2 px-2 py-2 sm:px-4 sm:py-2 rounded-lg font-medium transition-colors min-w-[44px] min-h-[44px] ${
+              className={`flex flex-row items-center justify-center gap-2 px-4 py-2 font-medium text-sm transition-colors whitespace-nowrap border-b-2 ${
                 tab === t.key
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  ? 'border-blue-600 text-white bg-blue-500'
+                  : 'border-transparent text-gray-600 hover:text-blue-600 hover:bg-blue-50'
               }`}
+              style={{ minWidth: 0, borderRadius: 0 }}
               title={t.label}
             >
               <Icon className="w-5 h-5" />

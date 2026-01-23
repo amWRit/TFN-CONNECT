@@ -1,9 +1,11 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProfileImage } from "@/components/ProfileImage";
-import { Bookmark, BookmarkCheck, Edit2, Info, User } from "lucide-react";
+import { Bookmark, BookmarkCheck, Edit2, Info, User, Briefcase, GraduationCap, Mail, Phone, Globe, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import React from "react";
+import React, { useState, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 const TYPE_META: Record<string, { bg: string; text: string; icon: string; label: string }> = {
   FELLOW:  { bg: "bg-purple-100",   text: "text-purple-700",   icon: "🎓", label: "Fellow" },
@@ -86,10 +88,91 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
   canViewPhones = false,
 }) => {
 
-  const canSeeContacts = !!canViewPhones;
+// Collapsible bio component with markdown support
+const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
+  const [expanded, setExpanded] = useState(false);
+  const [collapseLength, setCollapseLength] = useState(200);
+
+  React.useEffect(() => {
+    function handleResize() {
+      if (window.innerWidth < 640) {
+        setCollapseLength(120); // mobile
+      } else if (window.innerWidth < 1024) {
+        setCollapseLength(180); // tablet
+      } else {
+        setCollapseLength(250); // desktop
+      }
+    }
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isLong = bio.length > collapseLength;
+  const displayText = !expanded && isLong ? bio.slice(0, collapseLength) + "..." : bio;
+  return (
+    <div className="flex flex-col bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mb-5">
+      <span className="italic text-blue-900 w-full">
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            h1: ({node, ...props}) => <h1 {...props} className="text-2xl font-bold mt-4 mb-2 text-blue-900" />,
+            h2: ({node, ...props}) => <h2 {...props} className="text-xl font-bold mt-3 mb-2 text-blue-800" />,
+            h3: ({node, ...props}) => <h3 {...props} className="text-lg font-semibold mt-3 mb-1 text-blue-700" />,
+            h4: ({node, ...props}) => <h4 {...props} className="text-base font-semibold mt-2 mb-1 text-blue-600" />,
+            h5: ({node, ...props}) => <h5 {...props} className="text-sm font-semibold mt-2 mb-1 text-blue-500" />,
+            h6: ({node, ...props}) => <h6 {...props} className="text-xs font-semibold mt-2 mb-1 text-blue-400" />,
+            a: ({node, ...props}) => <a {...props} className="text-blue-600 underline break-all" target="_blank" rel="noopener noreferrer" />,
+            strong: ({node, ...props}) => <strong {...props} className="font-bold" />,
+            em: ({node, ...props}) => <em {...props} className="italic" />,
+            ul: ({node, ...props}) => <ul {...props} className="list-disc ml-6" />,
+            ol: ({node, ...props}) => <ol {...props} className="list-decimal ml-6" />,
+            li: ({node, ...props}) => <li {...props} className="mb-1" />,
+            p: ({node, ...props}) => <p {...props} className="prose prose-blue max-w-none text-blue-900 text-sm" />,
+          }}
+        >
+          {displayText}
+        </ReactMarkdown>
+      </span>
+      {isLong && (
+        <div className="flex justify-end mt-1">
+          {!expanded ? (
+            <button
+              className="text-blue-600 underline text-xs font-semibold"
+              onClick={() => setExpanded(true)}
+              type="button"
+            >
+              View more
+            </button>
+          ) : (
+            <button
+              className="text-blue-600 underline text-xs font-semibold"
+              onClick={() => setExpanded(false)}
+              type="button"
+            >
+              Show less
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+  // Hide contacts if type is LEADERSHIP
+  const isLeadership = person.type && person.type.toUpperCase() === "LEADERSHIP";
+  const canSeeContacts = !!canViewPhones && !isLeadership;
+
+  const [statusOptions, setStatusOptions] = useState<{ eduStatus: any[]; empStatus: any[] }>({ eduStatus: [], empStatus: [] });
+
+  useEffect(() => {
+    fetch('/api/meta/status-options')
+      .then(res => res.json())
+      .then(data => setStatusOptions(data));
+  }, []);
 
   if (editing && isProfileOwner && formData && onFormChange && onSave && onCancel) {
-    // Improved Edit mode UI
+    // Improved Edit mode UI - fix input stacking and spacing
     return (
       <Card className="bg-white border-2 border-indigo-500 shadow-lg rounded-xl overflow-hidden mb-4 relative">
         {/* Save/Cancel Buttons */}
@@ -97,36 +180,43 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
           <button
             aria-label="Save"
             onClick={onSave}
-            className="px-4 py-2 rounded-md font-semibold shadow transition-colors duration-200 border-2 border-blue-700 bg-white text-blue-700 hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+            className="p-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
+            title="Save"
           >
-            Save
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
           </button>
           <button
             aria-label="Cancel"
             onClick={onCancel}
-            className="px-4 py-2 rounded-md font-semibold shadow transition-colors duration-200 border-2 border-red-600 text-red-600 bg-white hover:bg-red-600 hover:text-white focus:outline-none focus:ring-2 focus:ring-red-200"
+            className="p-3 rounded-full bg-red-600 hover:bg-red-700 text-white shadow focus:outline-none focus:ring-2 focus:ring-red-300 transition"
+            title="Cancel"
           >
-            Cancel
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
-        <div className="relative h-40 bg-gradient-to-r from-indigo-500 to-purple-500">
-          <div className="absolute inset-0 flex items-end px-6 sm:px-8 pb-6 gap-6">
-            <div className="flex-shrink-0">
+        {/* Header and Inputs - stack vertically for mobile, avoid overlap */}
+        <div className="relative bg-gradient-to-r from-indigo-500 to-purple-500 pt-8 pb-6 px-0">
+          <div className="flex flex-col sm:flex-row items-center sm:items-end px-6 sm:px-8 gap-6">
+            <div className="flex-shrink-0 mb-4 sm:mb-0">
               <ProfileImage
                 src={person.profileImage}
                 name={[formData.firstName, formData.middleName, formData.lastName].filter(Boolean).join(" ")}
-                className="h-28 w-28 rounded-2xl border-4 border-indigo-200 shadow-md object-cover"
+                className="h-16 w-16 rounded-2xl border-4 border-indigo-200 shadow-md object-cover mb-2"
                 alt={[formData.firstName, formData.middleName, formData.lastName].filter(Boolean).join(" ")}
               />
             </div>
-            <div className="flex flex-col justify-end pb-2 flex-1">
-              <div className="flex gap-2 flex-wrap items-end">
+            <div className="flex flex-col justify-end flex-1 w-full">
+              <div className="flex flex-col sm:flex-row gap-2 mb-2 w-full">
                 <input
                   type="text"
                   name="firstName"
                   value={formData.firstName}
                   onChange={onFormChange}
-                  className="text-sm text-gray-700 mb-1 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-32 sm:w-36 placeholder:text-gray-400"
+                  className="text-sm text-gray-700 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-full sm:w-36 placeholder:text-gray-400"
                   placeholder="First Name"
                 />
                 <input
@@ -134,7 +224,7 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                   name="middleName"
                   value={formData.middleName}
                   onChange={onFormChange}
-                  className="text-sm text-gray-700 mb-1 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-28 sm:w-32 placeholder:text-gray-400"
+                  className="text-sm text-gray-700 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-full sm:w-32 placeholder:text-gray-400"
                   placeholder="Middle Name"
                 />
                 <input
@@ -142,7 +232,7 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                   name="lastName"
                   value={formData.lastName}
                   onChange={onFormChange}
-                  className="text-sm text-gray-700 mb-1 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-32 sm:w-36 placeholder:text-gray-400"
+                  className="text-sm text-gray-700 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-full sm:w-36 placeholder:text-gray-400"
                   placeholder="Last Name"
                 />
                 <input
@@ -150,7 +240,7 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                   name="pronouns"
                   value={formData.pronouns}
                   onChange={onFormChange}
-                  className="text-sm text-gray-700 mb-1 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-40 sm:w-48 placeholder:text-gray-400"
+                  className="text-sm text-gray-700 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-full sm:w-48 placeholder:text-gray-400"
                   placeholder="Pronouns (e.g., she/her)"
                 />
               </div>
@@ -186,16 +276,23 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                   ))}
                 </select>
               </div>
-              <label className="block text-sm font-medium mb-1 text-gray-700">Bio</label>
-              <textarea
-                name="bio"
-                value={formData.bio}
-                onChange={onFormChange}
-                rows={3}
-                className="w-full border border-blue-200 px-3 py-2 rounded-md text-sm text-gray-700 leading-relaxed bg-white focus:border-blue-400 focus:outline-none resize-none mb-5"
-                placeholder="Share a short bio about yourself..."
-                maxLength={300}
-              />
+                <div className="mb-5">
+                  <label className="block text-sm font-medium mb-1 text-gray-700">Bio</label>
+                  <textarea
+                    name="bio"
+                    value={formData.bio}
+                    onChange={onFormChange}
+                    rows={3}
+                    className="w-full border border-blue-200 px-3 py-2 rounded-md text-sm text-gray-700 leading-relaxed bg-white focus:border-blue-400 focus:outline-none mb-1 resize-y"
+                    placeholder="Share a short bio about yourself..."
+                    maxLength={1000}
+                  />
+                  <div className="text-xs text-gray-500 mt-1 italic">
+                    Tip: You can use Markdown to format your description.
+                    Supports bold, italics, headings, ordered and unordered lists. 
+                    You can use <a href="https://markdownlivepreview.com/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Live Preview</a>.
+                  </div>
+                </div>
               {/* Two-column Info Layout */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 mb-4 text-sm">
                 {/* Email1 (read-only) */}
@@ -278,9 +375,9 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                     onChange={onFormChange}
                     className="border border-blue-200 px-2 py-1 rounded focus:border-blue-400 focus:outline-none"
                   >
-                    <option value="COMPLETED">Completed</option>
-                    <option value="ENROLLED">Enrolled</option>
-                    <option value="NOT_ENROLLED">Not Enrolled</option>
+                    {statusOptions.eduStatus.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
                   </select>
                 </div>
                 {/* Employment Status */}
@@ -292,9 +389,9 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                     onChange={onFormChange}
                     className="border border-green-200 px-2 py-1 rounded focus:border-green-400 focus:outline-none"
                   >
-                    <option value="SEEKING">Seeking</option>
-                    <option value="EMPLOYED">Employed</option>
-                    <option value="UNEMPLOYED">Unemployed</option>
+                    {statusOptions.empStatus.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -372,15 +469,19 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
           </div>
         </div>
       </div>
-      <div className="relative px-6 sm:px-8 pt-6 pb-6">
+      <div className="relative px-4 sm:px-6 pt-2 pb-2">
         <div className="flex flex-col gap-6">
           <div className="flex-1">
             {person.bio && (
-              <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mb-5">
-                <Info className="w-5 h-5 mt-1 text-blue-400 flex-shrink-0" />
-                <span className="italic text-blue-900">{person.bio}</span>
+              <div className="mb-4">
+                <div className="flex items-center gap-2 text-blue-900 font-medium">
+                </div>
+                <div className="mt-1">
+                  <BioCollapse bio={person.bio} />
+                </div>
               </div>
             )}
+
             {/* Info Grid */}
             <div className="mb-4 text-sm">
               {!canSeeContacts && (
@@ -388,37 +489,32 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                   To connect with this person, sign in or contact the Admin.
                 </div>
               )}
-              {/* Each info pair in its own row, two columns per row */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2">
-                {/* Row 1: Email (only if allowed) */}
+                {/* Only render email and phone rows if allowed */}
                 {canSeeContacts && (
                   <>
+                    {/* Row 1: Email */}
                     <div className="flex items-center gap-2">
-                      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-500" viewBox="0 0 24 24"><path d="M4 4h16v16H4z" stroke="none"/><path d="M22 6l-10 7L2 6" /><rect x="2" y="6" width="20" height="12" rx="2" /></svg>
+                      <Mail size={18} className="text-blue-500" />
                       <span>{person.email1 || <span className="text-gray-400">--</span>}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-500" viewBox="0 0 24 24"><path d="M4 4h16v16H4z" stroke="none"/><path d="M22 6l-10 7L2 6" /><rect x="2" y="6" width="20" height="12" rx="2" /></svg>
+                      <Mail size={18} className="text-blue-500" />
                       <span>{person.email2 || <span className="text-gray-400">--</span>}</span>
                     </div>
-                  </>
-                )}
-                {/* Row 2: Phone (only if allowed) */}
-                {canSeeContacts && (
-                  <>
+                    {/* Row 2: Phone */}
                     <div className="flex items-center gap-2">
-                      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-500" viewBox="0 0 24 24"><path d="M22 16.92V19a2 2 0 0 1-2 2A18 18 0 0 1 3 5a2 2 0 0 1 2-2h2.09a2 2 0 0 1 2 1.72c.13.81.28 1.6.47 2.36a2 2 0 0 1-.45 2.11l-.27.27a16 16 0 0 0 6.29 6.29l.27-.27a2 2 0 0 1 2.11-.45c.76.19 1.55.34 2.36.47A2 2 0 0 1 22 16.92z" /></svg>
+                      <Phone size={18} className="text-green-500" />
                       <span>{person.phone1 || <span className="text-gray-400">--</span>}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-500" viewBox="0 0 24 24"><path d="M22 16.92V19a2 2 0 0 1-2 2A18 18 0 0 1 3 5a2 2 0 0 1 2-2h2.09a2 2 0 0 1 2 1.72c.13.81.28 1.6.47 2.36a2 2 0 0 1-.45 2.11l-.27.27a16 16 0 0 0 6.29 6.29l.27-.27a2 2 0 0 1 2.11-.45c.76.19 1.55.34 2.36.47A2 2 0 0 1 22 16.92z" /></svg>
+                      <Phone size={18} className="text-green-500" />
                       <span>{person.phone2 || <span className="text-gray-400">--</span>}</span>
                     </div>
                   </>
                 )}
-                {/* Row 3: LinkedIn & Web */}
                 <div className="flex items-center gap-2">
-                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-700" viewBox="0 0 24 24"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z" /><rect x="2" y="9" width="4" height="12" /><circle cx="4" cy="4" r="2" /></svg>
+                  <Linkedin size={18} className="text-blue-700" />
                   {person.linkedin ? (
                     <a href={person.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline break-all">{person.linkedin}</a>
                   ) : (
@@ -426,7 +522,7 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-700" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z" /></svg>
+                  <Globe size={18} className="text-blue-700" />
                   {person.website ? (() => {
                     const url = person.website.startsWith("http://") || person.website.startsWith("https://")
                       ? person.website
@@ -450,9 +546,9 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                   {/* Employment Status (left col) */}
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">
-                      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-green-600" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 3v4" /><path d="M8 3v4" /></svg>
+                      <Briefcase size={18} className="text-blue-500" />
                       <span className="font-medium text-gray-700">Employment Status:</span>
-                      <span className="font-normal">{person.empStatus ? person.empStatus.charAt(0).toUpperCase() + person.empStatus.slice(1).toLowerCase() : 'N/A'}</span>
+                      <span className="font-normal">{person.empStatus === 'NA' || !person.empStatus ? 'N/A' : person.empStatus.charAt(0).toUpperCase() + person.empStatus.slice(1).toLowerCase()}</span>
                     </div>
                     {person.experiences && person.experiences.length > 0 && (() => {
                       const recentExp = [...person.experiences].sort((a, b) => {
@@ -468,10 +564,9 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
                   {/* Education Status (right col) */}
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">
-                      {/* Graduation Cap Icon */}
-                      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" className="text-blue-500" viewBox="0 0 24 24"><path d="M22 12l-10-5-10 5 10 5 10-5z"/><path d="M6 12v5c0 1.1.9 2 2 2h4c1.1 0 2-.9 2-2v-5"/></svg>
+                      <GraduationCap size={18} className="text-blue-500" />
                       <span className="font-medium text-gray-700">Education Status:</span>
-                      <span className="font-normal">{person.eduStatus ? person.eduStatus.charAt(0).toUpperCase() + person.eduStatus.slice(1).toLowerCase() : 'N/A'}</span>
+                      <span className="font-normal">{person.eduStatus === 'NA' || !person.eduStatus ? 'N/A' : person.eduStatus.charAt(0).toUpperCase() + person.eduStatus.slice(1).toLowerCase()}</span>
                     </div>
                     {person.educations && person.educations.length > 0 && (() => {
                       const recentEdu = [...person.educations].sort((a, b) => {

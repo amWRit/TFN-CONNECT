@@ -74,7 +74,7 @@ export default function NewJobPage() {
 	};
 
 	return (
-		<div className="max-w-xl mx-auto p-8 bg-white rounded-2xl shadow-xl mt-12 border-4 border-blue-400/70 bg-gradient-to-br from-blue-50 via-white to-blue-100">
+		<div className="max-w-xl mx-auto p-8 bg-white rounded-2xl shadow-xl mt-4 mb-16 sm:mb-0 border-4 border-blue-400/70 bg-gradient-to-br from-blue-50 via-white to-blue-100">
 			<h1 className="text-3xl font-extrabold mb-8 text-blue-700 text-center tracking-tight">
 				Add New Job Posting
 			</h1>
@@ -102,10 +102,14 @@ export default function NewJobPage() {
 						onChange={(e) => setDescription(e.target.value)}
 						required
 					/>
-					<div className="text-xs text-gray-500 mt-1 italic">
-						Tip: You can use Markdown to format your description.<br />
-						Supports <b>bold</b>, <i>italics</i>, headings, ordered and unordered lists.<br />
-						You can use <a href="https://markdownlivepreview.com/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Live Preview</a>.
+					<div className="mb-2 mt-2 text-xs font-normal text-gray-800 bg-gray-50 border border-blue-200 rounded-lg p-3 italic">
+						<div>
+							This editor supports <a href="https://www.markdownguide.org/basic-syntax/" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">Markdown syntax</a>.
+						</div>
+						<div className="mt-1">
+							You can use online tools like <a href="https://markdownlivepreview.com/" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">Markdown Live Preview</a> or <a href="https://stackedit.io/app#" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">StackEdit</a> to compose and copy your content here.
+							To convert a Word document to Markdown, try <a href="https://www.word2md.net/" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">word2md.net</a> and paste the result here.
+						</div>
 					</div>
 				</div>
 				<div>
@@ -200,7 +204,7 @@ export default function NewJobPage() {
 						className="flex-1 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
 						disabled={loading}
 					>
-						{loading ? "Posting..." : "Add Job"}
+						{loading ? "Adding..." : "Add"}
 					</button>
 					<button
 						type="button"

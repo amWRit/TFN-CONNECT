@@ -64,8 +64,8 @@ export async function POST(request: Request) {
         profileImage: body.profileImage,
         bio: body.bio,
         type: body.type,
-        eduStatus: body.eduStatus || 'COMPLETED',
-        empStatus: body.empStatus || 'SEEKING',
+        eduStatus: body.eduStatus,
+        empStatus: body.empStatus,
       },
     });
     return NextResponse.json(person, { status: 201 });

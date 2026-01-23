@@ -122,7 +122,7 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
+    <div className="max-w-2xl mx-auto p-6 mt-4 mb-16 sm:mb-0">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold text-blue-700">Edit Job</h1>
         <button
@@ -146,13 +146,17 @@ export default function EditJobPage({ params }: { params: Promise<{ id: string }
         </label>
         <label className="font-semibold">Description
           <textarea name="description" value={form.description} onChange={handleChange} className="block w-full border-2 border-blue-400 rounded px-3 py-2 mt-1 font-normal focus:border-blue-600 focus:ring-blue-500" rows={4} required />
-          <div className="text-xs text-gray-500 mt-1 italic">
-            Tip: You can use Markdown to format your description.<br />
-            Supports **bold**, _italics_, headings, ordered and unordered lists.<br />
-            Try <a href="https://markdownlivepreview.com/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Live Preview</a> or the <a href="https://www.markdownguide.org/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Guide</a> for syntax and examples.
+          <div className="mb-2 mt-2 text-xs font-normal text-gray-800 bg-gray-50 border border-blue-200 rounded-lg p-3 italic">
+            <div>
+              This editor supports <a href="https://www.markdownguide.org/basic-syntax/" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">Markdown syntax</a>.
+            </div>
+            <div className="mt-1">
+              You can use online tools like <a href="https://markdownlivepreview.com/" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">Markdown Live Preview</a> or <a href="https://stackedit.io/app#" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">StackEdit</a> to compose and copy your content here.
+              To convert a Word document to Markdown, try <a href="https://www.word2md.net/" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">word2md.net</a> and paste the result here.
+            </div>
           </div>
         </label>
-        <label className="font-semibold">Job Type
+        <label className="font-semibold">Job
           <select name="jobType" value={form.jobType} onChange={handleChange} className="block w-full border-2 border-blue-400 rounded px-3 py-2 mt-1 font-normal focus:border-blue-600 focus:ring-blue-500">
             {jobTypes.map(type => (
               <option key={type} value={type} className="font-normal">{type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</option>

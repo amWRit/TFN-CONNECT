@@ -44,15 +44,16 @@ function AdminDashboardContent() {
 
   useEffect(() => {
     if (!searchParams) return;
-    const auto = searchParams.get('auto');
+    // const auto = searchParams.get('auto');
     const auth = localStorage.getItem('adminAuth');
     
-    if (auto === 'true' && !auth) {
-      // Auto-login with default credentials
-      localStorage.setItem('adminAuth', 'true');
-      localStorage.setItem('adminEmail', 'adminconnect@teachfornepal.org');
-      setIsAuthed(true);
-    } else if (!auth) {
+    // if (auto === 'true' && !auth) {
+    //   // Auto-login with default credentials
+    //   localStorage.setItem('adminAuth', 'true');
+    //   localStorage.setItem('adminEmail', 'adminconnect@teachfornepal.org');
+    //   setIsAuthed(true);
+    // } 
+    if (!auth) {
       router.push('/admin/login');
     } else {
       setIsAuthed(true);

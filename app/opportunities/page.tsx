@@ -77,7 +77,7 @@ export default function OpportunitiesPage() {
 
   return (
     <>
-      <div className="max-w-6xl mx-auto px-4 pt-2 pb-8 sm:pt-4 sm:pb-10">
+      <div className="max-w-6xl mx-auto px-4 pt-2 pb-8 sm:pt-4 mt-4 mb-16 sm:mb-0">
         <div className="flex flex-col gap-2">
           {/* Header and Filters Row - Responsive, collapsible like Events page */}
           <div className="sticky top-16 z-30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-0 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200/60 py-2">

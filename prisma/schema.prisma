@@ -33,12 +33,14 @@ enum EduStatus {
   COMPLETED
   ENROLLED
   NOT_ENROLLED
+  NA
 }
 
 enum EmpStatus {
   SEEKING
   EMPLOYED
   UNEMPLOYED
+  NA
 }
 
 enum EducationType {
@@ -54,6 +56,7 @@ enum SchoolType {
   PRIMARY
   SECONDARY
   HIGHER
+  OTHER
 }
 
 // ===== GEOGRAPHY HIERARCHY =====
@@ -155,9 +158,9 @@ model Person {
   bio          String?
 
   // Status
-  type      PersonType @default(ALUMNI)
-  eduStatus EduStatus  @default(COMPLETED)
-  empStatus EmpStatus  @default(SEEKING)
+  type      PersonType @default(GENERAL)
+  eduStatus EduStatus?
+  empStatus EmpStatus?
 
   // Relations
   educations        Education[]

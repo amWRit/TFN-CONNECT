@@ -1,8 +1,11 @@
 
+
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import type { SubscriptionType } from '@prisma/client';
 import { marked } from 'marked';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/pages/api/auth/[...nextauth]';
 
 const LOGO_URL = "https://tfn-connect.vercel.app/logo.png";
 
@@ -33,7 +36,7 @@ const TYPE_CONFIG = {
   },
   JOB_POSTING: {
     model: 'jobPosting',
-    subject: (item: any) => `[TFN Connect] Job Posting: ${item.title}`,
+    subject: (item: any) => `[TFN Connect] Job: ${item.title}`,
     html: (item: any, appUrl: string, subscriber?: { firstName?: string }) => {
       const jobType: string = item.jobType
         ? `<div style=\"color:#333;font-size:15px;margin-bottom:4px;\"><b>Type:</b> ${item.jobType.replace('_', ' ').toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}</div>`
@@ -116,7 +119,7 @@ const TYPE_CONFIG = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { type, id, personTypes, which } = await req.json();
+    const { type, id, personTypes, which, test } = await req.json();
     type TypeConfigKey = keyof typeof TYPE_CONFIG;
     if (!type || !id || !(type in TYPE_CONFIG)) {
       return NextResponse.json({ error: 'Missing or invalid type/id' }, { status: 400 });
@@ -147,28 +150,44 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `${type} not found` }, { status: 404 });
     }
 
-    // Require personTypes to be a non-empty array
-    if (!Array.isArray(personTypes) || personTypes.length === 0) {
-      return NextResponse.json({ error: 'personTypes must be a non-empty array' }, { status: 400 });
-    }
-    const allowedTypes: import('@prisma/client').PersonType[] = personTypes;
-    // Use which field to select email1 or email2
-    const emailField = which === 'email2' ? 'email2' : 'email1';
 
-    // Find subscribers with matching subscription and allowed person types
-    const subscribers = await prisma.person.findMany({
-      where: {
-        subscriptions: { has: type as SubscriptionType },
-        [emailField]: { not: '' },
-        type: { in: allowedTypes },
-      },
-      select: { email1: true, email2: true, firstName: true, lastName: true, type: true },
-    });
-
-    // Filter out missing emails
-    const filteredSubscribers = subscribers.filter(s => s[emailField]);
-    if (!filteredSubscribers.length) {
-      return NextResponse.json({ success: true, count: 0, message: 'No subscribers found' });
+    let filteredSubscribers;
+    let emailField = which === 'email2' ? 'email2' : 'email1';
+    if (test) {
+      // Only send to current user
+      const session = await getServerSession(authOptions);
+      if (!session?.user?.email) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      // Find the person by email
+      const person = await prisma.person.findUnique({ where: { email1: session.user.email }, select: { email1: true, email2: true, firstName: true, lastName: true, type: true } });
+      if (
+        !person ||
+        !(person as { email1: string; email2: string | null })[emailField as 'email1' | 'email2']
+      ) {
+        return NextResponse.json({ success: false, message: 'No email found for current user' });
+      }
+      filteredSubscribers = [person];
+    } else {
+      // Require personTypes to be a non-empty array
+      if (!Array.isArray(personTypes) || personTypes.length === 0) {
+        return NextResponse.json({ error: 'personTypes must be a non-empty array' }, { status: 400 });
+      }
+      const allowedTypes: import('@prisma/client').PersonType[] = personTypes;
+      // Find subscribers with matching subscription and allowed person types
+      const subscribers = await prisma.person.findMany({
+        where: {
+          subscriptions: { has: type as SubscriptionType },
+          [emailField]: { not: '' },
+          type: { in: allowedTypes },
+        },
+        select: { email1: true, email2: true, firstName: true, lastName: true, type: true },
+      });
+      // Filter out missing emails
+      filteredSubscribers = subscribers.filter(s => (s as Record<string, string | null>)[emailField]);
+      if (!filteredSubscribers.length) {
+        return NextResponse.json({ success: true, count: 0, message: 'No subscribers found' });
+      }
     }
 
     const appUrl = process.env.NEXT_PUBLIC_URL || '';
@@ -177,20 +196,34 @@ export async function POST(req: NextRequest) {
     const firstName = filteredSubscribers[0]?.firstName;
     const htmlBody = TYPE_CONFIG[type as TypeConfigKey].html(item, appUrl, { firstName });
 
-    // Send to Apps Script
+    // Send to Apps Script in batches of 50
     const appsScriptUrl = process.env.APPS_SCRIPT_URL;
-    const response = await fetch(appsScriptUrl!, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        subject,
-        htmlBody,
-        subscribers: filteredSubscribers.map(s => ({ email: s[emailField], name: `${s.firstName} ${s.lastName}` })),
-      }),
-    });
-    const result = await response.json();
+    const BATCH_SIZE = 50;
+    const batches = [];
+    for (let i = 0; i < filteredSubscribers.length; i += BATCH_SIZE) {
+      batches.push(filteredSubscribers.slice(i, i + BATCH_SIZE));
+    }
+    let totalSent = 0;
+    let batchResults = [];
+    let sentEmails: string[] = [];
+    for (const batch of batches) {
+      const response = await fetch(appsScriptUrl!, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject,
+          htmlBody,
+          subscribers: batch.map(s => ({ email: (s as Record<string, string | null>)[emailField], name: `${s.firstName} ${s.lastName}` })),
+        }),
+      });
+      const result = await response.json();
+      batchResults.push(result);
+      totalSent += batch.length;
+      // Collect sent emails for CSV
+      sentEmails.push(...batch.map(s => (s as Record<string, string | null>)[emailField]).filter((email): email is string => typeof email === 'string' && email !== null));
+    }
 
-    return NextResponse.json({ success: true, count: filteredSubscribers.length, appsScript: result });
+    return NextResponse.json({ success: true, count: totalSent, batches: batchResults, sentEmails });
   } catch (error: any) {
     // Log error details to server console for debugging
     console.error('Notify API error:', error);

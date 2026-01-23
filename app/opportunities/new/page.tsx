@@ -49,7 +49,7 @@ export default function NewOpportunityPage() {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-8 bg-white rounded-2xl shadow-xl mt-12 border-4 border-purple-400/70 bg-gradient-to-br from-purple-50 via-white to-purple-100">
+    <div className="max-w-xl mx-auto p-8 bg-white rounded-2xl shadow-xl mt-4 mb-16 sm:mb-0 border-4 border-purple-400/70 bg-gradient-to-br from-purple-50 via-white to-purple-100">
       <h1 className="text-3xl font-extrabold mb-8 text-purple-700 text-center tracking-tight">Add New Opportunity</h1>
       <div className="mb-4 text-sm text-gray-700 text-center bg-yellow-100 border border-yellow-300 rounded-lg px-4 py-2">
         By posting an opportunity, you agree to our <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline text-purple-700 font-semibold">Terms and Conditions</a>.
@@ -81,10 +81,14 @@ export default function NewOpportunityPage() {
             onChange={e => setDescription(e.target.value)}
             required
           />
-          <div className="text-xs text-gray-500 mt-1 italic">
-            Tip: You can use Markdown to format your description.<br />
-            Supports **bold**, _italics_, headings, ordered and unordered lists.<br />
-            Try <a href="https://markdownlivepreview.com/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Live Preview</a> or the <a href="https://www.markdownguide.org/" target="_blank" rel="noopener noreferrer" className="underline text-purple-600">Markdown Guide</a> for syntax and examples.
+          <div className="mb-2 mt-2 text-xs font-normal text-gray-800 bg-gray-50 border border-blue-200 rounded-lg p-3 italic">
+            <div>
+              This editor supports <a href="https://www.markdownguide.org/basic-syntax/" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">Markdown syntax</a>.
+            </div>
+            <div className="mt-1">
+              You can use online tools like <a href="https://markdownlivepreview.com/" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">Markdown Live Preview</a> or <a href="https://stackedit.io/app#" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">StackEdit</a> to compose and copy your content here.
+              To convert a Word document to Markdown, try <a href="https://www.word2md.net/" target="_blank" rel="noopener noreferrer" className="underline text-blue-700">word2md.net</a> and paste the result here.
+            </div>
           </div>
         </div>
         <div>
@@ -130,7 +134,7 @@ export default function NewOpportunityPage() {
             className="flex-1 bg-gradient-to-r from-purple-500 via-purple-600 to-purple-700 hover:from-purple-600 hover:to-purple-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
             disabled={loading}
           >
-            {loading ? "Creating..." : "Create Opportunity"}
+            {loading ? "Adding..." : "Add"}
           </button>
           <button
             type="button"

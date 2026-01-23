@@ -395,7 +395,7 @@ export default function PlacementsTab() {
 										className="flex-1 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
 										disabled={editSubmitting}
 									>
-										{editAction === 'save' && editSubmitting ? 'Saving...' : 'Add Placement'}
+										{editAction === 'save' && editSubmitting ? 'Adding...' : 'Add'}
 									</button>
 									<button
 										type="button"
@@ -507,10 +507,10 @@ export default function PlacementsTab() {
 									<button
 										type="button"
 										className="flex-1 bg-white border-2 border-red-400 text-red-600 font-bold px-8 py-3 rounded-xl shadow transition-all duration-200 text-lg tracking-wide hover:bg-red-50 hover:border-red-600"
-										onClick={handleEditDelete}
+										onClick={handleEditClose}
 										disabled={editSubmitting}
 									>
-										{editAction === 'delete' && editSubmitting ? 'Deleting...' : 'Delete'}
+										Cancel
 									</button>
 								</div>
 							</form>

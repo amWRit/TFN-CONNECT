@@ -40,9 +40,10 @@ export function EditPostModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm">
       <div className="bg-gradient-to-br from-blue-50 via-white to-blue-100 rounded-2xl shadow-2xl p-4 sm:p-8 w-full max-w-xl sm:max-w-2xl border-4 border-blue-400/70 relative mx-2">
         <button
-          className="absolute top-3 right-3 text-blue-400 hover:text-blue-700 text-3xl font-bold transition-colors duration-150"
+          className="absolute top-1 right-1 sm:top-3 sm:right-3 w-10 h-10 flex items-center justify-center text-blue-400 hover:text-blue-700 text-2xl sm:text-3xl font-bold transition-colors duration-150 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-400"
           onClick={onClose}
           aria-label="Close"
+          tabIndex={0}
         >
           &times;
         </button>

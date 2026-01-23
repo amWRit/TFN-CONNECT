@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { Card, CardTitle } from "@/components/ui/card";
 import { MapPin, Calendar, Clock, Users, Pencil, Bookmark, BookmarkCheck, Eye } from "lucide-react";
 import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { useSession } from "next-auth/react";
@@ -201,8 +201,10 @@ export default function EventCard({
 
       {/* Title */}
       <h2 className="text-xl font-semibold text-emerald-700 pr-12 mb-1">
-        <Link href={`/events/${id}`} className="hover:underline group-hover:text-emerald-800 transition-colors">
-          {title}
+        <Link href={`/events/${id}`} className="hover:underline group-hover:text-emerald-800 transition-colors block">
+          <span className="text-lg font-semibold truncate block max-w-full">
+            {title}
+          </span>
         </Link>
       </h2>
 
@@ -212,11 +214,11 @@ export default function EventCard({
           <Users className="h-4 w-4 mr-1 text-emerald-400" />
           <span>Posted by </span>
           {createdById ? (
-            <Link href={`/profile/${createdById}`} className="text-emerald-700 hover:underline font-semibold">
-              {createdByName}
+            <Link href={`/profile/${createdById}`} className="text-emerald-700 hover:underline font-semibold truncate block max-w-[50vw] sm:max-w-full">
+              <span className="truncate">{createdByName}</span>
             </Link>
           ) : (
-            <span>{createdByName}</span>
+            <span className="truncate block max-w-[50vw] sm:max-w-full">{createdByName}</span>
           )}
         </div>
       )}

@@ -27,11 +27,13 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-[1px]">
       <div className="relative w-full max-w-md mx-2">
-        <div className="bg-white rounded-2xl shadow-2xl p-6 border-2 border-blue-400 max-h-[90vh] flex flex-col items-center">
-          <h2 className="text-xl font-bold mb-4 text-blue-700 text-center">{title}</h2>
-          <p className="mb-6 text-gray-700 text-center">{message}</p>
-          {children && <div className="mb-6 w-full">{children}</div>}
-          <div className="flex gap-4 w-full">
+        <div className="bg-white rounded-2xl shadow-2xl border-2 border-blue-400 max-h-[90vh] flex flex-col" style={{ minHeight: '320px' }}>
+          <div className="overflow-y-auto p-6 flex-1 w-full flex flex-col items-center rounded-t-2xl">
+            <h2 className="text-xl font-bold mb-4 text-blue-700 text-center">{title}</h2>
+            <p className="mb-6 text-gray-700 text-center">{message}</p>
+            {children && <div className="mb-6 w-full">{children}</div>}
+          </div>
+          <div className="flex gap-4 w-full px-6 pb-6 pt-2 bg-white rounded-b-2xl sticky bottom-0">
             <button
               className="flex-1 bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white px-6 py-2 rounded-xl font-bold shadow-lg transition-all duration-200 text-lg tracking-wide"
               onClick={onConfirm}

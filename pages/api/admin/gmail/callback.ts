@@ -24,7 +24,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       maxAge: 60 * 60 * 24 * 7, // 1 week
       sameSite: 'lax',
     }));
-    res.redirect('/admin/auto-login'); // or wherever the admin UI is
+    // Auto-login feature is currently disabled. Redirecting to admin home instead.
+    res.redirect('/admin/home');
   } catch (err) {
     res.status(500).json({ error: 'Failed to get Gmail token', details: String(err) });
   }

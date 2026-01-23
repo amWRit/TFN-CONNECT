@@ -143,6 +143,13 @@ export default function UserMenu() {
             >
               <Shield size={16} /> Admin Panel
             </Link>
+            <Link
+              href="/admin/manual"
+              className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-blue-50 text-gray-700 text-sm"
+              onClick={() => setOpen(false)}
+            >
+              <span role="img" aria-label="Manual">📖</span> Admin Manual
+            </Link>
             <button
               onClick={() => {
                 setOpen(false);
@@ -278,6 +285,19 @@ export default function UserMenu() {
           >
             <Settings size={16} /> Settings
           </Link>
+          <Link
+            href="/manual"
+            className="flex items-center gap-2 px-4 py-2 hover:bg-blue-50 text-gray-700 text-sm"
+            onClick={() => setOpen(false)}
+          >
+            <span role="img" aria-label="Manual">📖</span> User Manual
+          </Link>
+          <button
+            onClick={() => { setOpen(false); signOut({ callbackUrl: "/" }); }}
+            className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-blue-50 text-gray-700 text-sm"
+          >
+            <LogOut size={16} /> Logout
+          </button>
           {/* Admin Panel toggle button and Dashboard link */}
           {showAdminPanel && (
             <>
@@ -318,7 +338,7 @@ export default function UserMenu() {
           {/* Admin password modal */}
           {showAdminModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-              <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
+              <div className="bg-white rounded-lg shadow-lg p-4 w-[90vw] max-w-xs sm:max-w-md relative">
                 <button
                   type="button"
                   className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 p-1 rounded-full focus:outline-none"
@@ -372,12 +392,6 @@ export default function UserMenu() {
               </div>
             </div>
           )}
-          <button
-            onClick={() => { setOpen(false); signOut({ callbackUrl: "/" }); }}
-            className="flex items-center gap-2 px-4 py-2 w-full text-left hover:bg-blue-50 text-gray-700 text-sm"
-          >
-            <LogOut size={16} /> Logout
-          </button>
         </div>
       )}
     </div>

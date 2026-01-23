@@ -134,13 +134,15 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({ id, title, descriptio
           </Link>
         </h2>
         {createdByName && (
-          <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
-            <Users className="h-4 w-4 mr-1 text-purple-400" />
+          <div className="flex items-center gap-1 mt-1 text-xs text-gray-500 min-w-0 max-w-full">
+            <Users className="h-4 w-4 mr-1 text-purple-400 flex-shrink-0" />
             <span>Posted by </span>
             {createdById ? (
-              <Link href={`/profile/${createdById}`} className="text-purple-700 hover:underline font-semibold">{createdByName}</Link>
+              <Link href={`/profile/${createdById}`} className="text-purple-700 hover:underline font-semibold truncate block max-w-[50vw] sm:max-w-full">
+                <span className="truncate">{createdByName}</span>
+              </Link>
             ) : (
-              <span>{createdByName}</span>
+              <span className="truncate block max-w-[50vw] sm:max-w-full">{createdByName}</span>
             )}
           </div>
         )}
