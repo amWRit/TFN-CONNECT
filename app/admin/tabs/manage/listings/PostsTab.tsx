@@ -152,35 +152,37 @@ export default function PostsTab() {
             </span>
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredPosts.length === 0 && (
+        {loading && (
+          <div className="w-full text-center py-8 text-blue-600 font-semibold text-lg animate-pulse">Loading posts...</div>
+        )}
+        <div className="grid grid-cols-1 gap-2">
+          {filteredPosts.length === 0 && !loading && (
             <div className="col-span-full text-center py-6 text-gray-400">No posts found.</div>
           )}
           {filteredPosts.map(post => (
-            <div key={post.id} className="bg-white border border-blue-400 rounded-xl shadow-sm p-4 flex flex-col gap-2">
-              <div className="flex items-center justify-between gap-2 mb-2">
+            <div key={post.id} className="bg-white border border-blue-400 rounded-xl shadow-sm p-3 flex flex-col gap-1.5">
+              <div className="flex items-start justify-between gap-2 mb-1">
                 <h3 className="font-bold text-lg text-blue-700 truncate" title={post.content}>{post.content}</h3>
+                <div className="flex gap-2 ml-4">
+                  <Link href={`/feed`}>
+                    <Button size="icon" className="bg-blue-600 hover:bg-blue-700 text-white" aria-label="View">
+                      <Eye className="w-4 h-4 text-white" />
+                    </Button>
+                  </Link>
+                  <Button size="icon" className="bg-emerald-600 hover:bg-emerald-700 text-white" aria-label="Email" onClick={() => openEmailModal(post.id)} disabled={loading} title="Email">
+                    <Mail className="w-4 h-4 text-white" />
+                  </Button>
+                  <Button size="icon" variant="destructive" aria-label="Delete" onClick={() => handleDelete(post.id)} disabled={loading}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
               <div className="flex flex-wrap gap-2 items-center text-sm">
+                <span className="font-semibold text-gray-600">By:</span>
+                <span>{post.person ? `${post.person.firstName} ${post.person.lastName}` : <span className="text-xs text-gray-400">---</span>}</span>
+                <span className="text-gray-400">|</span>
                 <span className="font-semibold text-gray-600">Type:</span>
                 <Badge variant="gray">{post.postType.replace('_', ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</Badge>
-              </div>
-              <div className="flex flex-wrap gap-2 items-center text-sm">
-                <span className="font-semibold text-gray-600">Posted By:</span>
-                <span>{post.person ? `${post.person.firstName} ${post.person.lastName}` : <span className="text-xs text-gray-400">---</span>}</span>
-              </div>
-              <div className="flex gap-2 mt-2">
-                <Link href={`/feed`}>
-                  <Button size="icon" className="bg-blue-600 hover:bg-blue-700 text-white" aria-label="View">
-                    <Eye className="w-4 h-4 text-white" />
-                  </Button>
-                </Link>
-                <Button size="icon" className="bg-emerald-600 hover:bg-emerald-700 text-white" aria-label="Email" onClick={() => openEmailModal(post.id)} disabled={loading} title="Email">
-                  <Mail className="w-4 h-4 text-white" />
-                </Button>
-                <Button size="icon" variant="destructive" aria-label="Delete" onClick={() => handleDelete(post.id)} disabled={loading}>
-                  <Trash2 className="w-4 h-4" />
-                </Button>
               </div>
             </div>
           ))}

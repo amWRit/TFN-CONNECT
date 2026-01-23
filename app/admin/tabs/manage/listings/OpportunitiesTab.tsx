@@ -26,7 +26,8 @@ type Opportunity = {
 export default function OpportunitiesTab() {
   const csvDownloadRef = useRef<HTMLAnchorElement | null>(null);
   const [opps, setOpps] = useState<Opportunity[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // for data fetch only
+  const [emailLoading, setEmailLoading] = useState(false); // for official email send only
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [typeOptions, setTypeOptions] = useState<{ value: string; label: string }[]>([{ value: '', label: 'All' }]);
@@ -106,7 +107,7 @@ export default function OpportunitiesTab() {
   async function sendEmail() {
     if (!modalOppId) return;
     setShowConfirm(false);
-    setLoading(true);
+    setEmailLoading(true);
     setBatchProgress(null);
     setSentCsvUrl(null);
     setCsvDownloadTriggered(false);
@@ -144,7 +145,7 @@ export default function OpportunitiesTab() {
       setBatchProgress({sent: 0, failed: [], batchResults: []});
       setResultModal({ open: true, message: 'Failed to send email notification', success: false });
     }
-    setLoading(false);
+    setEmailLoading(false);
     setModalOpen(false);
     setModalOppId(null);
   }
@@ -311,9 +312,12 @@ export default function OpportunitiesTab() {
             </div>
           </div>
         </div>
+        {loading && !emailLoading && (
+          <div className="w-full text-center py-8 text-blue-600 font-semibold text-lg animate-pulse">Loading opportunities...</div>
+        )}
         <div className="overflow-x-auto">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredOpps.length === 0 && (
+              {filteredOpps.length === 0 && !loading && (
                 <div className="col-span-full text-center py-6 text-gray-400">No opportunities found.</div>
               )}
               {filteredOpps.map(o => (
@@ -468,7 +472,7 @@ export default function OpportunitiesTab() {
           )}
 
           {/* Batch Progress Bar & CSV Download */}
-          {(loading || batchProgress) && (
+          {(emailLoading || batchProgress) && (
             <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-8 py-3 rounded-full shadow-lg text-lg font-bold flex items-center gap-2 animate-pulse z-50">
               <Mail className="w-5 h-5 animate-spin" />
               {loading ? 'Sending...' : (
