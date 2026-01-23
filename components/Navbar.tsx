@@ -79,7 +79,7 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2 group py-3 sm:py-4">
             <img 
-              src="/logo.png" 
+              src="/logos/logo.png" 
               alt="TFN-Connect Logo" 
               className="h-8 w-auto group-hover:opacity-80 transition"
             />
