@@ -1,7 +1,9 @@
 
+
 import { google } from 'googleapis';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { parse } from 'cookie';
+import { simpleParser } from 'mailparser';
 
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -22,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Invalid Gmail token.' });
   }
 
-  const { draftId, recipients, cc, bcc } = req.body;
+  const { draftId, recipients, cc, bcc, personalizeSalutation } = req.body;
   if (!draftId || !recipients || !Array.isArray(recipients) || recipients.length === 0) {
     console.log('DEBUG: Missing or empty recipients', { draftId, recipients });
     return res.status(400).json({ error: 'Missing required fields' });
@@ -110,6 +112,66 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             // Remove Bcc if present and not provided
             emailSource = emailSource.replace(/^Bcc:.*\n?/m, '');
           }
+
+          // Personalize salutation if requested
+          if (personalizeSalutation && recipient.name) {
+            let parsed;
+            try {
+              parsed = await simpleParser(emailSource);
+            } catch (err) {
+              // If mailparser fails, fallback to previous logic
+              parsed = null;
+            }
+            let body = '';
+            let isHtml = false;
+            let subject = '';
+            let from = '';
+            let to = recipient.email;
+            let ccVal = cc || '';
+            let bccVal = bcc || '';
+            if (parsed) {
+              subject = parsed.subject || '';
+              from = parsed.from?.text || '';
+              if (parsed.to) {
+                if (Array.isArray(parsed.to)) {
+                  to = parsed.to.map(addr => addr.text).join(', ');
+                } else if ('text' in parsed.to) {
+                  to = parsed.to.text;
+                } else if (parsed.to && typeof parsed.to === 'object' && 'address' in parsed.to) {
+                  to = (parsed.to as { address: string }).address;
+                }
+              }
+              if (parsed.html) {
+                body = `<p>Dear ${recipient.name},</p>` + parsed.html;
+                isHtml = true;
+              } else if (parsed.text) {
+                body = `Dear ${recipient.name},\n\n${parsed.text}`;
+                isHtml = false;
+              } else {
+                body = '';
+              }
+            } else {
+              // Fallback: treat all as plain text
+              body = `Dear ${recipient.name},\n\n` + emailSource;
+              isHtml = false;
+            }
+            // Build new MIME message
+            let mimeMessage = '';
+            if (subject) mimeMessage += `Subject: ${subject}\r\n`;
+            if (from) mimeMessage += `From: ${from}\r\n`;
+            if (to) mimeMessage += `To: ${to}\r\n`;
+            if (ccVal) mimeMessage += `Cc: ${ccVal}\r\n`;
+            if (bccVal) mimeMessage += `Bcc: ${bccVal}\r\n`;
+            if (isHtml) {
+              mimeMessage += 'Content-Type: text/html; charset="UTF-8"\r\n';
+              mimeMessage += '\r\n' + body;
+            } else {
+              mimeMessage += 'Content-Type: text/plain; charset="UTF-8"\r\n';
+              mimeMessage += '\r\n' + body;
+            }
+            emailSource = mimeMessage;
+          }
+
           // Re-encode to base64url
           const updatedRaw = Buffer.from(emailSource, 'utf-8').toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
           const message = { raw: updatedRaw };

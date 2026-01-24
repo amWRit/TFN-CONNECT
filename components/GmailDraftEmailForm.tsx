@@ -136,10 +136,19 @@ export default function GmailDraftEmailForm() {
     }
     setSending(true);
     try {
+      // Fetch first name from /api/profile
+      let firstName = '';
+      try {
+        const resProfile = await fetch('/api/profile');
+        const dataProfile = await resProfile.json();
+        firstName = dataProfile.firstName || '';
+      } catch {
+        firstName = '';
+      }
       const res = await fetch('/api/gmail/send-draft', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ draftId: selectedDraftId, cc: ccList, bcc: bccList }),
+        body: JSON.stringify({ draftId: selectedDraftId, cc: ccList, bcc: bccList, personalizeSalutation: true, firstName }),
         credentials: 'include'
       });
       const result = await res.json();
@@ -188,11 +197,11 @@ export default function GmailDraftEmailForm() {
         setSending(false);
         return;
       }
-      // Send draft content to all recipients
+      // Send draft content to all recipients, with first name for salutation
       const res = await fetch('/api/gmail/send-draft-multi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ draftId: selectedDraftId, recipients, cc: ccList, bcc: bccList }),
+        body: JSON.stringify({ draftId: selectedDraftId, recipients, cc: ccList, bcc: bccList, personalizeSalutation: true }),
         credentials: 'include'
       });
       const result = await res.json();
