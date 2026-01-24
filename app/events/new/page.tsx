@@ -92,7 +92,7 @@ export default function NewEventPage() {
           tags: tagList,
           sponsors: sponsors ? sponsors.split(",").map((s) => s.trim()).filter(Boolean) : [],
           startDateTime,
-          endDateTime: endDateTime || null,
+          endDateTime: endDateTime ? endDateTime : null,
           type,
           status,
           capacity: capacity ? parseInt(capacity, 10) : null,

@@ -6,7 +6,8 @@ import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { EventType, EventStatus } from "@prisma/client";
 import EventCard from "@/components/EventCard";
 import { Badge } from "@/components/ui/badge";
-import { Filter, Plus } from "lucide-react"
+import { Filter, Plus, Calendar, MapPin } from "lucide-react";
+import Modal from "@/components/Modal";
 
 interface Event {
   id: string;
@@ -44,7 +45,10 @@ export default function EventsPage() {
   // Collapsible filter state for small screens
   const [showFilters, setShowFilters] = useState(false);
 
-    // Utility to extract event IDs from batch bookmarks response
+  // Modal for upcoming events
+  const [showUpcomingModal, setShowUpcomingModal] = useState(true);
+
+  // Utility to extract event IDs from batch bookmarks response
   function extractBookmarkedEventIds(bookmarks: any): Set<string> {
     if (!bookmarks || !Array.isArray(bookmarks.events)) return new Set();
     return new Set(bookmarks.events.map((b: any) => b.targetId));
@@ -124,6 +128,13 @@ export default function EventsPage() {
     setEvents((prev) => prev.filter((e) => e.id !== id));
   };
 
+  // Filter for upcoming events (future startDateTime)
+  const now = new Date();
+  const upcomingEvents = events
+    .filter(e => new Date(e.startDateTime) > now)
+    .sort((a, b) => new Date(a.startDateTime).getTime() - new Date(b.startDateTime).getTime())
+    .slice(0, 10); // Show up to 10 upcoming
+
   return (
     <div className="w-full bg-gradient-to-br from-slate-50 via-emerald-50 to-slate-50 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 pt-2 pb-8 sm:pt-4 sm:pb-10">
@@ -136,14 +147,6 @@ export default function EventsPage() {
               Events
             </Badge>
             {/* Collapsible filter toggle for small screens */}
-            <button
-              type="button"
-              className="px-3 py-1 rounded border border-emerald-300 text-emerald-700 bg-white text-sm font-medium shadow-sm hover:bg-emerald-50 transition sm:hidden ml-2 flex items-center gap-2"
-              onClick={() => setShowFilters((v) => !v)}
-            >
-              <Filter size={16} className="inline-block" />
-              {showFilters ? "Hide Filters" : "Show Filters"}
-            </button>
           </div>
           <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-2">
             {/* Filter section: always visible on sm+, collapsible on small screens */}
@@ -328,6 +331,47 @@ export default function EventsPage() {
           <Plus className="w-7 h-7" />
           <span className="hidden sm:inline">Add Event</span>
         </button>
+      )}
+
+      {/* Upcoming Events Modal */}
+      {showUpcomingModal && upcomingEvents.length > 0 && (
+        <Modal
+          open={showUpcomingModal}
+          onClose={() => setShowUpcomingModal(false)}
+          className="w-full max-w-xs sm:max-w-md mx-auto"
+        >
+          <div className="w-full max-w-xs sm:max-w-md flex flex-col items-center">
+            <h2 className="text-lg sm:text-xl font-bold text-emerald-700 mb-2 text-center">Upcoming Events</h2>
+            <div className="w-full max-h-80 overflow-y-auto flex flex-col gap-3">
+              {upcomingEvents.map(event => (
+                <a
+                  key={event.id}
+                  href={`/events/${event.id}`}
+                  className="block w-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl p-3 transition flex flex-col gap-1 shadow-sm"
+                  onClick={() => setShowUpcomingModal(false)}
+                >
+                  <span className="font-semibold text-emerald-800 text-base truncate" title={event.title}>{event.title}</span>
+                  <span className="flex items-center gap-1 text-xs text-gray-600">
+                    <Calendar className="w-4 h-4 inline-block text-emerald-500" />
+                    {new Date(event.startDateTime).toLocaleDateString(undefined, { dateStyle: 'medium' })}
+                  </span>
+                  {event.location && (
+                    <span className="flex items-center gap-1 text-xs text-gray-500 truncate">
+                      <MapPin className="w-4 h-4 inline-block text-emerald-400" />
+                      {event.location}
+                    </span>
+                  )}
+                </a>
+              ))}
+            </div>
+            <button
+              className="mt-4 px-4 py-2 rounded-lg bg-emerald-600 text-white font-semibold shadow hover:bg-emerald-700 w-full"
+              onClick={() => setShowUpcomingModal(false)}
+            >
+              Close
+            </button>
+          </div>
+        </Modal>
       )}
     </div>
   );
