@@ -210,13 +210,13 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="w-full bg-gradient-to-br from-blue-100 via-white to-blue-200 min-h-screen py-6 pb-20 sm:pb-6">
-      <div className="max-w-4xl mx-auto px-2 sm:px-4">
+    <div className="w-full bg-gradient-to-br from-blue-100 via-white to-blue-200 min-h-screen pb-20 sm:pb-6">
+      <div className="max-w-4xl mx-auto px-2 pt-2 sm:px-4">
         {/* Header Section */}
         <div className="mb-2 sm:mb-3 relative flex items-center justify-between gap-2 sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <div className="inline-block mb-0">
-              <span className="inline-block bg-pink-400 text-white text-base sm:text-2xl font-extrabold px-4 sm:px-8 py-2 sm:py-3 rounded-full tracking-wide shadow-lg border-2 border-pink-500 animate-fadeIn">✨ FEED ✨</span>
+              <span className="inline-block bg-pink-400 text-white text-base text-sm font-extrabold px-4 sm:px-8 py-2 sm:py-3 rounded-full tracking-wide shadow-lg border-2 border-pink-500 animate-fadeIn">✨ FEED ✨</span>
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">

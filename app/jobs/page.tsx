@@ -133,7 +133,7 @@ export default function JobsPage() {
 
   return (
     <div className="w-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 pt-2 pb-8 sm:pt-4 mt-4 mb-16 sm:mb-0">
+      <div className="max-w-7xl mx-auto px-4 pt-2 pb-8 mb-16 sm:mb-0">
         {/* Header Section */}
         <div className="sticky top-16 z-30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-0 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200/60 py-2">
           {/* Row for Jobs label and Show Filters button on small screens */}

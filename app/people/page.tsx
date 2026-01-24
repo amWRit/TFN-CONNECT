@@ -211,7 +211,7 @@ export default function PeoplePage() {
 
 	return (
 		<div className="w-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 min-h-screen">
-			<div className="max-w-7xl mx-auto px-4 pt-2 pb-8 sm:pt-4 sm:pb-10">
+			<div className="max-w-7xl mx-auto px-4 pt-2 pb-8 sm:pb-10">
 				{/* Filters - Collapsible on small screens */}
 				<div className="sticky top-16 z-20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-0 bg-slate-50/95 backdrop-blur-sm border-b border-slate-200/60 py-2">
 					{/* Row for Community label and Show Filters button on small screens */}

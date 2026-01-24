@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Trash2, Eye, Mail, FlaskConical } from 'lucide-react';
+import Modal from '@/components/Modal';
+import { PostCard } from '@/components/PostCard';
 import ConfirmModal from '@/components/ConfirmModal';
 import OkModal from '@/components/OkModal';
 
@@ -13,6 +15,7 @@ type Post = {
   id: string;
   content: string;
   postType: string;
+  createdAt?: string; // Added createdAt property
   person?: {
     id: string;
     firstName: string;
@@ -43,6 +46,19 @@ export default function PostsTab() {
   // Email modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [modalPostId, setModalPostId] = useState<string | null>(null);
+  // Post details modal state
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [detailsPost, setDetailsPost] = useState<Post | null>(null);
+    // Open post details modal
+    function openDetailsModal(post: Post) {
+      setDetailsPost(post);
+      setDetailsModalOpen(true);
+    }
+
+    function closeDetailsModal() {
+      setDetailsModalOpen(false);
+      setDetailsPost(null);
+    }
   const [selectedPersonType, setSelectedPersonType] = useState<string>('ADMIN');
   const [selectedEmailField, setSelectedEmailField] = useState<'email1' | 'email2'>('email1');
   const [resultModal, setResultModal] = useState<{ open: boolean; message: string; success: boolean }>({ open: false, message: '', success: false });
@@ -321,14 +337,49 @@ export default function PostsTab() {
           )}
           {filteredPosts.map(post => (
             <div key={post.id} className="bg-white border border-blue-400 rounded-xl shadow-sm p-3 flex flex-col gap-1.5">
-              <div className="flex items-start justify-between gap-2 mb-1">
+              <div className="mb-1">
                 <h3 className="font-bold text-lg text-blue-700 truncate" title={post.content}>{post.content}</h3>
-                <div className="flex gap-2 ml-4">
-                  <Link href={`/feed`}>
-                    <Button size="icon" className="bg-blue-600 hover:bg-blue-700 text-white" aria-label="View">
-                      <Eye className="w-4 h-4 text-white" />
-                    </Button>
-                  </Link>
+              </div>
+              <div className="flex flex-wrap gap-2 items-center text-sm justify-between">
+                <div className="flex gap-2 items-center">
+                  <span className="font-semibold text-gray-600">By:</span>
+                  <span>{post.person ? `${post.person.firstName} ${post.person.lastName}` : <span className="text-xs text-gray-400">---</span>}</span>
+                  <span className="text-gray-400">|</span>
+                  <span className="font-semibold text-gray-600">Type:</span>
+                  <Badge variant="gray">{post.postType.replace('_', ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</Badge>
+                </div>
+                <div className="flex gap-2 items-center ml-auto">
+                  <Button
+                    size="icon"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    aria-label="View"
+                    onClick={() => openDetailsModal(post)}
+                  >
+                    <Eye className="w-4 h-4 text-white" />
+                  </Button>
+                  {/* Post Details Modal */}
+                  <Modal open={detailsModalOpen} onClose={closeDetailsModal}>
+                    {detailsPost && (
+                      <div className="w-full">
+                        <PostCard
+                          postId={detailsPost.id}
+                          author={{
+                            id: detailsPost.person?.id || '',
+                            firstName: detailsPost.person?.firstName || 'Unknown',
+                            lastName: detailsPost.person?.lastName || '',
+                          }}
+                          content={detailsPost.content}
+                          postType={detailsPost.postType}
+                          likes={(detailsPost as any).likes ?? 0}
+                          comments={(detailsPost as any).comments ?? 0}
+                          createdAt={detailsPost.createdAt ? new Date(detailsPost.createdAt) : new Date()}
+                          hideBookmark
+                          hideStats
+                          adminView
+                        />
+                      </div>
+                    )}
+                  </Modal>
                   <Button size="icon" className="bg-emerald-600 hover:bg-emerald-700 text-white" aria-label="Email" onClick={() => openEmailModal(post.id)} disabled={loading} title="Email">
                     <Mail className="w-4 h-4 text-white" />
                   </Button>
@@ -339,13 +390,6 @@ export default function PostsTab() {
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
-              </div>
-              <div className="flex flex-wrap gap-2 items-center text-sm">
-                <span className="font-semibold text-gray-600">By:</span>
-                <span>{post.person ? `${post.person.firstName} ${post.person.lastName}` : <span className="text-xs text-gray-400">---</span>}</span>
-                <span className="text-gray-400">|</span>
-                <span className="font-semibold text-gray-600">Type:</span>
-                <Badge variant="gray">{post.postType.replace('_', ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}</Badge>
               </div>
 
               {/* Test Email Confirmation Modal */}
