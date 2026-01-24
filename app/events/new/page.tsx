@@ -291,13 +291,19 @@ export default function NewEventPage() {
             <div>
               <label className="block font-semibold mb-2 text-emerald-700">Price (Rs.)</label>
               <input
-                type="number"
+                type="text"
                 className="w-full border-2 border-emerald-300 focus:border-emerald-500 rounded-lg px-4 py-2 bg-white/80 focus:bg-emerald-50 transition-all duration-200 outline-none"
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
+                onChange={(e) => {
+                  // Allow only digits, strip leading zeros
+                  let val = e.target.value.replace(/[^\d]/g, "");
+                  if (val.length > 1) val = val.replace(/^0+/, "");
+                  setPrice(val);
+                }}
                 placeholder="0"
-                min="0"
-                step="0.01"
+                inputMode="numeric"
+                autoComplete="off"
+                maxLength={8}
               />
             </div>
           )}

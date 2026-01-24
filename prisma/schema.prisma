@@ -527,7 +527,7 @@ model Event {
   capacity  Int? // Max attendees
   rsvpCount Int         @default(0)
   isFree    Boolean     @default(true)
-  price     Float? // If not free
+  price     Int? // If not free
 
   // Organization
   organizerName String?

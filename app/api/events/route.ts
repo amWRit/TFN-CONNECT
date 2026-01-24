@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
         status: status || 'DRAFT',
         capacity: capacity ? parseInt(capacity, 10) : null,
         isFree: isFree ?? true,
-        price: price ? parseFloat(price) : null,
+        price: price ? parseInt(price, 10) : null,
         organizerName,
         organizerLink,
         createdById: session.user.id,

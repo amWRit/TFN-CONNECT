@@ -150,7 +150,7 @@ export async function PUT(
         status,
         capacity: capacity !== undefined ? (capacity ? parseInt(capacity, 10) : null) : undefined,
         isFree,
-        price: price !== undefined ? (price ? parseFloat(price) : null) : undefined,
+        price: price !== undefined ? (price ? parseInt(price, 10) : null) : undefined,
         organizerName,
         organizerLink,
       },

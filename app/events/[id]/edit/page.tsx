@@ -129,6 +129,15 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
       return;
     }
 
+    // Debug: log the price value before submitting
+    console.log('Submitting price value:', price, 'Parsed as int:', !isFree && price !== '' ? parseInt(price, 10) : null);
+    // Validate price if not free
+    if (!isFree && (price === '' || !/^\d+$/.test(price))) {
+      setError('Please enter a valid price (digits only, e.g. 2500)');
+      setSaving(false);
+      return;
+    }
+
     try {
       const headers: Record<string, string> = { "Content-Type": "application/json" };
       try {
@@ -156,7 +165,7 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
           status,
           capacity: capacity ? parseInt(capacity, 10) : null,
           isFree,
-          price: !isFree && price ? parseFloat(price) : null,
+          price: !isFree && price !== '' ? parseInt(price, 10) : null,
           organizerName: organizerName || null,
           organizerLink: organizerLink || null,
         }),
@@ -388,13 +397,19 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
             <div>
               <label className="block font-semibold mb-2 text-emerald-700">Price (Rs.)</label>
               <input
-                type="number"
+                type="text"
                 className="w-full border-2 border-emerald-300 focus:border-emerald-500 rounded-lg px-4 py-2 bg-white/80 focus:bg-emerald-50 transition-all duration-200 outline-none"
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
+                onChange={(e) => {
+                  // Allow only digits, strip leading zeros
+                  let val = e.target.value.replace(/[^\d]/g, "");
+                  if (val.length > 1) val = val.replace(/^0+/, "");
+                  setPrice(val);
+                }}
                 placeholder="0"
-                min="0"
-                step="0.01"
+                inputMode="numeric"
+                autoComplete="off"
+                maxLength={8}
               />
             </div>
           )}
@@ -416,8 +431,7 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
         <div>
           <label className="block font-semibold mb-2 text-emerald-700">Tags <span className="text-xs text-gray-500">(max 3)</span></label>
           <input
-            type="text"
-            className="w-full border-2 border-emerald-300 focus:border-emerald-500 rounded-lg px-4 py-2 bg-white/80 focus:bg-emerald-50 transition-all duration-200 outline-none"
+
             value={tags}
             onChange={(e) => {
               setTags(e.target.value);
