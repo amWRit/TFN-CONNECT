@@ -121,6 +121,7 @@ export default function OpportunitiesTab() {
           id: modalOppId,
           which: selectedEmailField,
           personTypes: selectedPersonType ? [selectedPersonType] : [],
+          adminauth: true,
         }),
       });
       const result = await res.json();

@@ -139,6 +139,7 @@ export default function PostsTab() {
 
   // Send email after confirm
   async function sendEmail() {
+    console.log('sendEmail called', { modalPostId, selectedPersonType, selectedEmailField });
     if (!modalPostId) return;
     setShowConfirm(false);
     setEmailLoading(true);
@@ -154,6 +155,7 @@ export default function PostsTab() {
           id: modalPostId,
           which: selectedEmailField,
           personTypes: selectedPersonType ? [selectedPersonType] : [],
+          adminauth: true,
         }),
       });
       const result = await res.json();
@@ -505,7 +507,7 @@ export default function PostsTab() {
               >Cancel</button>
               <button
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-full font-bold shadow transition-all disabled:opacity-60"
-                onClick={sendEmail}
+                onClick={() => { console.log('Send button clicked'); sendEmail(); }}
                 disabled={loading}
               >Send</button>
             </div>

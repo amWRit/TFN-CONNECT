@@ -119,7 +119,8 @@ const TYPE_CONFIG = {
 
 export async function POST(req: NextRequest) {
   try {
-    const { type, id, personTypes, which, test } = await req.json();
+    const { type, id, personTypes, which, test, adminauth } = await req.json();
+    console.log('Notify API called with:', { type, id, personTypes, which, test });
     type TypeConfigKey = keyof typeof TYPE_CONFIG;
     if (!type || !id || !(type in TYPE_CONFIG)) {
       return NextResponse.json({ error: 'Missing or invalid type/id' }, { status: 400 });
@@ -146,6 +147,7 @@ export async function POST(req: NextRequest) {
       default:
         item = null;
     }
+    console.log('Notify API item:', item);
     if (!item) {
       return NextResponse.json({ error: `${type} not found` }, { status: 404 });
     }
@@ -168,23 +170,37 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: false, message: 'No email found for current user' });
       }
       filteredSubscribers = [person];
+      console.log('Notify API test mode, filteredSubscribers:', filteredSubscribers);
     } else {
       // Require personTypes to be a non-empty array
       if (!Array.isArray(personTypes) || personTypes.length === 0) {
         return NextResponse.json({ error: 'personTypes must be a non-empty array' }, { status: 400 });
       }
       const allowedTypes: import('@prisma/client').PersonType[] = personTypes;
-      // Find subscribers with matching subscription and allowed person types
-      const subscribers = await prisma.person.findMany({
-        where: {
-          subscriptions: { has: type as SubscriptionType },
-          [emailField]: { not: '' },
-          type: { in: allowedTypes },
-        },
-        select: { email1: true, email2: true, firstName: true, lastName: true, type: true },
-      });
+      let subscribers;
+      if (adminauth) {
+        // Admin override: send to all matching person types, ignore subscriptions
+        subscribers = await prisma.person.findMany({
+          where: {
+            [emailField]: { not: '' },
+            type: { in: allowedTypes },
+          },
+          select: { email1: true, email2: true, firstName: true, lastName: true, type: true },
+        });
+      } else {
+        // Default: require subscription
+        subscribers = await prisma.person.findMany({
+          where: {
+            subscriptions: { has: type as SubscriptionType },
+            [emailField]: { not: '' },
+            type: { in: allowedTypes },
+          },
+          select: { email1: true, email2: true, firstName: true, lastName: true, type: true },
+        });
+      }
       // Filter out missing emails
       filteredSubscribers = subscribers.filter(s => (s as Record<string, string | null>)[emailField]);
+      console.log('Notify API filteredSubscribers:', filteredSubscribers);
       if (!filteredSubscribers.length) {
         return NextResponse.json({ success: true, count: 0, message: 'No subscribers found' });
       }
@@ -207,6 +223,7 @@ export async function POST(req: NextRequest) {
     let batchResults = [];
     let sentEmails: string[] = [];
     for (const batch of batches) {
+      console.log('Notify API sending batch:', batch.map(s => ({ email: (s as Record<string, string | null>)[emailField], name: `${s.firstName} ${s.lastName}` })));
       const response = await fetch(appsScriptUrl!, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

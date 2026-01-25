@@ -180,6 +180,7 @@ export default function EventsTab() {
           id: modalEventId,
           which: selectedEmailField,
           personTypes: selectedPersonType ? [selectedPersonType] : [],
+          adminauth: true,
         }),
       });
       const result = await res.json();
