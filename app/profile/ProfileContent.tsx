@@ -12,6 +12,7 @@ import { Plus, Edit2, Trash2, Save, X, Upload, Image as ImageIcon, Mail, Phone, 
 
 import { ProfileImage } from "@/components/ProfileImage";
 import { ProfileHeaderCard } from "@/components/profile/ProfileHeaderCard";
+import OkModal from "@/components/OkModal";
 
 interface Fellowship {
   id: string;
@@ -72,7 +73,14 @@ interface Experience {
 }
 
 export default function ProfilePage() {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const showModal = (msg: string) => { setModalMessage(msg); setModalOpen(true); };
+  const [saving, setSaving] = useState(false);
   // --- Bookmark state and logic (must be at top level, before any return/conditional) ---
+  const [experienceSaving, setExperienceSaving] = useState(false);
+  const [educationSaving, setEducationSaving] = useState(false);
+  const [fellowshipSaving, setFellowshipSaving] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
   const { data: session, status } = useSession();
@@ -83,6 +91,7 @@ export default function ProfilePage() {
   const isSessionAdmin = !!(session && (session as any).user && (session as any).user.type === "ADMIN");
   const isEffectiveAdmin = isAdmin || isSessionAdmin;
   const [person, setPerson] = useState<Person | null>(null);
+  const [profileError, setProfileError] = useState<string | null>(null);
   const [personTypes, setPersonTypes] = useState<string[]>([]);
   // Determine if the current session user is the profile owner
   // Use useMemo to ensure isProfileOwner updates when person or session changes
@@ -246,6 +255,7 @@ export default function ProfilePage() {
       if (res.ok) {
         const data = await res.json();
         setPerson(data);
+        setProfileError(null);
         if (!editing) {
           setFormData({
             firstName: data.firstName || "",
@@ -264,9 +274,12 @@ export default function ProfilePage() {
             empStatus: data.empStatus || "SEEKING",
           });
         }
+      } else {
+        setProfileError("Failed to load profile (" + res.status + ")");
       }
     } catch (error) {
       console.error("Error fetching profile by id:", error);
+      setProfileError("Error fetching profile by id");
     } finally {
       setLoading(false);
     }
@@ -278,6 +291,7 @@ export default function ProfilePage() {
       if (res.ok) {
         const data = await res.json();
         setPerson(data);
+        setProfileError(null);
         if (!editing) {
           setFormData({
             firstName: data.firstName || "",
@@ -301,9 +315,12 @@ export default function ProfilePage() {
           // This will trigger next-auth to refetch session
           window.dispatchEvent(new Event('visibilitychange'));
         }
+      } else {
+        setProfileError("Failed to load profile (" + res.status + ")");
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
+      setProfileError("Error fetching profile");
     } finally {
       setLoading(false);
     }
@@ -339,6 +356,9 @@ export default function ProfilePage() {
 
   if (loading) {
     return <div className="text-center py-12">Loading...</div>;
+  }
+  if (profileError) {
+    return <div className="text-center py-12 text-red-600 font-semibold">{profileError}</div>;
   }
 
   // Only require session for non-admin view
@@ -397,23 +417,28 @@ export default function ProfilePage() {
   };
 
   const handleSaveEducation = async () => {
+    if (educationSaving) return;
+    setEducationSaving(true);
     // Validate required fields
     if (!educationForm.institution || !educationForm.level || !educationForm.name || !educationForm.start) {
-      alert("Please fill in all required fields: Institution, Level, Program/Course/Certification, and Start Date");
+      showModal("Please fill in all required fields: Institution, Level, Program/Course/Certification, and Start Date");
+      setEducationSaving(false);
       return;
     }
 
     // Validate date
     const startDate = new Date(educationForm.start);
     if (isNaN(startDate.getTime())) {
-      alert("Please enter a valid start date");
+      showModal("Please enter a valid start date");
+      setEducationSaving(false);
       return;
     }
 
     if (educationForm.end) {
       const endDate = new Date(educationForm.end);
       if (isNaN(endDate.getTime())) {
-        alert("Please enter a valid end date");
+        showModal("Please enter a valid end date");
+        setEducationSaving(false);
         return;
       }
     }
@@ -445,13 +470,15 @@ export default function ProfilePage() {
           end: "",
         });
         try { router.refresh(); } catch {}
-                    } else {
+      } else {
         const errorData = await res.json();
-        alert(errorData.error || "Failed to save education");
+        showModal(errorData.error || "Failed to save education");
       }
     } catch (error) {
       console.error("Error saving education:", error);
-      alert("An error occurred while saving education");
+      showModal("An error occurred while saving education");
+    } finally {
+      setEducationSaving(false);
     }
   };
 
@@ -472,24 +499,30 @@ export default function ProfilePage() {
     }
   };
 
+  // ...existing code...
   const handleSaveExperience = async () => {
+    if (experienceSaving) return;
+    setExperienceSaving(true);
     // Validate required fields
     if (!experienceForm.orgName || !experienceForm.title || !experienceForm.sector || !experienceForm.type || !experienceForm.start) {
-      alert("Please fill in all required fields: Organization, Title, Sector, Type, and Start Date");
+      showModal("Please fill in all required fields: Organization, Title, Sector, Type, and Start Date");
+      setExperienceSaving(false);
       return;
     }
 
     // Validate date
     const startDate = new Date(experienceForm.start);
     if (isNaN(startDate.getTime())) {
-      alert("Please enter a valid start date");
+      showModal("Please enter a valid start date");
+      setExperienceSaving(false);
       return;
     }
 
     if (experienceForm.end) {
       const endDate = new Date(experienceForm.end);
       if (isNaN(endDate.getTime())) {
-        alert("Please enter a valid end date");
+        showModal("Please enter a valid end date");
+        setExperienceSaving(false);
         return;
       }
     }
@@ -520,13 +553,15 @@ export default function ProfilePage() {
           end: "",
         });
         try { router.refresh(); } catch {}
-                        } else {
+      } else {
         const errorData = await res.json();
-        alert(errorData.error || "Failed to save experience");
-                        }
+        showModal(errorData.error || "Failed to save experience");
+      }
     } catch (error) {
       console.error("Error saving experience:", error);
-      alert("An error occurred while saving experience");
+      showModal("An error occurred while saving experience");
+    } finally {
+      setExperienceSaving(false);
     }
   };
 
@@ -565,7 +600,7 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error("Error removing image:", error);
-      alert("An error occurred while removing image");
+      showModal("An error occurred while removing image");
     }
   };
 
@@ -591,8 +626,11 @@ export default function ProfilePage() {
           editing={editing}
           formData={formData}
           onFormChange={e => setFormData({ ...formData, [e.target.name]: e.target.value })}
+          saving={saving}
           onSave={async () => {
+            setSaving(true);
             await handleUpdateProfile();
+            setSaving(false);
             setEditing(false);
           }}
           onCancel={() => setEditing(false)}
@@ -631,6 +669,7 @@ export default function ProfilePage() {
                     className="w-full border rounded p-2"
                     value={fellowshipForm.cohortId}
                     onChange={(e) => setFellowshipForm({ ...fellowshipForm, cohortId: e.target.value })}
+                    disabled={fellowshipSaving}
                   >
                     <option value="">Select Cohort</option>
                     {cohorts.map((c) => (
@@ -644,6 +683,7 @@ export default function ProfilePage() {
                     className="w-full border rounded p-2"
                     value={fellowshipForm.placementId}
                     onChange={(e) => setFellowshipForm({ ...fellowshipForm, placementId: e.target.value })}
+                    disabled={fellowshipSaving}
                   >
                     <option value="">Select Placement</option>
                     {placements.map((p) => (
@@ -658,53 +698,64 @@ export default function ProfilePage() {
                     className="w-full border rounded p-2"
                     value={fellowshipForm.subjects.join(", ")}
                     onChange={(e) => setFellowshipForm({ ...fellowshipForm, subjects: e.target.value.split(",").map(s => s.trim()) })}
+                    disabled={fellowshipSaving}
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Button onClick={async () => {
-                    // Save fellowship
-                    let url = "/api/fellowships";
-                    let method = "POST";
-                    if (editingFellowship) {
-                      url = `/api/fellowships/${editingFellowship}`;
-                      method = "PATCH";
-                    }
-                    const res = await fetch(url, {
-                      method,
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        personId: person.id,
-                        cohortId: fellowshipForm.cohortId,
-                        placementId: fellowshipForm.placementId,
-                        subjects: fellowshipForm.subjects,
-                      }),
-                    });
-                    if (res.ok) {
-                      await fetchProfile();
-                      setShowFellowshipForm(false);
-                      setEditingFellowship(null);
-                      setFellowshipForm({ cohortId: "", placementId: "", subjects: [] });
-                      try { router.refresh(); } catch {}
-                    } else {
-                      alert("Failed to save fellowship");
-                    }
-                  }} size="sm" className="bg-white border-blue-600 text-blue-600 hover:bg-blue-50 border">
-                    <Save size={16} className="mr-2" />
-                    Save
-                  </Button>
                   <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                    onClick={() => {
-                      setShowFellowshipForm(false);
-                      setEditingFellowship(null);
-                      setFellowshipForm({ cohortId: "", placementId: "", subjects: [] });
+                    onClick={async () => {
+                      if (fellowshipSaving) return;
+                      setFellowshipSaving(true);
+                      let url = "/api/fellowships";
+                      let method = "POST";
+                      if (editingFellowship) {
+                        url = `/api/fellowships/${editingFellowship}`;
+                        method = "PATCH";
+                      }
+                      const res = await fetch(url, {
+                        method,
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          personId: person.id,
+                          cohortId: fellowshipForm.cohortId,
+                          placementId: fellowshipForm.placementId,
+                          subjects: fellowshipForm.subjects,
+                        }),
+                      });
+                      if (res.ok) {
+                        await fetchProfile();
+                        setShowFellowshipForm(false);
+                        setEditingFellowship(null);
+                        setFellowshipForm({ cohortId: "", placementId: "", subjects: [] });
+                        try { router.refresh(); } catch {}
+                      } else {
+                        showModal("Failed to save fellowship");
+                      }
+                      setFellowshipSaving(false);
                     }}
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    disabled={fellowshipSaving}
                   >
-                    <X size={16} className="mr-2" />
-                    Cancel
+                    <Save size={16} className="mr-2" />
+                    {fellowshipSaving ? 'Saving...' : 'Save'}
                   </Button>
+                  {!fellowshipSaving && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                      onClick={() => {
+                        setShowFellowshipForm(false);
+                        setEditingFellowship(null);
+                        setFellowshipForm({ cohortId: "", placementId: "", subjects: [] });
+                      }}
+                      disabled={fellowshipSaving}
+                    >
+                      <X size={16} className="mr-2" />
+                      Cancel
+                    </Button>
+                  )}
                 </div>
               </div>
           )}
@@ -751,7 +802,7 @@ export default function ProfilePage() {
                             await fetchProfile();
                             try { router.refresh(); } catch {}
                           } else {
-                            alert("Failed to delete fellowship");
+                            showModal("Failed to delete fellowship");
                           }
                         }}
                       >
@@ -814,7 +865,7 @@ export default function ProfilePage() {
                   className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={educationForm.level}
                   onChange={(e) => setEducationForm({ ...educationForm, level: e.target.value })}
-                  placeholder="e.g., Bachelors, Masters"
+                  placeholder="e.g., Bachelors, Masters, Diploma, Others, etc."
                 />
               </div>
               <div>
@@ -849,6 +900,7 @@ export default function ProfilePage() {
                 className="w-full border rounded p-2"
                 value={educationForm.sector}
                 onChange={(e) => setEducationForm({ ...educationForm, sector: e.target.value })}
+                disabled={educationSaving}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -859,6 +911,7 @@ export default function ProfilePage() {
                   className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={educationForm.start}
                   onChange={(e) => setEducationForm({ ...educationForm, start: e.target.value })}
+                  disabled={educationSaving}
                 />
               </div>
               <div>
@@ -868,36 +921,40 @@ export default function ProfilePage() {
                   className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={educationForm.end}
                   onChange={(e) => setEducationForm({ ...educationForm, end: e.target.value })}
+                  disabled={educationSaving}
                 />
               </div>
             </div>
             <div className="flex gap-2">
-              <Button onClick={handleSaveEducation} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button onClick={handleSaveEducation} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white" disabled={educationSaving}>
                 <Save size={16} className="mr-2" />
-                Save
+                {educationSaving ? 'Saving...' : 'Save'}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                onClick={() => {
-                  setShowEducationForm(false);
-                  setEditingEducation(null);
-                  setEducationForm({
-                    institution: "",
-                    university: "",
-                    level: "",
-                    name: "",
-                    type: "DEGREE",
-                    sector: "",
-                    start: "",
-                    end: "",
-                  });
-                }}
-              >
-                <X size={16} className="mr-2" />
-                Cancel
-              </Button>
+              {!educationSaving && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                  onClick={() => {
+                    setShowEducationForm(false);
+                    setEditingEducation(null);
+                    setEducationForm({
+                      institution: "",
+                      university: "",
+                      level: "",
+                      name: "",
+                      type: "DEGREE",
+                      sector: "",
+                      start: "",
+                      end: "",
+                    });
+                  }}
+                  disabled={educationSaving}
+                >
+                  <X size={16} className="mr-2" />
+                  Cancel
+                </Button>
+              )}
             </div>
           </div>
         )}
@@ -915,6 +972,7 @@ export default function ProfilePage() {
                         className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={educationForm.institution}
                         onChange={(e) => setEducationForm({ ...educationForm, institution: e.target.value })}
+                        disabled={educationSaving}
                       />
                     </div>
                     <div>
@@ -924,6 +982,7 @@ export default function ProfilePage() {
                         className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={educationForm.university}
                         onChange={(e) => setEducationForm({ ...educationForm, university: e.target.value })}
+                        disabled={educationSaving}
                       />
                     </div>
                   </div>
@@ -935,6 +994,7 @@ export default function ProfilePage() {
                         className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={educationForm.level}
                         onChange={(e) => setEducationForm({ ...educationForm, level: e.target.value })}
+                        disabled={educationSaving}
                       />
                     </div>
                     <div>
@@ -944,6 +1004,7 @@ export default function ProfilePage() {
                         className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={educationForm.name}
                         onChange={(e) => setEducationForm({ ...educationForm, name: e.target.value })}
+                        disabled={educationSaving}
                       />
                     </div>
                   </div>
@@ -953,6 +1014,7 @@ export default function ProfilePage() {
                       className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       value={educationForm.type}
                       onChange={(e) => setEducationForm({ ...educationForm, type: e.target.value })}
+                      disabled={educationSaving}
                     >
                       <option value="DEGREE">Degree</option>
                       <option value="CERTIFICATION">Certification</option>
@@ -970,6 +1032,7 @@ export default function ProfilePage() {
                         className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={educationForm.start}
                         onChange={(e) => setEducationForm({ ...educationForm, start: e.target.value })}
+                        disabled={educationSaving}
                       />
                     </div>
                     <div>
@@ -979,35 +1042,39 @@ export default function ProfilePage() {
                         className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={educationForm.end}
                         onChange={(e) => setEducationForm({ ...educationForm, end: e.target.value })}
+                        disabled={educationSaving}
                       />
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button onClick={handleSaveEducation} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Button onClick={handleSaveEducation} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white" disabled={educationSaving}>
                       <Save size={16} className="mr-2" />
-                      Save
+                      {educationSaving ? 'Saving...' : 'Save'}
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                      onClick={() => {
-                        setEditingEducation(null);
-                        setEducationForm({
-                          institution: "",
-                          university: "",
-                          level: "",
-                          name: "",
-                          type: "DEGREE",
-                          sector: "",
-                          start: "",
-                          end: "",
-                        });
-                      }}
-                    >
-                      <X size={16} className="mr-2" />
-                      Cancel
-                    </Button>
+                    {!educationSaving && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                        onClick={() => {
+                          setEditingEducation(null);
+                          setEducationForm({
+                            institution: "",
+                            university: "",
+                            level: "",
+                            name: "",
+                            type: "DEGREE",
+                            sector: "",
+                            start: "",
+                            end: "",
+                          });
+                        }}
+                        disabled={educationSaving}
+                      >
+                        <X size={16} className="mr-2" />
+                        Cancel
+                      </Button>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -1085,7 +1152,7 @@ export default function ProfilePage() {
         </div>
 
         {showExperienceForm && (isProfileOwner || isAdmin) && (
-          <div className="mb-4 p-4 border rounded space-y-4">
+          <div className="mb-4 p-4 border rounded space-y-4 opacity-100">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Organization</label>
@@ -1094,6 +1161,7 @@ export default function ProfilePage() {
                   className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={experienceForm.orgName}
                   onChange={(e) => setExperienceForm({ ...experienceForm, orgName: e.target.value })}
+                  disabled={experienceSaving}
                 />
               </div>
               <div>
@@ -1103,6 +1171,7 @@ export default function ProfilePage() {
                   className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={experienceForm.title}
                   onChange={(e) => setExperienceForm({ ...experienceForm, title: e.target.value })}
+                  disabled={experienceSaving}
                 />
               </div>
             </div>
@@ -1114,6 +1183,7 @@ export default function ProfilePage() {
                   className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={experienceForm.sector}
                   onChange={(e) => setExperienceForm({ ...experienceForm, sector: e.target.value })}
+                  disabled={experienceSaving}
                 />
               </div>
               <div>
@@ -1122,6 +1192,7 @@ export default function ProfilePage() {
                   className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={experienceForm.type}
                   onChange={(e) => setExperienceForm({ ...experienceForm, type: e.target.value })}
+                  disabled={experienceSaving}
                 >
                   <option value="full_time">Full Time</option>
                   <option value="part_time">Part Time</option>
@@ -1137,6 +1208,7 @@ export default function ProfilePage() {
                 rows={3}
                 value={experienceForm.description}
                 onChange={(e) => setExperienceForm({ ...experienceForm, description: e.target.value })}
+                disabled={experienceSaving}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -1147,6 +1219,7 @@ export default function ProfilePage() {
                   className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={experienceForm.start}
                   onChange={(e) => setExperienceForm({ ...experienceForm, start: e.target.value })}
+                  disabled={experienceSaving}
                 />
               </div>
               <div>
@@ -1156,35 +1229,39 @@ export default function ProfilePage() {
                   className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={experienceForm.end}
                   onChange={(e) => setExperienceForm({ ...experienceForm, end: e.target.value })}
+                  disabled={experienceSaving}
                 />
               </div>
             </div>
             <div className="flex gap-2">
-              <Button onClick={handleSaveExperience} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button onClick={handleSaveExperience} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white" disabled={experienceSaving}>
                 <Save size={16} className="mr-2" />
-                Save
+                {experienceSaving ? 'Saving...' : 'Save'}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                onClick={() => {
-                  setShowExperienceForm(false);
-                  setEditingExperience(null);
-                  setExperienceForm({
-                    orgName: "",
-                    title: "",
-                    sector: "",
-                    type: "full_time",
-                    description: "",
-                    start: "",
-                    end: "",
-                  });
-                }}
-              >
-                <X size={16} className="mr-2" />
-                Cancel
-              </Button>
+              {!experienceSaving && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                  onClick={() => {
+                    setShowExperienceForm(false);
+                    setEditingExperience(null);
+                    setExperienceForm({
+                      orgName: "",
+                      title: "",
+                      sector: "",
+                      type: "full_time",
+                      description: "",
+                      start: "",
+                      end: "",
+                    });
+                  }}
+                  disabled={experienceSaving}
+                >
+                  <X size={16} className="mr-2" />
+                  Cancel
+                </Button>
+              )}
             </div>
           </div>
         )}
@@ -1202,6 +1279,7 @@ export default function ProfilePage() {
                         className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={experienceForm.orgName}
                         onChange={(e) => setExperienceForm({ ...experienceForm, orgName: e.target.value })}
+                        disabled={experienceSaving}
                       />
                     </div>
                     <div>
@@ -1211,6 +1289,7 @@ export default function ProfilePage() {
                         className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={experienceForm.title}
                         onChange={(e) => setExperienceForm({ ...experienceForm, title: e.target.value })}
+                        disabled={experienceSaving}
                       />
                     </div>
                   </div>
@@ -1222,6 +1301,7 @@ export default function ProfilePage() {
                         className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={experienceForm.sector}
                         onChange={(e) => setExperienceForm({ ...experienceForm, sector: e.target.value })}
+                        disabled={experienceSaving}
                       />
                     </div>
                     <div>
@@ -1230,6 +1310,7 @@ export default function ProfilePage() {
                         className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={experienceForm.type}
                         onChange={(e) => setExperienceForm({ ...experienceForm, type: e.target.value })}
+                        disabled={experienceSaving}
                       >
                         <option value="full_time">Full Time</option>
                         <option value="part_time">Part Time</option>
@@ -1245,6 +1326,7 @@ export default function ProfilePage() {
                       rows={3}
                       value={experienceForm.description}
                       onChange={(e) => setExperienceForm({ ...experienceForm, description: e.target.value })}
+                      disabled={experienceSaving}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -1255,6 +1337,7 @@ export default function ProfilePage() {
                         className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={experienceForm.start}
                         onChange={(e) => setExperienceForm({ ...experienceForm, start: e.target.value })}
+                        disabled={experienceSaving}
                       />
                     </div>
                     <div>
@@ -1264,34 +1347,38 @@ export default function ProfilePage() {
                         className="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         value={experienceForm.end}
                         onChange={(e) => setExperienceForm({ ...experienceForm, end: e.target.value })}
+                        disabled={experienceSaving}
                       />
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button onClick={handleSaveExperience} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Button onClick={handleSaveExperience} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white" disabled={experienceSaving}>
                       <Save size={16} className="mr-2" />
-                      Save
+                      {experienceSaving ? 'Saving...' : 'Save'}
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                      onClick={() => {
-                        setEditingExperience(null);
-                        setExperienceForm({
-                          orgName: "",
-                          title: "",
-                          sector: "",
-                          type: "full_time",
-                          description: "",
-                          start: "",
-                          end: "",
-                        });
-                      }}
-                    >
-                      <X size={16} className="mr-2" />
-                      Cancel
-                    </Button>
+                    {!experienceSaving && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                        onClick={() => {
+                          setEditingExperience(null);
+                          setExperienceForm({
+                            orgName: "",
+                            title: "",
+                            sector: "",
+                            type: "full_time",
+                            description: "",
+                            start: "",
+                            end: "",
+                          });
+                        }}
+                        disabled={experienceSaving}
+                      >
+                        <X size={16} className="mr-2" />
+                        Cancel
+                      </Button>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -1345,6 +1432,13 @@ export default function ProfilePage() {
           )}
         </div>
       </Card>
+
+      {/* OkModal for alerts and errors */}
+      <OkModal
+        open={modalOpen}
+        message={modalMessage}
+        onOk={() => setModalOpen(false)}
+      />
     </div>
   );
 }

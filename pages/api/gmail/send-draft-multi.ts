@@ -1,4 +1,5 @@
 
+
 import { google } from 'googleapis';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { parse } from 'cookie';
@@ -22,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Invalid Gmail token.' });
   }
 
-  const { draftId, recipients, cc, bcc } = req.body;
+  const { draftId, recipients, cc, bcc, personalizeSalutation } = req.body;
   if (!draftId || !recipients || !Array.isArray(recipients) || recipients.length === 0) {
     console.log('DEBUG: Missing or empty recipients', { draftId, recipients });
     return res.status(400).json({ error: 'Missing required fields' });
@@ -67,6 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           // Decode, update To/Cc/Bcc headers, and re-encode
           const buff = Buffer.from(raw.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
           let emailSource = buff.toString('utf-8');
+          // Log MIME before replacement
           // Replace or add To header
           if (/^To:/m.test(emailSource)) {
             emailSource = emailSource.replace(/^(To:).*/m, `To: ${recipient.email}`);
@@ -110,6 +112,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             // Remove Bcc if present and not provided
             emailSource = emailSource.replace(/^Bcc:.*\n?/m, '');
           }
+
+          // Personalize salutation if requested using placeholder replacement
+          if (personalizeSalutation) {
+            if (recipient.name) {
+              // Replace {{Dear first_name,}} with 'Dear {firstName},'
+              emailSource = emailSource.replace(/\{\{\s*Dear\s+first_name,\s*\}\}/gi, `Dear ${recipient.name},`);
+            } else {
+              // Remove {{Dear first_name,}} placeholder if no name
+              emailSource = emailSource.replace(/\{\{\s*Dear\s+first_name,\s*\}\}/gi, '');
+            }
+          }
+
           // Re-encode to base64url
           const updatedRaw = Buffer.from(emailSource, 'utf-8').toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
           const message = { raw: updatedRaw };

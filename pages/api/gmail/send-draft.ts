@@ -137,6 +137,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Remove Bcc if present and not provided
       emailSource = emailSource.replace(/^Bcc:.*\n?/m, '');
     }
+
+    // Personalize salutation if requested using placeholder replacement
+    if (req.body.personalizeSalutation) {
+      if (req.body.firstName) {
+        // Replace {{Dear first_name,}} with 'Dear {firstName},'
+        emailSource = emailSource.replace(/\{\{\s*Dear\s+first_name,\s*\}\}/gi, `Dear ${req.body.firstName},`);
+      } else {
+        // Remove {{Dear first_name,}} placeholder if no name
+        emailSource = emailSource.replace(/\{\{\s*Dear\s+first_name,\s*\}\}/gi, '');
+      }
+    }
+
     // Re-encode to base64url
     const updatedRaw = Buffer.from(emailSource, 'utf-8').toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     const message = { raw: updatedRaw };

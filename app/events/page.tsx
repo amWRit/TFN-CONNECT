@@ -128,12 +128,21 @@ export default function EventsPage() {
     setEvents((prev) => prev.filter((e) => e.id !== id));
   };
 
-  // Filter for upcoming events (future startDateTime)
+  // Filter for upcoming events (within next month, same day next month)
   const now = new Date();
+  const nextMonth = new Date(now);
+  nextMonth.setMonth(now.getMonth() + 1);
+  // If next month doesn't have this day, set to last day of next month
+  if (nextMonth.getDate() !== now.getDate()) {
+    nextMonth.setDate(0);
+  }
   const upcomingEvents = events
-    .filter(e => new Date(e.startDateTime) > now)
+    .filter(e => {
+      const eventDate = new Date(e.startDateTime);
+      return eventDate > now && eventDate <= nextMonth;
+    })
     .sort((a, b) => new Date(a.startDateTime).getTime() - new Date(b.startDateTime).getTime())
-    .slice(0, 10); // Show up to 10 upcoming
+    .slice(0, 10); // Show up to 10 upcoming within next month
 
   return (
     <div className="w-full bg-gradient-to-br from-slate-50 via-emerald-50 to-slate-50 min-h-screen">

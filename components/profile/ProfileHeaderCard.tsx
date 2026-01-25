@@ -68,6 +68,7 @@ interface ProfileHeaderCardProps {
   onSave?: () => void;
   onCancel?: () => void;
   canViewPhones?: boolean;
+  saving?: boolean;
 }
 
 const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
@@ -86,6 +87,7 @@ const ProfileHeaderCard: React.FC<ProfileHeaderCardProps> = ({
   onSave,
   onCancel,
   canViewPhones = false,
+  saving = false,
 }) => {
 
 // Collapsible bio component with markdown support
@@ -180,23 +182,37 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
           <button
             aria-label="Save"
             onClick={onSave}
-            className="p-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
+            className="p-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow focus:outline-none focus:ring-2 focus:ring-blue-300 transition flex items-center justify-center min-w-[48px]"
             title="Save"
+            disabled={saving}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
+            {saving ? (
+              <span className="flex items-center gap-1">
+                <svg className="animate-spin h-5 w-5 mr-1 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                </svg>
+                Saving...
+              </span>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            )}
           </button>
-          <button
-            aria-label="Cancel"
-            onClick={onCancel}
-            className="p-3 rounded-full bg-red-600 hover:bg-red-700 text-white shadow focus:outline-none focus:ring-2 focus:ring-red-300 transition"
-            title="Cancel"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+          {!saving && (
+            <button
+              aria-label="Cancel"
+              onClick={onCancel}
+              className="p-3 rounded-full bg-red-600 hover:bg-red-700 text-white shadow focus:outline-none focus:ring-2 focus:ring-red-300 transition"
+              title="Cancel"
+              disabled={saving}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
         </div>
         {/* Header and Inputs - stack vertically for mobile, avoid overlap */}
         <div className="relative bg-gradient-to-r from-indigo-500 to-purple-500 pt-8 pb-6 px-0">
@@ -218,6 +234,7 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
                   onChange={onFormChange}
                   className="text-sm text-gray-700 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-full sm:w-36 placeholder:text-gray-400"
                   placeholder="First Name"
+                  disabled={saving}
                 />
                 <input
                   type="text"
@@ -226,6 +243,7 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
                   onChange={onFormChange}
                   className="text-sm text-gray-700 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-full sm:w-32 placeholder:text-gray-400"
                   placeholder="Middle Name"
+                  disabled={saving}
                 />
                 <input
                   type="text"
@@ -234,6 +252,7 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
                   onChange={onFormChange}
                   className="text-sm text-gray-700 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-full sm:w-36 placeholder:text-gray-400"
                   placeholder="Last Name"
+                  disabled={saving}
                 />
                 <input
                   type="text"
@@ -242,6 +261,7 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
                   onChange={onFormChange}
                   className="text-sm text-gray-700 bg-white border border-indigo-200 focus:border-indigo-500 outline-none px-2 py-1 rounded transition-all w-full sm:w-48 placeholder:text-gray-400"
                   placeholder="Pronouns (e.g., she/her)"
+                  disabled={saving}
                 />
               </div>
             </div>
@@ -257,6 +277,7 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
                   value={formData.type || ""}
                   onChange={onFormChange}
                   className="w-full border border-indigo-200 px-3 py-1.5 rounded-md text-sm bg-white focus:border-indigo-500 focus:outline-none"
+                  disabled={saving}
                 >
                   <option value="">Select type</option>
                   {(personTypes.length ? personTypes : ["FELLOW", "ALUMNI", "STAFF", "ADMIN", "STAFF_ALUMNI", "STAFF_ADMIN", "LEADERSHIP", "GENERAL"]) 
@@ -286,6 +307,7 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
                     className="w-full border border-blue-200 px-3 py-2 rounded-md text-sm text-gray-700 leading-relaxed bg-white focus:border-blue-400 focus:outline-none mb-1 resize-y"
                     placeholder="Share a short bio about yourself..."
                     maxLength={1000}
+                    disabled={saving}
                   />
                   <div className="text-xs text-gray-500 mt-1 italic">
                     Tip: You can use Markdown to format your description.
@@ -316,6 +338,7 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
                     onChange={onFormChange}
                     className="border border-blue-200 px-2 py-1 rounded w-full focus:border-blue-400 focus:outline-none"
                     placeholder="Secondary Email"
+                    disabled={saving}
                   />
                 </div>
                 {/* Phone1 */}
@@ -328,6 +351,7 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
                     onChange={onFormChange}
                     className="border border-green-200 px-2 py-1 rounded w-full focus:border-green-400 focus:outline-none"
                     placeholder="Phone 1"
+                    disabled={saving}
                   />
                 </div>
                 {/* Phone2 */}
@@ -340,6 +364,7 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
                     onChange={onFormChange}
                     className="border border-green-200 px-2 py-1 rounded w-full focus:border-green-400 focus:outline-none"
                     placeholder="Phone 2"
+                    disabled={saving}
                   />
                 </div>
                 {/* LinkedIn */}
@@ -352,6 +377,7 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
                     onChange={onFormChange}
                     className="border border-blue-200 px-2 py-1 rounded w-full focus:border-blue-400 focus:outline-none"
                     placeholder="LinkedIn URL"
+                    disabled={saving}
                   />
                 </div>
                 {/* Website */}
@@ -364,6 +390,7 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
                     onChange={onFormChange}
                     className="border border-blue-200 px-2 py-1 rounded w-full focus:border-blue-400 focus:outline-none"
                     placeholder="Website URL"
+                    disabled={saving}
                   />
                 </div>
                 {/* Education Status */}
@@ -374,6 +401,7 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
                     value={formData.eduStatus}
                     onChange={onFormChange}
                     className="border border-blue-200 px-2 py-1 rounded focus:border-blue-400 focus:outline-none"
+                    disabled={saving}
                   >
                     {statusOptions.eduStatus.map(opt => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -388,6 +416,7 @@ const BioCollapse: React.FC<{ bio: string }> = ({ bio }) => {
                     value={formData.empStatus}
                     onChange={onFormChange}
                     className="border border-green-200 px-2 py-1 rounded focus:border-green-400 focus:outline-none"
+                    disabled={saving}
                   >
                     {statusOptions.empStatus.map(opt => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>

@@ -7,7 +7,7 @@ import { marked } from 'marked';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/pages/api/auth/[...nextauth]';
 
-const LOGO_URL = "https://tfn-connect.vercel.app/logo.png";
+const LOGO_URL = "https://tfn-connect.vercel.app/logos/logo.png";
 
 const TYPE_CONFIG = {
   EVENT: {
