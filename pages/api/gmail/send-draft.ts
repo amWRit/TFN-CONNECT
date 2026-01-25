@@ -6,7 +6,6 @@ import { google } from 'googleapis';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { authOptions } from '../auth/[...nextauth]';
 import { parse } from 'cookie';
-import { simpleParser } from 'mailparser';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -139,59 +138,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       emailSource = emailSource.replace(/^Bcc:.*\n?/m, '');
     }
 
-    // Personalize salutation if requested
+    // Personalize salutation if requested using placeholder replacement
     if (req.body.personalizeSalutation) {
       if (req.body.firstName) {
-        let parsed;
-        try {
-          parsed = await simpleParser(emailSource);
-        } catch (err) {
-          console.log('Mailparser failed:', err);
-        }
-        let body = '';
-        let isHtml = false;
-        let subject = '';
-        let from = '';
-        let to = '';
-        let cc = req.body.cc || '';
-        let bcc = req.body.bcc || '';
-        if (parsed) {
-          subject = parsed.subject || '';
-          from = parsed.from?.text || '';
-          if (parsed.to) {
-            if (Array.isArray(parsed.to)) {
-              to = parsed.to.map(addr => addr.text).join(', ');
-            } else if ('text' in parsed.to) {
-              to = parsed.to.text;
-            } else if (parsed.to && typeof parsed.to === 'object' && 'address' in parsed.to) {
-              to = (parsed.to as { address: string }).address;
-            }
-          }
-          if (parsed.html) {
-            body = `<p>Dear ${req.body.firstName},</p>` + parsed.html;
-            isHtml = true;
-          } else if (parsed.text) {
-            body = `Dear ${req.body.firstName},\n\n${parsed.text}`;
-            isHtml = false;
-          } else {
-          }
-        }
-        // Build new MIME message
-        let mimeMessage = '';
-        mimeMessage += `Subject: ${subject}\r\n`;
-        mimeMessage += `From: ${from}\r\n`;
-        mimeMessage += `To: ${to}\r\n`;
-        if (cc) mimeMessage += `Cc: ${cc}\r\n`;
-        if (bcc) mimeMessage += `Bcc: ${bcc}\r\n`;
-        if (isHtml) {
-          mimeMessage += 'Content-Type: text/html; charset="UTF-8"\r\n';
-          mimeMessage += '\r\n' + body;
-        } else {
-          mimeMessage += 'Content-Type: text/plain; charset="UTF-8"\r\n';
-          mimeMessage += '\r\n' + body;
-        }
-        emailSource = mimeMessage;
+        // Replace {{Dear first_name,}} with 'Dear {firstName},'
+        emailSource = emailSource.replace(/\{\{\s*Dear\s+first_name,\s*\}\}/gi, `Dear ${req.body.firstName},`);
       } else {
+        // Remove {{Dear first_name,}} placeholder if no name
+        emailSource = emailSource.replace(/\{\{\s*Dear\s+first_name,\s*\}\}/gi, '');
       }
     }
 

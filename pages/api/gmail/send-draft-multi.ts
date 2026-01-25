@@ -3,7 +3,6 @@
 import { google } from 'googleapis';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { parse } from 'cookie';
-import { simpleParser } from 'mailparser';
 
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -69,6 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           // Decode, update To/Cc/Bcc headers, and re-encode
           const buff = Buffer.from(raw.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
           let emailSource = buff.toString('utf-8');
+          // Log MIME before replacement
           // Replace or add To header
           if (/^To:/m.test(emailSource)) {
             emailSource = emailSource.replace(/^(To:).*/m, `To: ${recipient.email}`);
@@ -113,63 +113,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             emailSource = emailSource.replace(/^Bcc:.*\n?/m, '');
           }
 
-          // Personalize salutation if requested
-          if (personalizeSalutation && recipient.name) {
-            let parsed;
-            try {
-              parsed = await simpleParser(emailSource);
-            } catch (err) {
-              // If mailparser fails, fallback to previous logic
-              parsed = null;
-            }
-            let body = '';
-            let isHtml = false;
-            let subject = '';
-            let from = '';
-            let to = recipient.email;
-            let ccVal = cc || '';
-            let bccVal = bcc || '';
-            if (parsed) {
-              subject = parsed.subject || '';
-              from = parsed.from?.text || '';
-              if (parsed.to) {
-                if (Array.isArray(parsed.to)) {
-                  to = parsed.to.map(addr => addr.text).join(', ');
-                } else if ('text' in parsed.to) {
-                  to = parsed.to.text;
-                } else if (parsed.to && typeof parsed.to === 'object' && 'address' in parsed.to) {
-                  to = (parsed.to as { address: string }).address;
-                }
-              }
-              if (parsed.html) {
-                body = `<p>Dear ${recipient.name},</p>` + parsed.html;
-                isHtml = true;
-              } else if (parsed.text) {
-                body = `Dear ${recipient.name},\n\n${parsed.text}`;
-                isHtml = false;
-              } else {
-                body = '';
-              }
+          // Personalize salutation if requested using placeholder replacement
+          if (personalizeSalutation) {
+            if (recipient.name) {
+              // Replace {{Dear first_name,}} with 'Dear {firstName},'
+              emailSource = emailSource.replace(/\{\{\s*Dear\s+first_name,\s*\}\}/gi, `Dear ${recipient.name},`);
             } else {
-              // Fallback: treat all as plain text
-              body = `Dear ${recipient.name},\n\n` + emailSource;
-              isHtml = false;
+              // Remove {{Dear first_name,}} placeholder if no name
+              emailSource = emailSource.replace(/\{\{\s*Dear\s+first_name,\s*\}\}/gi, '');
             }
-            // Build new MIME message
-            let mimeMessage = '';
-            if (subject) mimeMessage += `Subject: ${subject}\r\n`;
-            if (from) mimeMessage += `From: ${from}\r\n`;
-            if (to) mimeMessage += `To: ${to}\r\n`;
-            if (ccVal) mimeMessage += `Cc: ${ccVal}\r\n`;
-            if (bccVal) mimeMessage += `Bcc: ${bccVal}\r\n`;
-            if (isHtml) {
-              mimeMessage += 'Content-Type: text/html; charset="UTF-8"\r\n';
-              mimeMessage += '\r\n' + body;
-            } else {
-              mimeMessage += 'Content-Type: text/plain; charset="UTF-8"\r\n';
-              mimeMessage += '\r\n' + body;
-            }
-            emailSource = mimeMessage;
           }
 
           // Re-encode to base64url
