@@ -31,8 +31,19 @@ export default function GmailDraftEmailForm() {
   const [drafts, setDrafts] = useState<{id: string, subject: string}[]>([]);
   const [selectedDraftId, setSelectedDraftId] = useState('');
   const [okModal, setOkModal] = useState<{ open: boolean; message: string; title?: string }>({ open: false, message: '', title: '' });
+  const [showExample, setShowExample] = useState(false);
+  // Example draft content
+  const exampleDraft = `{{Dear first_name,}}
 
-    // Ref for auto-download anchor
+We are excited to share some important updates with you!
+
+- You can now access new resources in your portal.
+- Upcoming events are listed on the website.
+- Please update your contact information if anything has changed.
+
+Best regards,
+The TFN Team`;
+  // Ref for auto-download anchor
   const csvDownloadRef = useRef<HTMLAnchorElement | null>(null);
   // Auto-download CSV when sentCsvUrl is set
   useEffect(() => {
@@ -245,6 +256,12 @@ export default function GmailDraftEmailForm() {
         <span className="flex-1">This bulk email feature is experimental and may not work as expected. Please verify results and proceed with care.</span>
       </div>
       <form className="space-y-6 sm:space-y-8">
+        <div className="mb-2 text-xs text-gray-600">
+          <span>
+            <b>Tip:</b> Use <span className="font-mono bg-gray-100 px-1 rounded">&#123;&#123;Dear first_name,&#125;&#125;</span> for personalized salutations. You can also attach a file or image to your email draft in Gmail before sending.
+          </span>
+        </div>
+
         {/* Gmail Draft Selection */}
         <div>
           <label className="font-medium flex items-center gap-2 text-blue-700 text-sm sm:text-base"><Mail className="w-5 h-5" /> Select Gmail Draft</label>
