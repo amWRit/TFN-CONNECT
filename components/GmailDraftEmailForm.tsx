@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import OkModal from './OkModal';
 import { PersonType } from '@prisma/client';
-import { Mail, Send, Users, AtSign, ChevronDown, Hash, Loader2 } from 'lucide-react';
+import { Mail, Send, Users, AtSign, ChevronDown, Hash, Loader2, Eye, FlaskConical } from 'lucide-react';
 
 
 // Checks admin Gmail token via API (supports httpOnly cookie)
@@ -32,6 +32,7 @@ export default function GmailDraftEmailForm() {
   const [selectedDraftId, setSelectedDraftId] = useState('');
   const [okModal, setOkModal] = useState<{ open: boolean; message: string; title?: string }>({ open: false, message: '', title: '' });
   const [showExample, setShowExample] = useState(false);
+  const [emails, setEmails] = useState<string[]>([]);
   // Example draft content
   const exampleDraft = `{{Dear first_name,}}
 
@@ -114,6 +115,34 @@ The TFN Team`;
       }
     }
     fetchCount();
+  }, [personType, emailPreference]);
+
+  // Fetch recipient emails
+  useEffect(() => {
+    async function fetchEmails() {
+      try {
+        const params = new URLSearchParams({
+          personType: personType || '',
+          emailPreference
+        });
+        const res = await fetch(`/api/admin/email/recipients?${params}`);
+        const data = await res.json();
+        let list: string[] = [];
+        if (Array.isArray(data.users)) {
+          if (emailPreference === 'primary') {
+            list = data.users.map((u:any) => u.email1).filter(Boolean);
+          } else if (emailPreference === 'secondary') {
+            list = data.users.map((u:any) => u.email2).filter(Boolean);
+          } else if (emailPreference === 'both') {
+            list = data.users.map((u:any) => u.email1 || u.email2).filter(Boolean);
+          }
+        }
+        setEmails(Array.from(new Set(list)));
+      } catch {
+        setEmails([]);
+      }
+    }
+    fetchEmails();
   }, [personType, emailPreference]);
 
   if (!hasGmailToken) {
@@ -335,7 +364,6 @@ The TFN Team`;
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-400 pointer-events-none" />
           </div>
-          <div className="text-xs text-pink-600 mt-1 flex items-center gap-1"><Hash className="w-3 h-3" /> Will send to <span className="font-bold">{recipientCount}</span> users</div>
         </div>
         {/* Email Preference */}
         <div>
@@ -347,11 +375,25 @@ The TFN Team`;
             <label className={emailPreference==='secondary' ? 'bg-pink-100 px-3 py-1 rounded-full flex items-center gap-1 font-semibold text-pink-700 text-xs sm:text-base' : 'px-3 py-1 rounded-full flex items-center gap-1 text-gray-600 cursor-pointer hover:bg-pink-50 text-xs sm:text-base'}>
               <input type="radio" checked={emailPreference==='secondary'} onChange={()=>setEmailPreference('secondary')} className="accent-pink-600" /> Secondary
             </label>
-            <label className={emailPreference==='both' ? 'bg-yellow-100 px-3 py-1 rounded-full flex items-center gap-1 font-semibold text-yellow-700 text-xs sm:text-base' : 'px-3 py-1 rounded-full flex items-center gap-1 text-gray-600 cursor-pointer hover:bg-yellow-50 text-xs sm:text-base'}>
-              <input type="radio" checked={emailPreference==='both'} onChange={()=>setEmailPreference('both')} className="accent-yellow-500" /> Both
+            <label className={emailPreference==='both' ? 'bg-yellow-100 px-3 py-1 rounded-full flex items-center gap-1 font-semibold text-yellow-700 text-xs sm:text-base' : 'px-3 py-1 rounded-full flex items-center gap-1 text-gray-600 cursor-not-allowed opacity-60 text-xs sm:text-base'}>
+              <input type="radio" checked={emailPreference==='both'} onChange={()=>setEmailPreference('both')} className="accent-yellow-500" disabled /> Both
             </label>
           </div>
         </div>
+        {/* User count and scrollable email list below email preference */}
+        {personType && emails.length > 0 && (
+          <div className="w-full mt-0">
+            <div className="text-xs text-pink-600 flex items-center gap-1 mb-1"><Hash className="w-3 h-3" /> Will send to <span className="font-bold">{recipientCount}</span> users</div>
+            <div className="w-full text-xs text-gray-500 max-h-32 overflow-y-auto border border-gray-200 rounded bg-gray-50 p-2">
+              <div className="mb-1 font-semibold text-blue-700">Emails:</div>
+              <ul className="list-disc ml-5">
+                {emails.map(email => (
+                  <li key={email}>{email}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
         {/* Removed body editor and live preview UI */}
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-6 sm:mt-8 justify-center items-center w-full">
@@ -364,7 +406,7 @@ The TFN Team`;
                 disabled={sending || !selectedDraftId}
                 title="Send this draft to yourself"
               >
-                <Send className="w-5 h-5" /> Send Test
+                <FlaskConical className="w-5 h-5" /> Send Test
               </button>
               <button
                 type="button"
