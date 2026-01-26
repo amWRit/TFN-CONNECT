@@ -113,6 +113,7 @@ export default function JobsTab() {
           id: modalJobId,
           which: selectedEmailField,
           personTypes: selectedPersonType ? [selectedPersonType] : [],
+          adminauth: true,
         }),
       });
       const result = await res.json();

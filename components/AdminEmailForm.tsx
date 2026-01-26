@@ -3,7 +3,7 @@ import OkModal from './OkModal';
 import { marked } from 'marked';
 import dynamic from 'next/dynamic';
 import { PersonType } from '@prisma/client';
-import { Mail, Eye, Send, Users, AtSign, ChevronDown, Smile, FileText, Hash, Loader2, Settings2 } from 'lucide-react';
+import { Mail, Eye, Send, Users, AtSign, ChevronDown, Smile, FileText, Hash, Loader2, Settings2, FlaskConical } from 'lucide-react';
 import Email from 'next-auth/providers/email';
 
 const EmailEditor = dynamic(() => import('react-email-editor'), { ssr: false });
@@ -25,6 +25,7 @@ export default function AdminEmailForm() {
   const [sentCsvUrl, setSentCsvUrl] = useState<{ url: string; filename: string } | null>(null);
   const [csvDownloadTriggered, setCsvDownloadTriggered] = useState(false);
   const [okModal, setOkModal] = useState<{ open: boolean; message: string; title?: string }>({ open: false, message: '', title: '' });
+  const [emails, setEmails] = useState<string[]>([]);
 
   // Auto-hide batch progress bar after sending is complete (like GmailDraftEmailForm)
   useEffect(() => {
@@ -91,6 +92,34 @@ export default function AdminEmailForm() {
       }
     }
     fetchCount();
+  }, [personType, emailPreference]);
+
+  // Fetch recipient emails
+  useEffect(() => {
+    async function fetchEmails() {
+      try {
+        const params = new URLSearchParams({
+          personType: personType || '',
+          emailPreference
+        });
+        const res = await fetch(`/api/admin/email/recipients?${params}`);
+        const data = await res.json();
+        let list: string[] = [];
+        if (Array.isArray(data.users)) {
+          if (emailPreference === 'primary') {
+            list = data.users.map((u:any) => u.email1).filter(Boolean);
+          } else if (emailPreference === 'secondary') {
+            list = data.users.map((u:any) => u.email2).filter(Boolean);
+          } else if (emailPreference === 'both') {
+            list = data.users.map((u:any) => u.email1 || u.email2).filter(Boolean);
+          }
+        }
+        setEmails(Array.from(new Set(list)));
+      } catch {
+        setEmails([]);
+      }
+    }
+    fetchEmails();
   }, [personType, emailPreference]);
 
   // Markdown CSS for preview and email
@@ -321,7 +350,6 @@ export default function AdminEmailForm() {
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-400 pointer-events-none" />
           </div>
-          <div className="text-xs text-pink-600 mt-1 flex items-center gap-1"><Hash className="w-3 h-3" /> Will send to <span className="font-bold">{recipientCount}</span> users</div>
         </div>
         {/* Email Preference */}
         <div>
@@ -333,11 +361,25 @@ export default function AdminEmailForm() {
             <label className={emailPreference==='secondary' ? 'bg-pink-100 px-3 py-1 rounded-full flex items-center gap-1 font-semibold text-pink-700' : 'px-3 py-1 rounded-full flex items-center gap-1 text-gray-600 cursor-pointer hover:bg-pink-50'}>
               <input type="radio" checked={emailPreference==='secondary'} onChange={()=>setEmailPreference('secondary')} className="accent-pink-600" /> Secondary
             </label>
-            <label className={emailPreference==='both' ? 'bg-yellow-100 px-3 py-1 rounded-full flex items-center gap-1 font-semibold text-yellow-700' : 'px-3 py-1 rounded-full flex items-center gap-1 text-gray-600 cursor-pointer hover:bg-yellow-50'}>
-              <input type="radio" checked={emailPreference==='both'} onChange={()=>setEmailPreference('both')} className="accent-yellow-500" /> Both
+            <label className={emailPreference==='both' ? 'bg-yellow-100 px-3 py-1 rounded-full flex items-center gap-1 font-semibold text-yellow-700' : 'px-3 py-1 rounded-full flex items-center gap-1 text-gray-600 cursor-not-allowed opacity-60'}>
+              <input type="radio" checked={emailPreference==='both'} onChange={()=>setEmailPreference('both')} className="accent-yellow-500" disabled /> Both
             </label>
           </div>
         </div>
+        {/* User count and scrollable email list below email preference */}
+        {personType && emails.length > 0 && (
+          <div className="w-full mt-0">
+            <div className="text-xs text-pink-600 flex items-center gap-1 mb-1"><Hash className="w-3 h-3" /> Will send to <span className="font-bold">{recipientCount}</span> users</div>
+            <div className="w-full text-xs text-gray-500 max-h-32 overflow-y-auto border border-gray-200 rounded bg-gray-50 p-2">
+              <div className="mb-1 font-semibold text-blue-700">Emails:</div>
+              <ul className="list-disc ml-5">
+                {emails.map(email => (
+                  <li key={email}>{email}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
         {/* Body Editor */}
         <div>
           <label className="font-medium flex items-center gap-2 text-blue-700"><FileText className="w-5 h-5" /> Email Body</label>
@@ -374,7 +416,7 @@ export default function AdminEmailForm() {
                 disabled={sending}
                 title="Send a test email to yourself"
               >
-                <Eye className="w-5 h-5" /> Send Test
+                <FlaskConical className="w-5 h-5" /> Send Test
               </button>
               <button
                 type="button"
